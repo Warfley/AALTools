@@ -28,6 +28,7 @@ type
     OpenDialog1: TOpenDialog;
     SaveDialog1: TSaveDialog;
     procedure Button2Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
@@ -53,6 +54,12 @@ procedure TForm1.Button2Click(Sender: TObject);
 begin
   if OpenDialog1.Execute then
     EditorFrame1.Load(OpenDialog1.FileName);
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  if (Paramcount>0) and FileExists(ParamStr(1)) then
+    EditorFrame1.Load(ParamStr(1));
 end;
 
 procedure TForm1.MenuItem2Click(Sender: TObject);

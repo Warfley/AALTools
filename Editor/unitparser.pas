@@ -121,38 +121,30 @@ begin
       Break;
     end;
 end;
-
-var
-  p: PChar;
-  s, len: integer;
-  v: string;
+var i, s, len: Integer;
+  str:String;
 begin
-  p := PChar(ln);
-  s := 1;
-  while (p^ <> #00) do
+  i:=1;
+  While i<=Length(ln) do
   begin
-    if (p^ = '$') then
+    if ln[i] = '$' then
     begin
-      len := 1;
-      Inc(p);
-      while p^ in ['_', '0'..'9', 'a'..'z', 'A'..'Z'] do
+      s:=i;
+      len:=1;
+      inc(i);
+      while (i<=Length(ln)) And (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
       begin
-        Inc(len);
-        Inc(p);
+        inc(i);
+        inc(len);
       end;
-      v := Copy(ln, s, len);
-      if len = 1 then
-        Continue;
-      if not StringsContain(FCurr, v) then
+      str:=Copy(ln, s, len);
+      if not StringsContain(FCurr, str) then
       begin
-        vars.Add(v);
-        FCurr.Add(v);
+        FCurr.Add(str);
+        vars.Add(str);
       end;
-      Inc(s, len - 1);
-      Dec(p);
     end;
-    Inc(s);
-    Inc(p);
+    inc(i);
   end;
 end;
 
@@ -160,10 +152,14 @@ procedure TUnitParser.Execute;
 var i, x, s, len: Integer;
   str, ln: String;
 begin
+  FCurr.Clear;
+  FMyFunc.Clear;
+  FMYVars.Clear;
+  FMyRanges.Clear;
   i:=0;
   while i<FText.Count do
   begin
-      ln:=trim(FText[i]);
+    ln:=trim(FText[i]);
     if AnsiStartsText('func', ln) then
     begin
       len:=0;
@@ -184,7 +180,8 @@ begin
       ParseRange(i, 'endfunc');
     end
     else
-      ParseLine(ln, FVars);
+      ParseLine(ln, FMyVars);
+    inc(i);
   end;
   FWait:=True;
   Application.QueueAsyncCall(@UpdateTheShit, 0);

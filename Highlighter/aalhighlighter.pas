@@ -52,17 +52,12 @@ type
     destructor Destroy; override;
   published
     property StringAttribute: TSynHighlighterAttributes read FStrAttr write SetStrAttr;
-    property IdentifierAttribute: TSynHighlighterAttributes
-      read FIdentifierAttr write SetIdentAttr;
-    property CommentAttribute: TSynHighlighterAttributes
-      read FCommentAttr write SetComAttr;
+    property IdentifierAttribute: TSynHighlighterAttributes read FIdentifierAttr write SetIdentAttr;
+    property CommentAttribute: TSynHighlighterAttributes read FCommentAttr write SetComAttr;
     property KeywordAttribute: TSynHighlighterAttributes read FKeyAttr write SetKeyAttr;
-    property FunctionAttribute: TSynHighlighterAttributes
-      read FFunctionAttr write SetFuncAttr;
-    property NumberAttribute: TSynHighlighterAttributes
-      read FNumberAttr write SetNumAttr;
-    property SpaceAttribute: TSynHighlighterAttributes
-      read FSpaceAttr write SetSpaceAttr;
+    property FunctionAttribute: TSynHighlighterAttributes read FFunctionAttr write SetFuncAttr;
+    property NumberAttribute: TSynHighlighterAttributes read FNumberAttr write SetNumAttr;
+    property SpaceAttribute: TSynHighlighterAttributes read FSpaceAttr write SetSpaceAttr;
     property TextAttribute: TSynHighlighterAttributes read FTextAttr write SetTextAttr;
     property VariableAttribute: TSynHighlighterAttributes read FVarAttr write SetVarAttr;
   end;
@@ -122,8 +117,8 @@ procedure TAALSynHighlight.CheckHash;
     t: string;
   begin
     {$IfDef CaseInsensitive}
-    t := LowerCase(FToken);
-    aKey := LowerCase(aKey);
+      t := LowerCase(FToken);
+      aKey := LowerCase(aKey);
     {$Else}
       t := FToken;
     {$EndIf}
@@ -506,7 +501,7 @@ begin
     FTokenHash := HashToken(@FLineText[FTokenEnd], FTokLen);
     Inc(FTokenEnd, FTokLen);
     FToken := copy(FLineText, FTokenPos, FTokLen);
-    if if (FTokenEnd <= l) and (FLineText[FTokenEnd] = '(') then
+    if FLineText[FTokenEnd] = '(' then
       FTok := tkFunction
     else
       FTok := tkUndefined;

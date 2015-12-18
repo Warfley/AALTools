@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
-  Dialogs, Graphics;
+  Dialogs, Graphics, strutils;
 
 type
 
@@ -92,6 +92,7 @@ begin
     'Funcs.lst');
   FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
     'Keywords.lst');
+  UpdateTimerTimer(nil);
 end;
 
 procedure TEditorFrame.CompletionExecute(Sender: TObject);
@@ -229,9 +230,103 @@ end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
   Shift: TShiftState);
+
+  function isEnd(s, endTok: string): boolean;
+  var
+    l, l2: integer;
+  begin
+    s := Trim(s);
+    l := Length(endTok);
+    l2 := Length(s);
+    Result := False;
+    if l2 < l then
+    begin
+      Exit;
+    end
+    else
+    if (l2 > l) and (AnsiStartsText(endTok, s) and (s[l + 1] in [#0..#32])) then
+    begin
+      Result := True;
+      Exit;
+    end
+    else
+    if LowerCase(s) = endTok then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  function GotClosed(i: integer; sTok, eTok: string): boolean;
+  var
+    counter, c: integer;
+  begin
+    while (i>=0) do
+    if isEnd(CodeEditor.Lines[i], 'func') then
+    begin
+      inc(i);
+      Break;
+    end
+    else dec(i);
+    c := CodeEditor.Lines.Count;
+    counter := 0;
+    while (i < c) and (not (isEnd(LowerCase(CodeEditor.Lines[i]), 'endfunc'))) and
+      (not (isEnd(LowerCase(CodeEditor.Lines[i]), 'func'))) do
+    begin
+      if isEnd(LowerCase(CodeEditor.Lines[i]), sTok) then
+        Inc(counter)
+      else if isEnd(LowerCase(CodeEditor.Lines[i]), eTok) then
+        Dec(counter);
+      Inc(i);
+    end;
+    Result := counter <= 0;
+  end;
+
+var
+  ln, pref: string;
+  i, x, l: integer;
+  b: boolean;
 begin
   if Key = 13 then
+  begin
+    ln := LowerCase(CodeEditor.Lines[CodeEditor.BlockBegin.y-2]);
+    i := 1;
+    l:=Length(ln);
+    while (i <= l) and (ln[i] in [#0..#32]) do
+      Inc(i);
+    pref := Copy(ln, 1, i - 1);
+    i := CodeEditor.BlockBegin.y-2;
+    if isEnd(ln, 'while') then
+    begin
+      if not GotClosed(i, 'while', 'wend') then
+        CodeEditor.Lines.Insert(i + 2, pref + 'WEnd');
+    end
+    else if isEnd(ln, 'for') then
+    begin
+      if not GotClosed(i, 'for', 'next') then
+        CodeEditor.Lines.Insert(i + 2, pref + 'Next');
+    end
+    else if isEnd(ln, 'if') then
+    begin
+      if not GotClosed(i, 'if', 'endif') then
+        CodeEditor.Lines.Insert(i + 2, pref + 'EndIf');
+    end
+    else if isEnd(ln, 'func') then
+    begin
+      b := True;
+      for x := i + 1 to CodeEditor.Lines.Count - 1 do
+        if isEnd(CodeEditor.Lines[x], 'endfunc') then
+          break
+        else if isEnd(CodeEditor.Lines[x], 'func') then
+        begin
+          b := False;
+          break;
+        end;
+      if b then
+        CodeEditor.Lines.Insert(i + 2, pref + 'EndFunc');
+    end;
     UpdateTimerTimer(nil);
+  end;
 end;
 
 procedure TEditorFrame.SetFunc(l: TStringList);
@@ -250,8 +345,6 @@ destructor TEditorFrame.Destroy;
 var
   i: integer;
 begin
-  if not Parser.Finished then
-    Parser.Suspend;
   Parser.Free;
   for i := 0 to FDefRanges.Count - 1 do
     FDefRanges.Items[i].Free;
@@ -259,7 +352,7 @@ begin
   FFunctions.Free;
   FVars.Free;
   FStdFunc.Clear;
-  CodeEditor.Highlighter:=nil;
+  CodeEditor.Highlighter := nil;
   Highlight.Free;
   inherited;
 end;

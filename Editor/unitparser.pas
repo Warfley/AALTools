@@ -5,7 +5,7 @@ unit UnitParser;
 interface
 
 uses
-  Classes, SysUtils, contnrs, AALTypes, strutils, Forms;
+  Classes, SysUtils, contnrs, AALTypes, strutils, Forms, Dialogs;
 
 type
   TUnitParser = class(TThread)
@@ -18,7 +18,7 @@ type
     FMyRanges: TObjectList;
     FMYVars: TStringList;
     FCurr: TStringList;
-    FWait: Boolean;
+    FWait: boolean;
     procedure UpdateTheShit(Data: IntPtr);
     procedure SetText(s: string);
     procedure ParseLine(ln: string; vars: TStringList);
@@ -35,6 +35,33 @@ type
   end;
 
 implementation
+
+
+function isEnd(s, endTok: string): boolean;
+var
+  l, l2: integer;
+begin
+  s := Trim(s);
+  l := Length(endTok);
+  l2 := Length(s);
+  Result := False;
+  if l2 < l then
+  begin
+    Exit;
+  end
+  else
+  if (l2 > l) and (AnsiStartsText(endTok, s) and (s[l + 1] in [#0..#32])) then
+  begin
+    Result := True;
+    Exit;
+  end
+  else
+  if LowerCase(s) = endTok then
+  begin
+    Result := True;
+    Exit;
+  end;
+end;
 
 procedure TUnitParser.SetText(s: string);
 begin
@@ -63,42 +90,27 @@ begin
 end;
 
 procedure TUnitParser.ParseRange(var i: integer; endTok: string);
-
-  function isEnd(s: string): boolean;
-  begin
-    s := Trim(s);
-    Result := False;
-    if Length(s) < Length(endTok) then
-    begin
-      Exit;
-    end
-    else
-    if (Length(s) > Length(endTok)) and (AnsiStartsText(endTok, s) and
-      (s[Length(endTok) + 1] in [#0..#32])) then
-    begin
-      Result := True;
-      Exit;
-    end
-    else
-    if s = LowerCase(endTok) then
-    begin
-      Result := True;
-      Exit;
-    end;
-
-  end;
-
 var
   x, n: integer;
   ln: string;
   curr: TDefRange;
 begin
   curr := TDefRange.Create;
-  ln:=FText[i];
+  ln := FText[i];
   curr.StartLine := i;
-  while (i < FText.Count) and (not isEnd(LowerCase(ln))) do
+  ParseLine(ln, curr.Vars);
+  inc(i);
+  ln := FText[i];
+  while (i < FText.Count) and (not isEnd(LowerCase(ln), endTok)) do
   begin
-    ParseLine(ln, curr.Vars);
+    if isEnd(ln, 'if') then
+      ParseRange(i, 'endif')
+    else if isEnd(ln, 'while') then
+      ParseRange(i, 'wend')
+    else if isEnd(ln, 'for') then
+      ParseRange(i, 'next')
+    else
+      ParseLine(ln, curr.Vars);
     ln := FText[i];
     Inc(i);
   end;
@@ -110,80 +122,92 @@ begin
 end;
 
 procedure TUnitParser.ParseLine(ln: string; vars: TStringList);
-function StringsContain(s: TStrings; str: String): Boolean;
-var i: Integer;
+
+  function StringsContain(s: TStrings; str: string): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to s.Count - 1 do
+      if LowerCase(str) = LowerCase(s[i]) then
+      begin
+        Result := True;
+        Break;
+      end;
+  end;
+
+var
+  i, s, len: integer;
+  str: string;
 begin
-  Result:=False;
-  for i:=0 to s.Count-1 do
-    if LowerCase(str) = LowerCase(s[i]) then
-    begin
-      Result:=True;
-      Break;
-    end;
-end;
-var i, s, len: Integer;
-  str:String;
-begin
-  i:=1;
-  While i<=Length(ln) do
+  i := 1;
+  while i <= Length(ln) do
   begin
     if ln[i] = '$' then
     begin
-      s:=i;
-      len:=1;
-      inc(i);
-      while (i<=Length(ln)) And (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+      s := i;
+      len := 1;
+      Inc(i);
+      while (i <= Length(ln)) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
       begin
-        inc(i);
-        inc(len);
+        Inc(i);
+        Inc(len);
       end;
-      str:=Copy(ln, s, len);
+      str := Copy(ln, s, len);
+      if len>1 then
       if not StringsContain(FCurr, str) then
       begin
         FCurr.Add(str);
         vars.Add(str);
       end;
     end;
-    inc(i);
+    Inc(i);
   end;
 end;
 
 procedure TUnitParser.Execute;
-var i, x, s, len: Integer;
-  str, ln: String;
+var
+  i, x, s, len: integer;
+  str, ln: string;
 begin
   FCurr.Clear;
   FMyFunc.Clear;
   FMYVars.Clear;
   FMyRanges.Clear;
-  i:=0;
-  while i<FText.Count do
+  i := 0;
+  while i < FText.Count do
   begin
-    ln:=trim(FText[i]);
-    if AnsiStartsText('func', ln) then
+    ln := trim(FText[i]);
+    if isEnd(ln, 'func') then
     begin
-      len:=0;
-      s:=5;
-      for x:=5 to Length(ln) do
+      len := 0;
+      s := 5;
+      for x := 5 to Length(ln) do
         if ln[x] in [#0..#32] then
-          inc(s)
+          Inc(s)
         else
           Break;
-      for x:=s to Length(ln) do
+      for x := s to Length(ln) do
       begin
-        inc(len);
-        if ln[x] =')' then
+        Inc(len);
+        if ln[x] = ')' then
           Break;
       end;
       str := Copy(ln, s, len);
       FMyFunc.Add(str);
       ParseRange(i, 'endfunc');
     end
+    else if isEnd(ln, 'if') then
+      ParseRange(i, 'endif')
+    else if isEnd(ln, 'while') then
+      ParseRange(i, 'wend')
+    else if isEnd(ln, 'for') then
+      ParseRange(i, 'next')
     else
       ParseLine(ln, FMyVars);
-    inc(i);
+    Inc(i);
   end;
-  FWait:=True;
+  FWait := True;
   Application.QueueAsyncCall(@UpdateTheShit, 0);
   while FWait do
     Sleep(20);
@@ -202,7 +226,7 @@ begin
   FRanges.Clear;
   for i := 0 to FMyRanges.Count - 1 do
     FRanges.Add(FMyRanges[i]);
-  FWait:=False;
+  FWait := False;
 end;
 
 end.

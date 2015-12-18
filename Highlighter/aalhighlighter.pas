@@ -461,6 +461,13 @@ begin
     FToken := copy(FLineText, FTokenPos, FTokLen);
     FTok := tkSpace;
   end
+  else if FLineText[FTokenEnd] = ';' then
+  begin
+    FTokenEnd:=l+1;
+    FTokLen:=l-FTokenPos+1;
+    FToken:=Copy(FLineText, FTokenPos, FTokLen);
+    FTok:=tkComment;
+  end
   else if not (FLineText[FTokenEnd] in ['_', '0'..'9', 'a'..'z',
     'A'..'Z', '$', '"']) then
   begin

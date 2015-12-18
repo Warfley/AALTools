@@ -1,0 +1,102 @@
+object Form1: TForm1
+  Left = 356
+  Height = 658
+  Top = 294
+  Width = 1143
+  Caption = 'AAL Editor'
+  ClientHeight = 628
+  ClientWidth = 1143
+  Menu = MainMenu1
+  LCLVersion = '1.7'
+  inline EditorFrame1: TEditorFrame
+    Height = 628
+    Width = 1143
+    Align = alClient
+    ClientHeight = 628
+    ClientWidth = 1143
+    inherited CodeEditor: TSynEdit
+      Height = 628
+      Width = 1143
+    end
+  end
+  object MainMenu1: TMainMenu
+    left = 206
+    top = 142
+    object MenuItem1: TMenuItem
+      Caption = 'Datei'
+      object MenuItem2: TMenuItem
+        Caption = 'Öffnen'
+        ShortCut = 16463
+        OnClick = MenuItem2Click
+      end
+      object MenuItem3: TMenuItem
+        Caption = 'Speichern'
+        ShortCut = 16467
+        OnClick = MenuItem3Click
+      end
+      object MenuItem4: TMenuItem
+        Caption = 'Speichern Unter'
+        ShortCut = 24659
+        OnClick = MenuItem4Click
+      end
+    end
+    object MenuItem5: TMenuItem
+      Caption = 'Einstellungen'
+      object MenuItem6: TMenuItem
+        Caption = 'Schrift'
+        OnClick = MenuItem6Click
+      end
+      object MenuItem7: TMenuItem
+        Caption = 'Hintergrund'
+        OnClick = MenuItem7Click
+      end
+      object MenuItem8: TMenuItem
+        Caption = 'Seitenleiste'
+        OnClick = MenuItem8Click
+      end
+    end
+  end
+  object OpenDialog1: TOpenDialog
+    Filter = 'AAL Source|*.aal1'
+    left = 984
+    top = 128
+  end
+  object SaveDialog1: TSaveDialog
+    Filter = 'AAL Source|*.aal1'
+    left = 981
+    top = 256
+  end
+  object FontDialog1: TFontDialog
+    MinFontSize = 0
+    MaxFontSize = 0
+    left = 592
+    top = 142
+  end
+  object ColorDialog1: TColorDialog
+    Color = clBlack
+    CustomColors.Strings = (
+      'ColorA=000000'
+      'ColorB=000080'
+      'ColorC=008000'
+      'ColorD=008080'
+      'ColorE=800000'
+      'ColorF=800080'
+      'ColorG=808000'
+      'ColorH=808080'
+      'ColorI=C0C0C0'
+      'ColorJ=0000FF'
+      'ColorK=00FF00'
+      'ColorL=00FFFF'
+      'ColorM=FF0000'
+      'ColorN=FF00FF'
+      'ColorO=FFFF00'
+      'ColorP=FFFFFF'
+      'ColorQ=C0DCC0'
+      'ColorR=F0CAA6'
+      'ColorS=F0FBFF'
+      'ColorT=A4A0A0'
+    )
+    left = 728
+    top = 162
+  end
+end

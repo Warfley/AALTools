@@ -8,8 +8,6 @@ object EditorFrame: TEditorFrame
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
-  DesignLeft = 548
-  DesignTop = 127
   inline CodeEditor: TSynEdit
     Left = 0
     Height = 422
@@ -448,6 +446,7 @@ object EditorFrame: TEditorFrame
     MouseActions = <>
     MouseTextActions = <>
     MouseSelActions = <>
+    Options = [eoAutoIndent, eoBracketHighlight, eoGroupUndo, eoSmartTabs, eoTabsToSpaces, eoTrimTrailingSpaces]
     VisibleSpecialChars = [vscSpace, vscTabAtLast]
     RightEdge = 1024
     SelectedColor.BackPriority = 50

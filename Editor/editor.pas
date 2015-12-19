@@ -102,7 +102,7 @@ end;
 constructor TEditorFrame.Create(TheOwner: TComponent);
 begin
   inherited;
-  CodeEditor.Text := ' ';
+  CodeEditor.Lines.Add('');
   FOnChange := nil;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);

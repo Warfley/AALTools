@@ -15,7 +15,8 @@ type
   TAALSynHighlight = class(TSynCustomHighlighter)
   private
     FStrAttr, FCommentAttr, FIdentifierAttr, FKeyAttr, FFunctionAttr,
-    FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr: TSynHighlighterAttributes;
+    FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr, FSelectAttr: TSynHighlighterAttributes;
+    FSelectText: String;
     procedure SetStrAttr(v: TSynHighlighterAttributes);
     procedure SetComAttr(v: TSynHighlighterAttributes);
     procedure SetIdentAttr(v: TSynHighlighterAttributes);
@@ -25,6 +26,7 @@ type
     procedure SetSpaceAttr(v: TSynHighlighterAttributes);
     procedure SetTextAttr(v: TSynHighlighterAttributes);
     procedure SetVarAttr(v: TSynHighlighterAttributes);
+    procedure SetSelectAttr(v: TSynHighlighterAttributes);
   protected
     FTokenPos, FTokenEnd, FLineNum: integer;
     FToken: string;
@@ -60,6 +62,8 @@ type
     property SpaceAttribute: TSynHighlighterAttributes read FSpaceAttr write SetSpaceAttr;
     property TextAttribute: TSynHighlighterAttributes read FTextAttr write SetTextAttr;
     property VariableAttribute: TSynHighlighterAttributes read FVarAttr write SetVarAttr;
+    property SelectAttribute: TSynHighlighterAttributes read FSelectAttr write SetSelectAttr;
+    property SelectTextAttribute: String read FSelectText write FSelectText;
   end;
 
 implementation
@@ -107,6 +111,11 @@ end;
 procedure TAALSynHighlight.SetVarAttr(v: TSynHighlighterAttributes);
 begin
   FVarAttr.Assign(v);
+end;
+
+procedure TAALSynHighlight.SetSelectAttr(v: TSynHighlighterAttributes);
+begin
+  FSelectAttr.Assign(v);
 end;
 
 procedure TAALSynHighlight.CheckHash;
@@ -405,6 +414,8 @@ begin
   FSpaceAttr := TSynHighlighterAttributes.Create('Space', 'Space');
   FTextAttr := TSynHighlighterAttributes.Create('Text', 'Text');
   FVarAttr := TSynHighlighterAttributes.Create('Variable', 'Variable');
+  FSelectAttr := TSynHighlighterAttributes.Create('Selected', 'Selected');
+  FSelectText:= 'penis';
   for i := 0 to 255 do
     FHashList[i] := TList.Create;
 end;
@@ -527,10 +538,43 @@ begin
 end;
 
 function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
+
+  function KeyComp(aKey: string): boolean;
+  var
+    i: integer;
+    t: string;
+  begin
+    {$IfDef CaseInsensitive}
+      t := LowerCase(FToken);
+      aKey := LowerCase(aKey);
+    {$Else}
+      t := FToken;
+    {$EndIf}
+    if Length(aKey) <> FTokLen then
+    begin
+      Result := False;
+      Exit;
+    end;
+    Result := True;
+    for i := 1 to FTokLen do
+      if t[i] <> aKey[i] then
+      begin
+        Result := False;
+        Break;
+      end;
+  end;
+
 begin
   if FTok = tkUndefined then
     CheckHash;
-  Result := GetAttr(FTok);
+  if (Length(FSelectText) < 0) AND (KeyComp(FSelectText)) then
+  begin
+    Result := FSelectAttr;
+    Result.Assign(GetAttr(FTok));
+    Result.Background:= clSilver;
+  end
+  else
+    Result := GetAttr(FTok);
 end;
 
 function TAALSynHighlight.GetToken: string;
@@ -586,6 +630,7 @@ begin
   FSpaceAttr.Free;
   FTextAttr.Free;
   FVarAttr.Free;
+  FSelectAttr.Free;
   for i := 0 to 255 do
     FreeLst(FHashList[i]);
   inherited;

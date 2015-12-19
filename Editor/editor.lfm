@@ -8,6 +8,8 @@ object EditorFrame: TEditorFrame
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
+  DesignLeft = 344
+  DesignTop = 162
   inline CodeEditor: TSynEdit
     Left = 0
     Height = 422
@@ -21,7 +23,6 @@ object EditorFrame: TEditorFrame
     ParentColor = False
     ParentFont = False
     TabOrder = 0
-    OnClick = CodeEditorClick
     OnKeyUp = CodeEditorKeyUp
     Gutter.Width = 67
     Gutter.MouseActions = <>
@@ -528,5 +529,11 @@ object EditorFrame: TEditorFrame
     OnTimer = SelectHighlightTimerTimer
     left = 376
     top = 150
+  end
+  object CheckSelTimer: TTimer
+    Interval = 200
+    OnTimer = CheckSelTimerTimer
+    left = 710
+    top = 229
   end
 end

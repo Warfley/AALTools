@@ -16,7 +16,7 @@ type
   private
     FStrAttr, FCommentAttr, FIdentifierAttr, FKeyAttr, FFunctionAttr,
     FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr, FSelectAttr: TSynHighlighterAttributes;
-    FSelectText: String;
+    FSelectText: string;
     procedure SetStrAttr(v: TSynHighlighterAttributes);
     procedure SetComAttr(v: TSynHighlighterAttributes);
     procedure SetIdentAttr(v: TSynHighlighterAttributes);
@@ -54,16 +54,22 @@ type
     destructor Destroy; override;
   published
     property StringAttribute: TSynHighlighterAttributes read FStrAttr write SetStrAttr;
-    property IdentifierAttribute: TSynHighlighterAttributes read FIdentifierAttr write SetIdentAttr;
-    property CommentAttribute: TSynHighlighterAttributes read FCommentAttr write SetComAttr;
+    property IdentifierAttribute: TSynHighlighterAttributes
+      read FIdentifierAttr write SetIdentAttr;
+    property CommentAttribute: TSynHighlighterAttributes
+      read FCommentAttr write SetComAttr;
     property KeywordAttribute: TSynHighlighterAttributes read FKeyAttr write SetKeyAttr;
-    property FunctionAttribute: TSynHighlighterAttributes read FFunctionAttr write SetFuncAttr;
-    property NumberAttribute: TSynHighlighterAttributes read FNumberAttr write SetNumAttr;
-    property SpaceAttribute: TSynHighlighterAttributes read FSpaceAttr write SetSpaceAttr;
+    property FunctionAttribute: TSynHighlighterAttributes
+      read FFunctionAttr write SetFuncAttr;
+    property NumberAttribute: TSynHighlighterAttributes
+      read FNumberAttr write SetNumAttr;
+    property SpaceAttribute: TSynHighlighterAttributes
+      read FSpaceAttr write SetSpaceAttr;
     property TextAttribute: TSynHighlighterAttributes read FTextAttr write SetTextAttr;
     property VariableAttribute: TSynHighlighterAttributes read FVarAttr write SetVarAttr;
-    property SelectAttribute: TSynHighlighterAttributes read FSelectAttr write SetSelectAttr;
-    property SelectedText: String read FSelectText write FSelectText;
+    property SelectAttribute: TSynHighlighterAttributes
+      read FSelectAttr write SetSelectAttr;
+    property SelectedText: string read FSelectText write FSelectText;
   end;
 
 implementation
@@ -126,8 +132,8 @@ procedure TAALSynHighlight.CheckHash;
     t: string;
   begin
     {$IfDef CaseInsensitive}
-      t := LowerCase(FToken);
-      aKey := LowerCase(aKey);
+    t := LowerCase(FToken);
+    aKey := LowerCase(aKey);
     {$Else}
       t := FToken;
     {$EndIf}
@@ -415,7 +421,7 @@ begin
   FTextAttr := TSynHighlighterAttributes.Create('Text', 'Text');
   FVarAttr := TSynHighlighterAttributes.Create('Variable', 'Variable');
   FSelectAttr := TSynHighlighterAttributes.Create('Selected', 'Selected');
-  FSelectText:= '';
+  FSelectText := '';
   for i := 0 to 255 do
     FHashList[i] := TList.Create;
 end;
@@ -474,10 +480,10 @@ begin
   end
   else if FLineText[FTokenEnd] = ';' then
   begin
-    FTokenEnd:=l+1;
-    FTokLen:=l-FTokenPos+1;
-    FToken:=Copy(FLineText, FTokenPos, FTokLen);
-    FTok:=tkComment;
+    FTokenEnd := l + 1;
+    FTokLen := l - FTokenPos + 1;
+    FToken := Copy(FLineText, FTokenPos, FTokLen);
+    FTok := tkComment;
   end
   else if not (FLineText[FTokenEnd] in ['_', '0'..'9', 'a'..'z',
     'A'..'Z', '$', '"']) then
@@ -545,8 +551,8 @@ function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
     t: string;
   begin
     {$IfDef CaseInsensitive}
-      t := LowerCase(FToken);
-      aKey := LowerCase(aKey);
+    t := LowerCase(FToken);
+    aKey := LowerCase(aKey);
     {$Else}
       t := FToken;
     {$EndIf}
@@ -567,13 +573,13 @@ function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
 begin
   if FTok = tkUndefined then
     CheckHash;
-  if (Length(FSelectText) > 0) AND (KeyComp(FSelectText)) then
+  if (Length(FSelectText) > 0) and (KeyComp(FSelectText)) then
   begin
     Result := FSelectAttr;
     Result.Assign(GetAttr(FTok));
-    Result.Background:= $00DEDEDE;
-    Result.FrameColor:=clSilver;
-    Result.FrameEdges:=sfeAround;
+    Result.Background := $00DEDEDE;
+    Result.FrameColor := clSilver;
+    Result.FrameEdges := sfeAround;
   end
   else
     Result := GetAttr(FTok);

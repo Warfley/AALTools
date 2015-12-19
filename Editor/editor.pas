@@ -17,8 +17,9 @@ type
     CodeEditor: TSynEdit;
     Completion: TSynCompletion;
     SelectHighlightTimer: TTimer;
+    CheckSelTimer: TTimer;
+    procedure CheckSelTimerTimer(Sender: TObject);
     procedure CodeEditorChange(Sender: TObject);
-    procedure CodeEditorClick(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure CompletionCodeCompletion(var Value: string; SourceValue: string;
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
@@ -27,7 +28,7 @@ type
     procedure SelectHighlightTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
-    currWord :String;
+    currWord: string;
     FOnChange: TNotifyEvent;
     Highlight: TAALSynHighlight;
     FFunctions: TStringList;
@@ -37,7 +38,7 @@ type
     FKeyWords: TStringList;
     FDefRanges: TObjectList;
     Parser: TUnitParser;
-    function GetCurrWord: String;
+    function GetCurrWord: string;
     function GetFont: TFont;
     procedure SetFont(f: TFont);
     procedure SetRanges(l: TObjectList);
@@ -230,8 +231,9 @@ end;
 
 procedure TEditorFrame.SelectHighlightTimerTimer(Sender: TObject);
 begin
-     SelectHighlightTimer.Enabled := False;
-     Highlight.SelectedText := currWord;
+  Highlight.SelectedText := currWord;
+  SelectHighlightTimer.Enabled := False;
+  CodeEditor.Invalidate;
 end;
 
 procedure TEditorFrame.UpdateTimerTimer(Sender: TObject);
@@ -346,7 +348,7 @@ begin
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'WEnd');
       end;
-        Application.QueueAsyncCall(@MoveHorz, 2);
+      Application.QueueAsyncCall(@MoveHorz, 2);
     end
     else if isEnd(ln, 'for') then
     begin
@@ -354,7 +356,7 @@ begin
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'Next');
       end;
-        Application.QueueAsyncCall(@MoveHorz, 2);
+      Application.QueueAsyncCall(@MoveHorz, 2);
     end
     else if isEnd(ln, 'if') then
     begin
@@ -362,7 +364,7 @@ begin
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'EndIf');
       end;
-        Application.QueueAsyncCall(@MoveHorz, 2);
+      Application.QueueAsyncCall(@MoveHorz, 2);
     end
     else if isEnd(ln, 'func') then
     begin
@@ -379,7 +381,7 @@ begin
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'EndFunc');
       end;
-        Application.QueueAsyncCall(@MoveHorz, 2);
+      Application.QueueAsyncCall(@MoveHorz, 2);
     end;
     UpdateTimerTimer(nil);
   end;
@@ -391,61 +393,65 @@ begin
     FOnChange(Self);
 end;
 
-function TEditorFrame.GetCurrWord(): String;
+procedure TEditorFrame.CheckSelTimerTimer(Sender: TObject);
+var
+  tmp: string;
+begin
+  tmp := lowercase(GetCurrWord());
+  if tmp <> currWord then
+  begin
+    currWord := tmp;
+    Highlight.SelectedText := '';
+    CodeEditor.Invalidate;
+    //Reset
+    SelectHighlightTimer.Enabled := False;
+    SelectHighlightTimer.Enabled := True;
+  end;
+end;
+
+function TEditorFrame.GetCurrWord(): string;
 var
   s: integer;
   i: integer;
   len: integer;
   slen: integer;
-  ln: String;
+  ln: string;
 begin
   Result := '';
   ln := CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1];
+  if ln = '' then
+    Exit;
   slen := Length(ln);
   i := CodeEditor.LogicalCaretXY.x - 1;
   len := 0;
 
   if i < 1 then
     i := 1;
+  if (i < slen) and (ln[i + 1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$']) and
+    ((i > 0) or (ln[i] in [#0..#32])) then
+    Inc(i);
 
-  while (i > 0) AND (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
-   dec(i);
+  while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+    Dec(i);
 
-  if (i>0) and (ln = '$') then
+  if (i > 0) and (ln[i] = '$') then
   begin
-    inc(len);
-    s:=i;
-    inc(i);
+    Inc(len);
+    s := i;
+    Inc(i);
   end
   else
   begin
-    inc(i);
-    s:=i;
+    Inc(i);
+    s := i;
   end;
 
-  while (i <= slen) AND (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+  while (i <= slen) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
   begin
-    inc(i);
-    inc(len);
+    Inc(i);
+    Inc(len);
   end;
-  Result:=Copy(ln, s, len);
-
-
-end;
-
-procedure TEditorFrame.CodeEditorClick(Sender: TObject);
-var
-  tmp: String;
-begin
-  tmp := GetCurrWord();
-  if tmp <> currWord then
-  begin
-    currWord := GetCurrWord();
-    Highlight.SelectedText:= '';
-    //Reset
-    SelectHighlightTimer.Enabled := False;
-    SelectHighlightTimer.Enabled := True;
-  end;
+  Result := Copy(ln, s, len);
 
 end;
 

@@ -415,7 +415,7 @@ begin
   FTextAttr := TSynHighlighterAttributes.Create('Text', 'Text');
   FVarAttr := TSynHighlighterAttributes.Create('Variable', 'Variable');
   FSelectAttr := TSynHighlighterAttributes.Create('Selected', 'Selected');
-  FSelectText:= 'penis';
+  FSelectText:= '';
   for i := 0 to 255 do
     FHashList[i] := TList.Create;
 end;
@@ -567,11 +567,13 @@ function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
 begin
   if FTok = tkUndefined then
     CheckHash;
-  if (Length(FSelectText) < 0) AND (KeyComp(FSelectText)) then
+  if (Length(FSelectText) > 0) AND (KeyComp(FSelectText)) then
   begin
     Result := FSelectAttr;
     Result.Assign(GetAttr(FTok));
-    Result.Background:= clSilver;
+    Result.Background:= $00DEDEDE;
+    Result.FrameColor:=clSilver;
+    Result.FrameEdges:=sfeAround;
   end
   else
     Result := GetAttr(FTok);

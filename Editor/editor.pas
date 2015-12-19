@@ -362,7 +362,8 @@ begin
   FDefRanges.Free;
   FFunctions.Free;
   FVars.Free;
-  FStdFunc.Clear;
+  FStdFunc.Free;
+  FKeyWords.Free;
   CodeEditor.Highlighter := nil;
   Highlight.Free;
   inherited;

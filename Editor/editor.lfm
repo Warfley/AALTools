@@ -2,19 +2,19 @@ object EditorFrame: TEditorFrame
   Left = 0
   Height = 422
   Top = 0
-  Width = 1001
+  Width = 1269
   ClientHeight = 422
-  ClientWidth = 1001
+  ClientWidth = 1269
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
-  DesignLeft = 187
+  DesignLeft = 548
   DesignTop = 127
   inline CodeEditor: TSynEdit
     Left = 0
     Height = 422
     Top = 0
-    Width = 1001
+    Width = 1269
     Align = alClient
     Font.Height = -22
     Font.Name = 'Courier New'
@@ -208,10 +208,6 @@ object EditorFrame: TEditorFrame
       item
         Command = ecLineBreak
         ShortCut = 16461
-      end    
-      item
-        Command = ecInsertLine
-        ShortCut = 16462
       end    
       item
         Command = ecDeleteWord
@@ -453,6 +449,7 @@ object EditorFrame: TEditorFrame
     MouseTextActions = <>
     MouseSelActions = <>
     VisibleSpecialChars = [vscSpace, vscTabAtLast]
+    RightEdge = 1024
     SelectedColor.BackPriority = 50
     SelectedColor.ForePriority = 50
     SelectedColor.FramePriority = 50

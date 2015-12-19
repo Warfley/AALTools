@@ -576,6 +576,16 @@ destructor TAALSynHighlight.Destroy;
 var
   i: integer;
 begin
+
+  FStrAttr.Free;
+  FCommentAttr.Free;
+  FIdentifierAttr.Free;
+  FKeyAttr.Free;
+  FFunctionAttr.Free;
+  FNumberAttr.Free;
+  FSpaceAttr.Free;
+  FTextAttr.Free;
+  FVarAttr.Free;
   for i := 0 to 255 do
     FreeLst(FHashList[i]);
   inherited;

@@ -13,7 +13,8 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
-    ColorDialog1: TColorDialog;
+    BGDLG: TColorDialog;
+    SiteBarDLG: TColorDialog;
     FontDialog1: TFontDialog;
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
@@ -104,14 +105,28 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 var
   i: integer;
+  tmp: TTabSheet;
 begin
   if (Paramcount > 0) then
   begin
     for i := 1 to Paramcount do
       if FileExists(ParamStr(i)) then
       begin
-        NewItemClick(nil);
-        (PageControl1.ActivePage.Components[0] as TEditorFrame).Load(ParamStr(i));
+        tmp := PageControl1.AddTabSheet;
+        tmp.Caption := 'Neu';
+        PageControl1.ActivePage := tmp;
+        tmp.Visible := True;
+        with TEditorFrame.Create(tmp) do
+        begin
+          Font := FontDialog1.Font;
+          CodeEditor.Color := BGDLG.Color;
+          CodeEditor.Gutter.Color := SiteBarDLG.Color;
+          Align := alClient;
+          Parent := tmp;
+          Visible := True;
+          OnChange := @PageChanged;
+          Load(ParamStr(i));
+        end;
       end;
   end
   else
@@ -128,6 +143,9 @@ begin
   tmp.Visible := True;
   with TEditorFrame.Create(tmp) do
   begin
+    Font := FontDialog1.Font;
+    CodeEditor.Color := BGDLG.Color;
+    CodeEditor.Gutter.Color := SiteBarDLG.Color;
     Align := alClient;
     Parent := tmp;
     Visible := True;
@@ -138,7 +156,8 @@ end;
 
 procedure TForm1.OpenItemClick(Sender: TObject);
 var
-  i: integer;
+  i, x: integer;
+  b: Boolean;
 begin
   if OpenDialog1.Execute then
   begin
@@ -146,9 +165,21 @@ begin
     begin
       for i := 0 to OpenDialog1.Files.Count - 1 do
       begin
-        NewItemClick(nil);
-        (PageControl1.ActivePage.Components[0] as TEditorFrame).Load(OpenDialog1.Files[i]);
-        PageControl1.ActivePage.Caption := ExtractFileNameWithoutExt(OpenDialog1.Files[i]);
+        b:=True;
+        for x:=0 to PageControl1.PageCount-1 do
+          if ((PageControl1.Pages[x].Components[0] as TEditorFrame).FileName='')
+          And (Trim((PageControl1.Pages[x].Components[0] as TEditorFrame).CodeEditor.Text)='') then
+          begin
+            PageControl1.PageIndex:=x;
+            b:=False;
+            Break;
+          end;
+        if b then
+          NewItemClick(nil);
+        (PageControl1.ActivePage.Components[0] as TEditorFrame).Load(
+          OpenDialog1.Files[i]);
+        PageControl1.ActivePage.Caption :=
+          ExtractFileName(OpenDialog1.Files[i]);
       end;
     end;
   end;
@@ -178,7 +209,7 @@ begin
     (PageControl1.ActivePage.Components[0] as TEditorFrame).Save();
   if (PageControl1.ActivePage.Components[0] as TEditorFrame).FileName <> '' then
     PageControl1.ActivePage.Caption :=
-      (PageControl1.ActivePage.Components[0] as TEditorFrame).FileName;
+      ExtractFileName((PageControl1.ActivePage.Components[0] as TEditorFrame).FileName);
 end;
 
 procedure TForm1.SaveAsItemClick(Sender: TObject);
@@ -189,7 +220,7 @@ begin
       DeleteFile(SaveDialog1.FileName);
     (PageControl1.ActivePage.Components[0] as TEditorFrame).Save(SaveDialog1.FileName);
     PageControl1.ActivePage.Caption :=
-      (PageControl1.ActivePage.Components[0] as TEditorFrame).FileName;
+      ExtractFileName((PageControl1.ActivePage.Components[0] as TEditorFrame).FileName);
   end;
 end;
 
@@ -202,16 +233,16 @@ end;
 
 procedure TForm1.MenuItem7Click(Sender: TObject);
 begin
-  //ColorDialog1.Color := EditorFrame1.CodeEditor.Color;
-  if ColorDialog1.Execute then;
-  //EditorFrame1.CodeEditor.Color := ColorDialog1.Color;
+  //BGDLG.Color := EditorFrame1.CodeEditor.Color;
+  if BGDLG.Execute then;
+  //EditorFrame1.CodeEditor.Color := BGDLG.Color;
 end;
 
 procedure TForm1.MenuItem8Click(Sender: TObject);
 begin
-  //ColorDialog1.Color := EditorFrame1.CodeEditor.Gutter.Color;
-  //if ColorDialog1.Execute then
-  //EditorFrame1.CodeEditor.Gutter.Color := ColorDialog1.Color;
+  //BGDLG.Color := EditorFrame1.CodeEditor.Gutter.Color;
+  //if BGDLG.Execute then
+  //EditorFrame1.CodeEditor.Gutter.Color := BGDLG.Color;
 end;
 
 end.

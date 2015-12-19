@@ -4,7 +4,7 @@ object Form1: TForm1
   Top = 137
   Width = 807
   Caption = 'AAL Editor'
-  ClientHeight = 461
+  ClientHeight = 451
   ClientWidth = 807
   Menu = MainMenu1
   OnClose = FormClose
@@ -12,10 +12,11 @@ object Form1: TForm1
   LCLVersion = '1.7'
   object PageControl1: TPageControl
     Left = 0
-    Height = 461
+    Height = 451
     Top = 0
     Width = 807
     Align = alClient
+    ParentFont = False
     TabOrder = 0
   end
   object MainMenu1: TMainMenu
@@ -97,13 +98,17 @@ object Form1: TForm1
     top = 256
   end
   object FontDialog1: TFontDialog
+    Font.Height = 22
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Quality = fqProof
     MinFontSize = 0
     MaxFontSize = 0
     left = 592
     top = 142
   end
-  object ColorDialog1: TColorDialog
-    Color = clBlack
+  object BGDLG: TColorDialog
+    Color = clWhite
     CustomColors.Strings = (
       'ColorA=000000'
       'ColorB=000080'
@@ -128,5 +133,32 @@ object Form1: TForm1
     )
     left = 624
     top = 88
+  end
+  object SiteBarDLG: TColorDialog
+    Color = clBtnFace
+    CustomColors.Strings = (
+      'ColorA=000000'
+      'ColorB=000080'
+      'ColorC=008000'
+      'ColorD=008080'
+      'ColorE=800000'
+      'ColorF=800080'
+      'ColorG=808000'
+      'ColorH=808080'
+      'ColorI=C0C0C0'
+      'ColorJ=0000FF'
+      'ColorK=00FF00'
+      'ColorL=00FFFF'
+      'ColorM=FF0000'
+      'ColorN=FF00FF'
+      'ColorO=FFFF00'
+      'ColorP=FFFFFF'
+      'ColorQ=C0DCC0'
+      'ColorR=F0CAA6'
+      'ColorS=F0FBFF'
+      'ColorT=A4A0A0'
+    )
+    left = 513
+    top = 271
   end
 end

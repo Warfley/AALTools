@@ -1,0 +1,28 @@
+Roadmap:
+
+Editor:
+-ToolTips
+-Code Jumps
+-Code Formatter
+-Find/Replace
+
+Code Explorer
+
+Compiler Interface
+
+-------------------------------
+
+
+TODO:
+Extend StringLists for more Information about Function and Vars
+-New List Class for each Type
+Extend Ranges with Information about the Range (Func, While, etc)
+-New Field on TDefRange
+Create Code Formatter
+Add Events to TUnitParser
+-OnFinished, OnVarFound, OnFuncFound
+Create Find and Replace Functions
+
+--------------------------------
+
+Combine All Components to a basic IDE

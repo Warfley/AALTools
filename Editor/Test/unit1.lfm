@@ -1,44 +1,71 @@
 object Form1: TForm1
-  Left = 111
-  Height = 658
-  Top = 32
-  Width = 1143
+  Left = 286
+  Height = 481
+  Top = 137
+  Width = 807
   Caption = 'AAL Editor'
-  ClientHeight = 0
-  ClientWidth = 0
+  ClientHeight = 461
+  ClientWidth = 807
   Menu = MainMenu1
+  OnClose = FormClose
   OnCreate = FormCreate
   LCLVersion = '1.7'
-  inline EditorFrame1: TEditorFrame
-    Height = 0
-    Width = 0
+  object PageControl1: TPageControl
+    Left = 0
+    Height = 461
+    Top = 0
+    Width = 807
     Align = alClient
-    ClientHeight = 0
-    ClientWidth = 0
-    inherited CodeEditor: TSynEdit
-      Height = 0
-      Width = 0
-    end
+    TabOrder = 0
   end
   object MainMenu1: TMainMenu
     left = 206
     top = 142
     object MenuItem1: TMenuItem
       Caption = 'Datei'
-      object MenuItem2: TMenuItem
+      object NewItem: TMenuItem
+        Caption = 'Neu'
+        ShortCut = 16462
+        OnClick = NewItemClick
+      end
+      object MenuItem11: TMenuItem
+        Caption = '-'
+      end
+      object OpenItem: TMenuItem
         Caption = 'Öffnen'
         ShortCut = 16463
-        OnClick = MenuItem2Click
+        OnClick = OpenItemClick
       end
-      object MenuItem3: TMenuItem
+      object SaveItem: TMenuItem
         Caption = 'Speichern'
         ShortCut = 16467
-        OnClick = MenuItem3Click
+        OnClick = SaveItemClick
       end
-      object MenuItem4: TMenuItem
-        Caption = 'Speichern Unter'
+      object SaveAsItem: TMenuItem
+        Caption = 'Speichern unter'
         ShortCut = 24659
-        OnClick = MenuItem4Click
+        OnClick = SaveAsItemClick
+      end
+      object MenuItem10: TMenuItem
+        Caption = '-'
+      end
+      object CloseFileItem: TMenuItem
+        Caption = 'Schließen'
+        ShortCut = 16471
+        OnClick = CloseFileItemClick
+      end
+      object CloseAllItem: TMenuItem
+        Caption = 'Alle Schließen'
+        ShortCut = 24663
+        OnClick = CloseAllItemClick
+      end
+      object MenuItem14: TMenuItem
+        Caption = '-'
+      end
+      object QuitItem: TMenuItem
+        Caption = 'Beenden'
+        ShortCut = 16465
+        OnClick = QuitItemClick
       end
     end
     object MenuItem5: TMenuItem
@@ -59,11 +86,13 @@ object Form1: TForm1
   end
   object OpenDialog1: TOpenDialog
     Filter = 'AAL Source|*.aal1'
+    Options = [ofAllowMultiSelect, ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
     left = 984
     top = 128
   end
   object SaveDialog1: TSaveDialog
     Filter = 'AAL Source|*.aal1'
+    Options = [ofExtensionDifferent, ofEnableSizing, ofViewDetail]
     left = 981
     top = 256
   end
@@ -97,7 +126,7 @@ object Form1: TForm1
       'ColorS=F0FBFF'
       'ColorT=A4A0A0'
     )
-    left = 728
-    top = 162
+    left = 624
+    top = 88
   end
 end

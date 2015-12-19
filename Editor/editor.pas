@@ -16,6 +16,7 @@ type
   TEditorFrame = class(TFrame)
     CodeEditor: TSynEdit;
     Completion: TSynCompletion;
+    procedure CodeEditorChange(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure CompletionCodeCompletion(var Value: string; SourceValue: string;
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
@@ -23,6 +24,7 @@ type
     procedure CompletionSearchPosition(var APosition: integer);
     procedure UpdateTimerTimer(Sender: TObject);
   private
+    FOnChange: TNotifyEvent;
     Highlight: TAALSynHighlight;
     FFunctions: TStringList;
     FVars: TStringList;
@@ -47,6 +49,7 @@ type
     property FileName: string read FFileName write FFilename;
     property DefRanges: TObjectList read FDefRanges write SetRanges;
     property Font: TFont read GetFont write SetFont;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
     { public declarations }
   end;
 
@@ -78,6 +81,8 @@ end;
 constructor TEditorFrame.Create(TheOwner: TComponent);
 begin
   inherited;
+  CodeEditor.Text:=' ';
+  FOnChange:=nil;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);
   Highlight.LoadConfig(IncludeTrailingPathDelimiter(
@@ -327,6 +332,12 @@ begin
     end;
     UpdateTimerTimer(nil);
   end;
+end;
+
+procedure TEditorFrame.CodeEditorChange(Sender: TObject);
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TEditorFrame.SetFunc(l: TStringList);

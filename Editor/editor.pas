@@ -315,9 +315,9 @@ begin
     begin
       b := True;
       for x := i + 1 to CodeEditor.Lines.Count - 1 do
-        if isEnd(CodeEditor.Lines[x], 'endfunc') then
+        if isEnd(CodeEditor.Lines[x], 'func') then
           break
-        else if isEnd(CodeEditor.Lines[x], 'func') then
+        else if isEnd(CodeEditor.Lines[x], 'endfunc') then
         begin
           b := False;
           break;

@@ -1,23 +1,23 @@
 object Form1: TForm1
-  Left = 356
+  Left = 111
   Height = 658
-  Top = 294
+  Top = 32
   Width = 1143
   Caption = 'AAL Editor'
-  ClientHeight = 628
-  ClientWidth = 1143
+  ClientHeight = 0
+  ClientWidth = 0
   Menu = MainMenu1
   OnCreate = FormCreate
   LCLVersion = '1.7'
   inline EditorFrame1: TEditorFrame
-    Height = 628
-    Width = 1143
+    Height = 0
+    Width = 0
     Align = alClient
-    ClientHeight = 628
-    ClientWidth = 1143
+    ClientHeight = 0
+    ClientWidth = 0
     inherited CodeEditor: TSynEdit
-      Height = 628
-      Width = 1143
+      Height = 0
+      Width = 0
     end
   end
   object MainMenu1: TMainMenu

@@ -6,6 +6,7 @@ object EditorFrame: TEditorFrame
   ClientHeight = 862
   ClientWidth = 1069
   Font.Quality = fqProof
+  LCLVersion = '1.7'
   ParentFont = False
   TabOrder = 0
   DesignLeft = 1027

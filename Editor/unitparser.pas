@@ -95,6 +95,8 @@ var
   ln: string;
   curr: TDefRange;
 begin
+  if i>=FText.Count then
+   Exit;
   curr := TDefRange.Create;
   ln := FText[i];
   curr.StartLine := i;

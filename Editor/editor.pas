@@ -200,8 +200,8 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i])) = 1 then
         Completion.ItemList.Add(FVars[i]);
     for x := 0 to FDefRanges.Count - 1 do
-      if (CodeEditor.BlockBegin.y >= (FDefRanges[x] as TDefRange).StartLine) and
-        (CodeEditor.BlockBegin.y <= (FDefRanges[x] as TDefRange).EndLine) then
+      if (CodeEditor.LogicalCaretXY.y >= (FDefRanges[x] as TDefRange).StartLine) and
+        (CodeEditor.LogicalCaretXY.y <= (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
           if Pos(LowerCase(Completion.CurrentString), LowerCase(
             (FDefRanges[x] as TDefRange).Vars[i])) = 1 then
@@ -321,36 +321,36 @@ var
 begin
   if Key = 13 then
   begin
-    ln := LowerCase(CodeEditor.Lines[CodeEditor.BlockBegin.y - 2]);
+    ln := LowerCase(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 2]);
     i := 1;
     l := Length(ln);
     while (i <= l) and (ln[i] in [#0..#32]) do
       Inc(i);
     pref := Copy(ln, 1, i - 1);
-    i := CodeEditor.BlockBegin.y - 2;
+    i := CodeEditor.LogicalCaretXY.y - 2;
     if isEnd(ln, 'while') then
     begin
       if not GotClosed(i, 'while', 'wend') then
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'WEnd');
-        Application.QueueAsyncCall(@MoveHorz, 2);
       end;
+        Application.QueueAsyncCall(@MoveHorz, 2);
     end
     else if isEnd(ln, 'for') then
     begin
       if not GotClosed(i, 'for', 'next') then
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'Next');
-        Application.QueueAsyncCall(@MoveHorz, 2);
       end;
+        Application.QueueAsyncCall(@MoveHorz, 2);
     end
     else if isEnd(ln, 'if') then
     begin
       if not GotClosed(i, 'if', 'endif') then
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'EndIf');
-        Application.QueueAsyncCall(@MoveHorz, 2);
       end;
+        Application.QueueAsyncCall(@MoveHorz, 2);
     end
     else if isEnd(ln, 'func') then
     begin
@@ -366,8 +366,8 @@ begin
       if b then
       begin
         CodeEditor.Lines.Insert(i + 2, pref + 'EndFunc');
-        Application.QueueAsyncCall(@MoveHorz, 2);
       end;
+        Application.QueueAsyncCall(@MoveHorz, 2);
     end;
     UpdateTimerTimer(nil);
   end;

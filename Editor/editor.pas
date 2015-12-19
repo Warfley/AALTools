@@ -38,6 +38,8 @@ type
     procedure SetRanges(l: TObjectList);
     procedure SetFunc(l: TStringList);
     procedure SetVar(l: TStringList);
+    procedure MoveHorz(i: IntPtr);
+    procedure MoveVert(i: IntPtr);
     { private declarations }
   public
     procedure Save(p: string = '');
@@ -56,6 +58,25 @@ type
 implementation
 
 {$R *.lfm}
+
+
+procedure TEditorFrame.MoveHorz(i: IntPtr);
+var
+  p: TPoint;
+begin
+  p := CodeEditor.LogicalCaretXY;
+  p.x := p.x + i;
+  CodeEditor.LogicalCaretXY := p;
+end;
+
+procedure TEditorFrame.MoveVert(i: IntPtr);
+var
+  p: TPoint;
+begin
+  p := CodeEditor.LogicalCaretXY;
+  p.y := p.y + i;
+  CodeEditor.LogicalCaretXY := p;
+end;
 
 function TEditorFrame.GetFont: TFont;
 begin
@@ -81,8 +102,8 @@ end;
 constructor TEditorFrame.Create(TheOwner: TComponent);
 begin
   inherited;
-  CodeEditor.Text:=' ';
-  FOnChange:=nil;
+  CodeEditor.Text := ' ';
+  FOnChange := nil;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);
   Highlight.LoadConfig(IncludeTrailingPathDelimiter(
@@ -104,15 +125,14 @@ procedure TEditorFrame.CompletionExecute(Sender: TObject);
 var
   i, x: integer;
 begin
+  Completion.ItemList.Clear;
   if Length(Completion.CurrentString) = 0 then
   begin
-    Completion.ItemList.Clear;
     Completion.ItemList.AddStrings(FStdFunc);
     Completion.ItemList.AddStrings(FFunctions);
   end
   else if Completion.CurrentString[1] = '$' then
   begin
-    Completion.ItemList.Clear;
     for i := 0 to FVars.Count - 1 do
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i])) = 1 then
         Completion.ItemList.Add(FVars[i]);
@@ -126,7 +146,6 @@ begin
   end
   else
   begin
-    Completion.ItemList.Clear;
     for i := 0 to FKeyWords.Count - 1 do
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FKeyWords[i])) = 1 then
         Completion.ItemList.Add(FKeyWords[i]);
@@ -137,6 +156,7 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i])) = 1 then
         Completion.ItemList.Add(FFunctions[i]);
   end;
+  Completion.ItemList.Add(Completion.CurrentString);
 end;
 
 procedure TEditorFrame.Save(p: string = '');
@@ -167,16 +187,15 @@ procedure TEditorFrame.CompletionSearchPosition(var APosition: integer);
 var
   i, x: integer;
 begin
+  Completion.ItemList.Clear;
   if Length(Completion.CurrentString) = 0 then
   begin
-    Completion.ItemList.Clear;
     Completion.ItemList.AddStrings(FKeyWords);
     Completion.ItemList.AddStrings(FStdFunc);
     Completion.ItemList.AddStrings(FFunctions);
   end
   else if Completion.CurrentString[1] = '$' then
   begin
-    Completion.ItemList.Clear;
     for i := 0 to FVars.Count - 1 do
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i])) = 1 then
         Completion.ItemList.Add(FVars[i]);
@@ -190,7 +209,6 @@ begin
   end
   else
   begin
-    Completion.ItemList.Clear;
     for i := 0 to FKeyWords.Count - 1 do
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FKeyWords[i])) = 1 then
         Completion.ItemList.Add(FKeyWords[i]);
@@ -201,6 +219,7 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i])) = 1 then
         Completion.ItemList.Add(FFunctions[i]);
   end;
+  Completion.ItemList.Add(Completion.CurrentString);
 end;
 
 procedure TEditorFrame.UpdateTimerTimer(Sender: TObject);
@@ -223,11 +242,18 @@ procedure TEditorFrame.CompletionCodeCompletion(var Value: string;
 var
   p: integer;
 begin
+  if Length(Value) = 0 then
+    Exit;
   if not (Value[1] = '$') then
   begin
     p := Pos('(', Value);
     if p > 0 then
-      SetLength(Value, Pos('(', Value))
+    begin
+      if Value[p + 1] <> ')' then
+        Application.QueueAsyncCall(@MoveHorz, -1);
+      SetLength(Value, Pos('(', Value));
+      Value := Value + ')';
+    end
     else
       Value := Value + ' ';
   end;
@@ -266,13 +292,14 @@ procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
   var
     counter, c: integer;
   begin
-    while (i>=0) do
-    if isEnd(CodeEditor.Lines[i], 'func') then
-    begin
-      inc(i);
-      Break;
-    end
-    else dec(i);
+    while (i >= 0) do
+      if isEnd(CodeEditor.Lines[i], 'func') then
+      begin
+        Inc(i);
+        Break;
+      end
+      else
+        Dec(i);
     c := CodeEditor.Lines.Count;
     counter := 0;
     while (i < c) and (not (isEnd(LowerCase(CodeEditor.Lines[i]), 'endfunc'))) and
@@ -294,27 +321,36 @@ var
 begin
   if Key = 13 then
   begin
-    ln := LowerCase(CodeEditor.Lines[CodeEditor.BlockBegin.y-2]);
+    ln := LowerCase(CodeEditor.Lines[CodeEditor.BlockBegin.y - 2]);
     i := 1;
-    l:=Length(ln);
+    l := Length(ln);
     while (i <= l) and (ln[i] in [#0..#32]) do
       Inc(i);
     pref := Copy(ln, 1, i - 1);
-    i := CodeEditor.BlockBegin.y-2;
+    i := CodeEditor.BlockBegin.y - 2;
     if isEnd(ln, 'while') then
     begin
       if not GotClosed(i, 'while', 'wend') then
+      begin
         CodeEditor.Lines.Insert(i + 2, pref + 'WEnd');
+        Application.QueueAsyncCall(@MoveHorz, 2);
+      end;
     end
     else if isEnd(ln, 'for') then
     begin
       if not GotClosed(i, 'for', 'next') then
+      begin
         CodeEditor.Lines.Insert(i + 2, pref + 'Next');
+        Application.QueueAsyncCall(@MoveHorz, 2);
+      end;
     end
     else if isEnd(ln, 'if') then
     begin
       if not GotClosed(i, 'if', 'endif') then
+      begin
         CodeEditor.Lines.Insert(i + 2, pref + 'EndIf');
+        Application.QueueAsyncCall(@MoveHorz, 2);
+      end;
     end
     else if isEnd(ln, 'func') then
     begin
@@ -328,7 +364,10 @@ begin
           break;
         end;
       if b then
+      begin
         CodeEditor.Lines.Insert(i + 2, pref + 'EndFunc');
+        Application.QueueAsyncCall(@MoveHorz, 2);
+      end;
     end;
     UpdateTimerTimer(nil);
   end;

@@ -1,3 +1,4 @@
+And
 Dim
 Else
 EndIf
@@ -6,7 +7,9 @@ For
 Func
 If
 Next
+Or
 Return
 To
+Then
 While
 WEnd

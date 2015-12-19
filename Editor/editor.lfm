@@ -21,6 +21,7 @@ object EditorFrame: TEditorFrame
     ParentColor = False
     ParentFont = False
     TabOrder = 0
+    OnClick = CodeEditorClick
     OnKeyUp = CodeEditorKeyUp
     Gutter.Width = 67
     Gutter.MouseActions = <>
@@ -519,6 +520,13 @@ object EditorFrame: TEditorFrame
     ExecCommandID = ecSynCompletionExecute
     Editor = CodeEditor
     left = 135
+    top = 150
+  end
+  object SelectHighlightTimer: TTimer
+    Enabled = False
+    Interval = 2000
+    OnTimer = SelectHighlightTimerTimer
+    left = 376
     top = 150
   end
 end

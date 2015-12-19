@@ -63,7 +63,7 @@ type
     property TextAttribute: TSynHighlighterAttributes read FTextAttr write SetTextAttr;
     property VariableAttribute: TSynHighlighterAttributes read FVarAttr write SetVarAttr;
     property SelectAttribute: TSynHighlighterAttributes read FSelectAttr write SetSelectAttr;
-    property SelectTextAttribute: String read FSelectText write FSelectText;
+    property SelectedText: String read FSelectText write FSelectText;
   end;
 
 implementation

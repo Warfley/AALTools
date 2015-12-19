@@ -16,14 +16,18 @@ type
   TEditorFrame = class(TFrame)
     CodeEditor: TSynEdit;
     Completion: TSynCompletion;
+    SelectHighlightTimer: TTimer;
     procedure CodeEditorChange(Sender: TObject);
+    procedure CodeEditorClick(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure CompletionCodeCompletion(var Value: string; SourceValue: string;
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
     procedure CompletionExecute(Sender: TObject);
     procedure CompletionSearchPosition(var APosition: integer);
+    procedure SelectHighlightTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
+    currWord :String;
     FOnChange: TNotifyEvent;
     Highlight: TAALSynHighlight;
     FFunctions: TStringList;
@@ -33,6 +37,7 @@ type
     FKeyWords: TStringList;
     FDefRanges: TObjectList;
     Parser: TUnitParser;
+    function GetCurrWord: String;
     function GetFont: TFont;
     procedure SetFont(f: TFont);
     procedure SetRanges(l: TObjectList);
@@ -119,6 +124,7 @@ begin
   FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
     'Keywords.lst');
   UpdateTimerTimer(nil);
+  currWord := '';
 end;
 
 procedure TEditorFrame.CompletionExecute(Sender: TObject);
@@ -220,6 +226,12 @@ begin
         Completion.ItemList.Add(FFunctions[i]);
   end;
   Completion.ItemList.Add(Completion.CurrentString);
+end;
+
+procedure TEditorFrame.SelectHighlightTimerTimer(Sender: TObject);
+begin
+     SelectHighlightTimer.Enabled := False;
+     Highlight.SelectedText := currWord;
 end;
 
 procedure TEditorFrame.UpdateTimerTimer(Sender: TObject);
@@ -377,6 +389,64 @@ procedure TEditorFrame.CodeEditorChange(Sender: TObject);
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);
+end;
+
+function TEditorFrame.GetCurrWord(): String;
+var
+  s: integer;
+  i: integer;
+  len: integer;
+  slen: integer;
+  ln: String;
+begin
+  Result := '';
+  ln := CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1];
+  slen := Length(ln);
+  i := CodeEditor.LogicalCaretXY.x - 1;
+  len := 0;
+
+  if i < 1 then
+    i := 1;
+
+  while (i > 0) AND (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+   dec(i);
+
+  if (i>0) and (ln = '$') then
+  begin
+    inc(len);
+    s:=i;
+    inc(i);
+  end
+  else
+  begin
+    inc(i);
+    s:=i;
+  end;
+
+  while (i <= slen) AND (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+  begin
+    inc(i);
+    inc(len);
+  end;
+  Result:=Copy(ln, s, len);
+
+
+end;
+
+procedure TEditorFrame.CodeEditorClick(Sender: TObject);
+var
+  tmp: String;
+begin
+  tmp := GetCurrWord();
+  if tmp <> currWord then
+  begin
+    currWord := GetCurrWord();
+    Highlight.SelectedText:= '';
+    //Reset
+    SelectHighlightTimer.Enabled := False;
+    SelectHighlightTimer.Enabled := True;
+  end;
+
 end;
 
 procedure TEditorFrame.SetFunc(l: TStringList);

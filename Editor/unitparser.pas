@@ -11,25 +11,25 @@ type
   TUnitParser = class(TThread)
   private
     FText: TStringList;
-    FFunc: TStringList;
+    FFunc: TFuncList;
     FRanges: TObjectList;
-    FVars: TStringList;
-    FMyFunc: TStringList;
+    FVars: TVarList;
+    FMyFunc: TFuncList;
     FMyRanges: TObjectList;
-    FMYVars: TStringList;
+    FMYVars: TVarList;
     FCurr: TStringList;
     FWait: boolean;
     procedure UpdateTheShit(Data: IntPtr);
     procedure SetText(s: string);
-    procedure ParseLine(ln: string; vars: TStringList);
-    procedure ParseRange(var i: integer; endTok: string);
+    procedure ParseLine(ln: string; vars: TVarList; line: Integer);
+    procedure ParseRange(var i: integer; endTok: string; RType: TRangeType);
   protected
     procedure Execute; override;
   public
     property Text: string write SetText;
-    property Funcs: TStringList read FFunc write FFunc;
+    property Funcs: TFuncList read FFunc write FFunc;
     property Ranges: TObjectList read FRanges write FRanges;
-    property Vars: TStringList read FVars write FVars;
+    property Vars: TVarList read FVars write FVars;
     constructor Create(CreateSuspended: boolean);
     destructor Destroy; override;
   end;
@@ -70,9 +70,9 @@ end;
 
 constructor TUnitParser.Create(CreateSuspended: boolean);
 begin
-  FMyFunc := TStringList.Create;
+  FMyFunc := TFuncList.Create;
   FMyRanges := TObjectList.Create(False);
-  FMYVars := TStringList.Create;
+  FMYVars := TVarList.Create;
   FCurr := TStringList.Create;
   FText := TStringList.Create;
   FreeOnTerminate := False;
@@ -89,7 +89,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TUnitParser.ParseRange(var i: integer; endTok: string);
+procedure TUnitParser.ParseRange(var i: integer; endTok: string; RType: TRangeType);
 var
   x, n: integer;
   ln: string;
@@ -98,32 +98,34 @@ begin
   if i>=FText.Count then
    Exit;
   curr := TDefRange.Create;
+  curr.RangeType:=RType;
   ln := FText[i];
   curr.StartLine := i;
-  ParseLine(ln, curr.Vars);
+  ParseLine(ln, curr.Vars, i);
   inc(i);
+  if i<FText.Count then
   ln := FText[i];
-  while (i < FText.Count) and (not isEnd(LowerCase(ln), endTok)) do
+  while (i < FText.Count) and (not isEnd(LowerCase(ln), endTok)) and not Terminated do
   begin
     if isEnd(ln, 'if') then
-      ParseRange(i, 'endif')
+      ParseRange(i, 'endif', rtIf)
     else if isEnd(ln, 'while') then
-      ParseRange(i, 'wend')
+      ParseRange(i, 'wend', rtWhile)
     else if isEnd(ln, 'for') then
-      ParseRange(i, 'next')
+      ParseRange(i, 'next', rtFor)
     else
-      ParseLine(ln, curr.Vars);
+      ParseLine(ln, curr.Vars, i);
     ln := FText[i];
     Inc(i);
   end;
   curr.EndLine := i;
   FMyRanges.Add(curr);
   for x := 0 to curr.Vars.Count - 1 do
-    if FCurr.Find(curr.Vars[x], n) then
+    if FCurr.Find(curr.Vars[x].Name, n) then
       FCurr.Delete(n);
 end;
 
-procedure TUnitParser.ParseLine(ln: string; vars: TStringList);
+procedure TUnitParser.ParseLine(ln: string; vars: TVarList; line: Integer);
 
   function StringsContain(s: TStrings; str: string): boolean;
   var
@@ -143,7 +145,7 @@ var
   str: string;
 begin
   i := 1;
-  while i <= Length(ln) do
+  while (i <= Length(ln)) and not Terminated do
   begin
     if ln[i] = '$' then
     begin
@@ -160,7 +162,7 @@ begin
       if not StringsContain(FCurr, str) then
       begin
         FCurr.Add(str);
-        vars.Add(str);
+        vars.Add(VarInfo(str, line, s));
       end;
     end;
     Inc(i);
@@ -177,7 +179,7 @@ begin
   FMYVars.Clear;
   FMyRanges.Clear;
   i := 0;
-  while i < FText.Count do
+  while (i < FText.Count) and not Terminated do
   begin
     ln := trim(FText[i]);
     if isEnd(ln, 'func') then
@@ -196,19 +198,20 @@ begin
           Break;
       end;
       str := Copy(ln, s, len);
-      FMyFunc.Add(str);
-      ParseRange(i, 'endfunc');
+      FMyFunc.Add(FuncInfo(str, i));
+      ParseRange(i, 'endfunc', rtFunc);
     end
     else if isEnd(ln, 'if') then
-      ParseRange(i, 'endif')
+      ParseRange(i, 'endif', rtIf)
     else if isEnd(ln, 'while') then
-      ParseRange(i, 'wend')
+      ParseRange(i, 'wend', rtWhile)
     else if isEnd(ln, 'for') then
-      ParseRange(i, 'next')
+      ParseRange(i, 'next', rtFor)
     else
-      ParseLine(ln, FMyVars);
+      ParseLine(ln, FMyVars, i);
     Inc(i);
   end;
+  if Terminated then Exit;
   FWait := True;
   Application.QueueAsyncCall(@UpdateTheShit, 0);
   while FWait do
@@ -219,10 +222,8 @@ procedure TUnitParser.UpdateTheShit(Data: IntPtr);
 var
   i: integer;
 begin
-  FFunc.Clear;
-  FFunc.AddStrings(FMyFunc);
-  FVars.Clear;
-  FVars.AddStrings(FMYVars);
+  FFunc.Assign(FMyFunc);
+  FVars.Assign(FMYVars);
   for i := 0 to FRanges.Count - 1 do
     FRanges[i].Free;
   FRanges.Clear;

@@ -20,7 +20,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="31"/>
+      <BuildNr Value="33"/>
       <StringTable ProductVersion=""/>
     </VersionInfo>
     <BuildModes Count="3">
@@ -111,7 +111,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="6">
+    <Units Count="7">
       <Unit0>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -147,6 +147,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="AALTypes"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="..\..\Utils\listrecords.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ListRecords"/>
+      </Unit6>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

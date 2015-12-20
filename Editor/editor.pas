@@ -28,11 +28,12 @@ type
     procedure SelectHighlightTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
+    moveright: boolean;
     currWord: string;
     FOnChange: TNotifyEvent;
     Highlight: TAALSynHighlight;
-    FFunctions: TStringList;
-    FVars: TStringList;
+    FFunctions: TFuncList;
+    FVars: TVarList;
     FStdFunc: TStringList;
     FFileName: string;
     FKeyWords: TStringList;
@@ -42,8 +43,8 @@ type
     function GetFont: TFont;
     procedure SetFont(f: TFont);
     procedure SetRanges(l: TObjectList);
-    procedure SetFunc(l: TStringList);
-    procedure SetVar(l: TStringList);
+    procedure SetFunc(l: TFuncList);
+    procedure SetVar(l: TVarList);
     procedure MoveHorz(i: IntPtr);
     procedure MoveVert(i: IntPtr);
     { private declarations }
@@ -52,8 +53,8 @@ type
     procedure Load(p: string = '');
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
-    property FunctionList: TStringList read FFunctions write SetFunc;
-    property VariableList: TStringList read FVars write SetVar;
+    property FunctionList: TFuncList read FFunctions write SetFunc;
+    property VariableList: TVarList read FVars write SetVar;
     property FileName: string read FFileName write FFilename;
     property DefRanges: TObjectList read FDefRanges write SetRanges;
     property Font: TFont read GetFont write SetFont;
@@ -71,8 +72,8 @@ var
 begin
   p := CodeEditor.LogicalCaretXY;
   p.x := p.x + i;
-  while Length(CodeEditor.Lines[p.y-1])<p.x-1 do
-    CodeEditor.Lines[p.y-1]:= CodeEditor.Lines[p.y-1]+' ';
+  while Length(CodeEditor.Lines[p.y - 1]) < p.x - 1 do
+    CodeEditor.Lines[p.y - 1] := CodeEditor.Lines[p.y - 1] + ' ';
   CodeEditor.LogicalCaretXY := p;
 end;
 
@@ -82,6 +83,8 @@ var
 begin
   p := CodeEditor.LogicalCaretXY;
   p.y := p.y + i;
+  while CodeEditor.Lines.Count < p.y do
+    CodeEditor.Lines.Add('');
   CodeEditor.LogicalCaretXY := p;
 end;
 
@@ -111,13 +114,14 @@ begin
   inherited;
   CodeEditor.Lines.Add('');
   FOnChange := nil;
+  moveright := True;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);
   Highlight.LoadConfig(IncludeTrailingPathDelimiter(
     ExtractFilePath(ParamStr(0))) + 'HL');
   CodeEditor.Highlighter := Highlight;
-  FFunctions := TStringList.Create;
-  FVars := TStringList.Create;
+  FFunctions := TFuncList.Create;
+  FVars := TVarList.Create;
   FStdFunc := TStringList.Create;
   FKeyWords := TStringList.Create;
   FDefRanges := TObjectList.Create(False);
@@ -130,27 +134,45 @@ begin
 end;
 
 procedure TEditorFrame.CompletionExecute(Sender: TObject);
+
+  function StringsContain(s: TStrings; str: string): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to s.Count - 1 do
+      if LowerCase(str) = LowerCase(s[i]) then
+      begin
+        Result := True;
+        Break;
+      end;
+  end;
+
 var
   i, x: integer;
 begin
   Completion.ItemList.Clear;
   if Length(Completion.CurrentString) = 0 then
   begin
+    Completion.ItemList.AddStrings(FKeyWords);
     Completion.ItemList.AddStrings(FStdFunc);
-    Completion.ItemList.AddStrings(FFunctions);
+    for i := 0 to FFunctions.Count - 1 do
+      Completion.ItemList.Add(FFunctions[i].Name);
   end
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i])) = 1 then
-        Completion.ItemList.Add(FVars[i]);
+      if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1 then
+        Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.BlockBegin.y >= (FDefRanges[x] as TDefRange).StartLine) and
         (CodeEditor.BlockBegin.y <= (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
           if Pos(LowerCase(Completion.CurrentString), LowerCase(
-            (FDefRanges[x] as TDefRange).Vars[i])) = 1 then
-            Completion.ItemList.Add((FDefRanges[x] as TDefRange).Vars[i]);
+            (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1 then
+            Completion.ItemList.Add((FDefRanges[x] as TDefRange).Vars[i].Name);
+    if not StringsContain(Completion.ItemList, Completion.CurrentString) then
+      Completion.ItemList.Add(Completion.CurrentString);
   end
   else
   begin
@@ -161,10 +183,11 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FStdFunc[i])) = 1 then
         Completion.ItemList.Add(FStdFunc[i]);
     for i := 0 to FFunctions.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i])) = 1 then
-        Completion.ItemList.Add(FFunctions[i]);
+      if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i].Name)) = 1 then
+        Completion.ItemList.Add(FFunctions[i].Name);
+    Completion.ItemList.Add(Completion.CurrentString);
   end;
-  Completion.ItemList.Add(Completion.CurrentString);
+  Completion.ItemList.Add('');
 end;
 
 procedure TEditorFrame.Save(p: string = '');
@@ -192,6 +215,20 @@ begin
 end;
 
 procedure TEditorFrame.CompletionSearchPosition(var APosition: integer);
+
+  function StringsContain(s: TStrings; str: string): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to s.Count - 1 do
+      if LowerCase(str) = LowerCase(s[i]) then
+      begin
+        Result := True;
+        Break;
+      end;
+  end;
+
 var
   i, x: integer;
 begin
@@ -200,20 +237,23 @@ begin
   begin
     Completion.ItemList.AddStrings(FKeyWords);
     Completion.ItemList.AddStrings(FStdFunc);
-    Completion.ItemList.AddStrings(FFunctions);
+    for i := 0 to FFunctions.Count - 1 do
+      Completion.ItemList.Add(FFunctions[i].Name);
   end
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i])) = 1 then
-        Completion.ItemList.Add(FVars[i]);
+      if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1 then
+        Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
-      if (CodeEditor.LogicalCaretXY.y >= (FDefRanges[x] as TDefRange).StartLine) and
-        (CodeEditor.LogicalCaretXY.y <= (FDefRanges[x] as TDefRange).EndLine) then
+      if (CodeEditor.BlockBegin.y >= (FDefRanges[x] as TDefRange).StartLine) and
+        (CodeEditor.BlockBegin.y <= (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
           if Pos(LowerCase(Completion.CurrentString), LowerCase(
-            (FDefRanges[x] as TDefRange).Vars[i])) = 1 then
-            Completion.ItemList.Add((FDefRanges[x] as TDefRange).Vars[i]);
+            (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1 then
+            Completion.ItemList.Add((FDefRanges[x] as TDefRange).Vars[i].Name);
+    if not StringsContain(Completion.ItemList, Completion.CurrentString) then
+      Completion.ItemList.Add(Completion.CurrentString);
   end
   else
   begin
@@ -224,10 +264,11 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FStdFunc[i])) = 1 then
         Completion.ItemList.Add(FStdFunc[i]);
     for i := 0 to FFunctions.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i])) = 1 then
-        Completion.ItemList.Add(FFunctions[i]);
+      if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i].Name)) = 1 then
+        Completion.ItemList.Add(FFunctions[i].Name);
+    Completion.ItemList.Add(Completion.CurrentString);
   end;
-  Completion.ItemList.Add(Completion.CurrentString);
+  Completion.ItemList.Add('');
 end;
 
 procedure TEditorFrame.SelectHighlightTimerTimer(Sender: TObject);
@@ -257,9 +298,18 @@ procedure TEditorFrame.CompletionCodeCompletion(var Value: string;
 var
   p: integer;
 begin
+  moveright := False;
   if Length(Value) = 0 then
     Exit;
-  if not (Value[1] = '$') then
+  if (Value[1] = '$') then
+  begin
+    if AnsiStartsText(Completion.CurrentString,
+      Trim(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+      Value := Value + ' = '
+    else
+      Value := Value + ' ';
+  end
+  else
   begin
     p := Pos('(', Value);
     if p > 0 then
@@ -334,7 +384,7 @@ var
   i, x, l: integer;
   b: boolean;
 begin
-  if Key = 13 then
+  if (Key = 13) and moveright then
   begin
     ln := LowerCase(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 2]);
     i := 1;
@@ -384,12 +434,21 @@ begin
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end;
-    UpdateTimerTimer(nil);
   end;
+  moveright := True;
 end;
 
 procedure TEditorFrame.CodeEditorChange(Sender: TObject);
+var
+  tmp: string;
+  p: TPoint;
 begin
+  tmp := GetCurrWord;
+  p := Point(CodeEditor.CaretXPix, CodeEditor.CaretYPix + CodeEditor.LineHeight);
+  p := CodeEditor.ClientToScreen(p);
+  UpdateTimerTimer(nil);
+  if (Length(tmp) > 1) and (tmp[1] = '$') then
+    Completion.Execute(GetCurrWord, p);
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -456,22 +515,24 @@ begin
 
 end;
 
-procedure TEditorFrame.SetFunc(l: TStringList);
+procedure TEditorFrame.SetFunc(l: TFuncList);
 begin
   FFunctions.Clear;
-  FFunctions.AddStrings(l);
+  FFunctions.Assign(l);
 end;
 
-procedure TEditorFrame.SetVar(l: TStringList);
+procedure TEditorFrame.SetVar(l: TVarList);
 begin
   FVars.Clear;
-  FVars.AddStrings(l);
+  FVars.Assign(l);
 end;
 
 destructor TEditorFrame.Destroy;
 var
   i: integer;
 begin
+  if not (Parser.Finished) then
+    Parser.Terminate;
   Parser.Free;
   for i := 0 to FDefRanges.Count - 1 do
     FDefRanges.Items[i].Free;

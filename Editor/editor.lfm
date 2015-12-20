@@ -517,6 +517,7 @@ object EditorFrame: TEditorFrame
     SelectedColor = clHighlight
     CaseSensitive = False
     Width = 262
+    ShowSizeDrag = True
     AutoUseSingleIdent = True
     ShortCut = 16416
     EndOfTokenChr = '()[].'

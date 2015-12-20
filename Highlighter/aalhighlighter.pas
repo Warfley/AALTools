@@ -19,7 +19,7 @@ type
     FJumpAttr: TSynHighlighterAttributes;
     FJumpItem: TSelectedItem;
     FSelectText: string;
-    CurrLine: Integer;
+    CurrLine: integer;
     procedure SetJumpAttr(v: TSynHighlighterAttributes);
     procedure SetStrAttr(v: TSynHighlighterAttributes);
     procedure SetComAttr(v: TSynHighlighterAttributes);
@@ -31,6 +31,7 @@ type
     procedure SetTextAttr(v: TSynHighlighterAttributes);
     procedure SetVarAttr(v: TSynHighlighterAttributes);
     procedure SetSelectAttr(v: TSynHighlighterAttributes);
+    function GetLine: string;
   protected
     FTokenPos, FTokenEnd, FLineNum: integer;
     FToken: string;
@@ -50,6 +51,7 @@ type
     procedure GetTokenEx(out TokenStart: PChar; out TokenLength: integer); override;
     function GetTokenAttribute: TSynHighlighterAttributes; override;
   public
+    property Line: string read GetLine;
     function GetToken: string; override;
     function GetTokenPos: integer; override;
     function GetTokenKind: integer; override;
@@ -79,6 +81,12 @@ type
   end;
 
 implementation
+
+
+function TAALSynHighlight.GetLine: string;
+begin
+  Result := FLineText;
+end;
 
 procedure TAALSynHighlight.SetJumpAttr(v: TSynHighlighterAttributes);
 begin
@@ -433,8 +441,8 @@ begin
   FVarAttr := TSynHighlighterAttributes.Create('Variable', 'Variable');
   FSelectAttr := TSynHighlighterAttributes.Create('Selected', 'Selected');
   FJumpAttr := TSynHighlighterAttributes.Create('Jump', 'Jump');
-  FJumpItem.Pos:=0;
-  FJumpItem.Line:=-1;
+  FJumpItem.Pos := 0;
+  FJumpItem.Line := -1;
   FSelectText := '';
   for i := 0 to 255 do
     FHashList[i] := TList.Create;
@@ -446,7 +454,7 @@ begin
   FLineText := NewValue;
   // Next will start at "FTokenEnd", so set this to 1
   FTokenEnd := 1;
-  CurrLine:=LineNumber;
+  CurrLine := LineNumber;
   Next;
 end;
 
@@ -589,12 +597,13 @@ function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
 begin
   if FTok = tkUndefined then
     CheckHash;
-  if (CurrLine=FJumpItem.Line) and (FJumpItem.Pos>=FTokenPos) and (FJumpItem.Pos<FTokenEnd) then
+  if (CurrLine = FJumpItem.Line) and (FJumpItem.Pos >= FTokenPos) and
+    (FJumpItem.Pos < FTokenEnd) then
   begin
     Result := FJumpAttr;
     Result.Assign(GetAttr(FTok));
-    Result.Style:=Result.Style+[fsUnderline, fsBold];
-    Result.Foreground:=clHighlight;
+    Result.Style := Result.Style + [fsUnderline, fsBold];
+    Result.Foreground := clHighlight;
   end
   else
   if (Length(FSelectText) > 0) and (KeyComp(FSelectText)) then

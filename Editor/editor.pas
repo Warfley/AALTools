@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
-  Dialogs, Graphics, strutils;
+  Dialogs, Graphics, StdCtrls, strutils, CodeFormatter;
 
 type
 
@@ -54,9 +54,10 @@ type
     procedure MoveVert(i: IntPtr);
     function GetAtCursor(x, y: integer): string;
     procedure CodeJump(p: TPoint);
-    procedure ParserHasFinished(Sender:TObject);
+    procedure ParserHasFinished(Sender: TObject);
     { private declarations }
   public
+    procedure StartFormatter;
     procedure Save(p: string = '');
     procedure Load(p: string = '');
     constructor Create(TheOwner: TComponent); override;
@@ -68,7 +69,8 @@ type
     property Font: TFont read GetFont write SetFont;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     procedure JumpTo(p: TPoint);
-    property OnParserFinished: TNotifyEvent read FOnParserFinished write FOnParserFinished;
+    property OnParserFinished: TNotifyEvent read FOnParserFinished
+      write FOnParserFinished;
     { public declarations }
   end;
 
@@ -301,7 +303,7 @@ begin
   begin
     Parser.Free;
     Parser := TUnitParser.Create(True);
-    Parser.OnFinished:=@ParserHasFinished;
+    Parser.OnFinished := @ParserHasFinished;
     Parser.Text := CodeEditor.Lines.Text;
     Parser.Funcs := FFunctions;
     Parser.Vars := FVars;
@@ -346,9 +348,10 @@ begin
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString), Length(ln) -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz,
-    -(Length(ln) - (pos(Completion.CurrentString, ln) +
-    Length(Completion.CurrentString)) + 1));
+  Application.QueueAsyncCall(@MoveHorz, -(Length(ln) -
+    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1));
+
+
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
@@ -461,7 +464,11 @@ begin
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end;
-  end;
+  end
+  else if (Key = Ord('D')) and (ssCtrl in Shift) and
+    (MessageDlg('Code Formatieren', 'Codeformatter:'#10#13'Wirklich formatieren?',
+    mtConfirmation, mbYesNo, 'Confirmation') = mrYes) then
+    StartFormatter;
   moveright := True;
 end;
 
@@ -625,6 +632,28 @@ begin
   if Assigned(FOnChange) then
     FOnChange(Self);
   Invalidate;
+end;
+
+
+procedure TEditorFrame.StartFormatter;
+var
+  c: TCodeFormatter;
+  i: integer;
+begin
+  c := TCodeFormatter.Create;
+  try
+    c.Lines.Clear;
+    c.Lines.AddStrings(CodeEditor.Lines);
+    c.Format;
+    for i := 0 to CodeEditor.Lines.Count - 1 do
+      if CodeEditor.Lines[i] <> c.Lines[i] then
+      begin
+        CodeEditor.TextBetweenPoints[Point(0, i + 1),
+          Point(Length(CodeEditor.Lines[i]), i + 1)] := c.Lines[i];
+      end;
+  finally
+    c.Free;
+  end;
 end;
 
 procedure TEditorFrame.CheckSelTimerTimer(Sender: TObject);

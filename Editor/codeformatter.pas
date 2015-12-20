@@ -5,7 +5,7 @@ unit CodeFormatter;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, strutils, Dialogs;
 
 type
   TCodeFormatter = class(TObject)
@@ -13,8 +13,8 @@ type
     FLines: TStringList;
     procedure SetLines(l: TStringList);
     function isEnd(s, endTok: string): boolean;
-    function FormatLine(ln: String): String;
-    function GetSpaces(Depth: Integer): String;
+    function FormatLine(ln: string): string;
+    function GetSpaces(Depth: integer): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -67,38 +67,149 @@ begin
   inherited;
 end;
 
-function TCodeFormatter.FormatLine(ln: String): String;
-begin
+function TCodeFormatter.FormatLine(ln: string): string;
+type
+  TTokenType = (ttNormal, ttsymbol, ttNearSym, ttrightNear);
 
+  function getTokenkind(token: string): TTokenType;
+  begin
+    if token[1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$', '"', ';'] then
+      Result := ttNormal
+    else if token[1] in ['(', '[', '.'] then
+      Result := ttNearSym
+    else if token[1] in [')', ']', ','] then
+      Result := ttrightNear
+    else
+      Result := ttsymbol;
+  end;
+
+var
+  TokStart, TokEnd, TokLen, l: integer;
+  i: integer;
+  t1, t2: TTokenType;
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    TokStart := 1;
+    TokEnd := 1;
+    l := Length(ln);
+    while TokEnd <= l do
+    begin
+      TokStart := TokEnd;
+      if TokStart > l then
+        exit
+      else
+      if ln[TokEnd] in [#9, ' '] then
+      begin
+        while (TokEnd <= l) and (ln[TokEnd] in [#0..#32]) do
+          Inc(TokEnd);
+        TokLen := TokEnd - TokStart;
+        sl.Add(copy(ln, TokStart, TokLen));
+      end
+      else if ln[TokEnd] = ';' then
+      begin
+        TokEnd := l + 1;
+        TokLen := l - TokStart + 1;
+        sl.Add(copy(ln, TokStart, TokLen));
+      end
+      else if not (ln[TokEnd] in ['_', '0'..'9', 'a'..'z', 'A'..'Z',
+        '$', '"']) then
+      begin
+        Inc(TokEnd);
+        sl.Add(ln[TokStart]);
+      end
+      else if ln[TokEnd] = '$' then
+      begin
+        Inc(TokEnd);
+        while ln[TokEnd] in ['_', '0'..'9', 'a'..'z', 'A'..'Z'] do
+          Inc(TokEnd);
+        TokLen := TokEnd - TokStart;
+        sl.Add(copy(ln, TokStart, TokLen));
+      end
+      else if ln[TokEnd] = '"' then
+      begin
+        Inc(TokEnd);
+        while (TokEnd <= l) and (ln[TokEnd] <> '"') do
+          Inc(TokEnd);
+        Inc(TokEnd);
+        TokLen := TokEnd - TokStart;
+        sl.Add(copy(ln, TokStart, TokLen));
+      end
+      else if ln[TokEnd] in ['0'..'9'] then
+      begin
+        while (TokEnd <= l) and
+          (ln[TokEnd] in ['0'..'9', '.', 'x', 'a'..'f', 'A'..'F']) do
+          Inc(TokEnd);
+        TokLen := TokEnd - TokStart;
+        sl.Add(copy(ln, TokStart, TokLen));
+      end
+      else
+      begin
+        while ln[TokEnd] in ['_', '0'..'9', 'a'..'z', 'A'..'Z'] do
+          Inc(TokEnd);
+        TokLen := TokEnd - TokStart;
+        sl.Add(copy(ln, TokStart, TokLen));
+      end;
+    end;
+
+    i := 0;
+    while i < sl.Count do
+      if Trim(sl[i]) = '' then
+        sl.Delete(i)
+      else
+        Inc(i);
+    i := 1;
+    while i < sl.Count do
+    begin
+      t1 := getTokenkind(sl[i - 1]);
+      t2 := getTokenkind(sl[i]);
+      if not ((t1 = ttNearSym) or (t2 = ttNearSym) or (t2 = ttrightNear) or
+        ((t1 = ttsymbol) and (t2 = ttsymbol))) then
+      begin
+        sl.Insert(i, ' ');
+        Inc(i);
+      end;
+      Inc(i);
+    end;
+    Result := '';
+    for i := 0 to sl.Count - 1 do
+      Result := Result + sl[i];
+  finally
+    sl.Free;
+  end;
 end;
 
-function TCodeFormatter.GetSpaces(Depth: Integer): String;
-var i: Integer;
+function TCodeFormatter.GetSpaces(Depth: integer): string;
+var
+  i: integer;
 begin
-  SetLength(Result, Depth*2);
-  FillChar(Result[1], Depth*2, ' ');
+  SetLength(Result, Depth * 2);
+  FillChar(Result[1], Depth * 2, ' ');
 end;
 
 procedure TCodeFormatter.Format;
-var i: Integer;
-  depth: Integer;
+var
+  i: integer;
+  depth: integer;
 begin
-  depth:=0;
-  for i:=0 to FLines.Count-1 do
+  depth := 0;
+  for i := 0 to FLines.Count - 1 do
   begin
-    if isEnd(FLines[i], 'endfunc') Or isEnd(FLines[i], 'wend') Or
-     isEnd(FLines[i], 'next') Or  isEnd(FLines[i], 'endif') then
-     dec(depth)
+    if isEnd(FLines[i], 'endfunc') or isEnd(FLines[i], 'wend') or
+      isEnd(FLines[i], 'next') or isEnd(FLines[i], 'endif') then
+      Dec(depth)
     else
-    if isEnd(FLines[i], 'func') Or isEnd(FLines[i], 'while') Or
-     isEnd(FLines[i], 'for') Or  isEnd(FLines[i], 'if') then
-     inc(depth);
-    if isEnd(FLines[i], 'else') then
-      FLines[i]:=GetSpaces(depth-1)+FormatLine(Trim(FLines[i]))
+    if isEnd(FLines[i], 'func') or isEnd(FLines[i], 'while') or
+      isEnd(FLines[i], 'for') or isEnd(FLines[i], 'if') or isEnd(FLines[i], 'else') then
+    begin
+      if not isEnd(FLines[i], 'else') then
+        Inc(depth);
+      FLines[i] := GetSpaces(depth - 1) + FormatLine(Trim(FLines[i]));
+    end
     else
-      FLines[i]:=GetSpaces(depth)+FormatLine(Trim(FLines[i]));
+      FLines[i] := GetSpaces(depth) + FormatLine(Trim(FLines[i]));
   end;
 end;
 
 end.
-

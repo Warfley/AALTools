@@ -515,7 +515,7 @@ begin
   else if FLineText[FTokenEnd] in ['0'..'9'] then
   begin
     FTok := tkNumber;
-    while (FTokenEnd <= l) and (FLineText[FTokenEnd] in ['0'..'9', '.']) do
+    while (FTokenEnd <= l) and (FLineText[FTokenEnd] in ['0'..'9', '.','x', 'a'..'f', 'A'..'F']) do
       Inc(FTokenEnd);
     FTokLen := FTokenEnd - FTokenPos;
     FToken := copy(FLineText, FTokenPos, FTokLen);

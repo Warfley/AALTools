@@ -21,6 +21,10 @@ type
     procedure CheckSelTimerTimer(Sender: TObject);
     procedure CodeEditorChange(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: integer);
+    procedure CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: integer);
     procedure CompletionCodeCompletion(var Value: string; SourceValue: string;
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
     procedure CompletionExecute(Sender: TObject);
@@ -47,6 +51,8 @@ type
     procedure SetVar(l: TVarList);
     procedure MoveHorz(i: IntPtr);
     procedure MoveVert(i: IntPtr);
+    function GetAtCursor(x, y: integer): string;
+    procedure CodeJump(p: TPoint);
     { private declarations }
   public
     procedure Save(p: string = '');
@@ -438,11 +444,144 @@ begin
   moveright := True;
 end;
 
+
+function TEditorFrame.GetAtCursor(x, y: integer): string;
+var
+  p: TPoint;
+  s: integer;
+  i: integer;
+  len: integer;
+  slen: integer;
+  ln: string;
+begin
+  Result := '';
+  p := CodeEditor.PixelsToLogicalPos(Point(x, y));
+  ln := CodeEditor.Lines[p.y - 1];
+  if ln = '' then
+    Exit;
+  slen := Length(ln);
+  i := p.x - 1;
+  len := 0;
+
+  if i < 1 then
+    i := 1;
+  if (i < slen) and (ln[i + 1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$']) and
+    ((i > 0) or (ln[i] in [#0..#32])) then
+    Inc(i);
+
+  while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+    Dec(i);
+
+  if (i > 0) and (ln[i] = '$') then
+  begin
+    Inc(len);
+    s := i;
+    Inc(i);
+  end
+  else
+  begin
+    Inc(i);
+    s := i;
+  end;
+
+  while (i <= slen) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+  begin
+    Inc(i);
+    Inc(len);
+  end;
+  Result := Copy(ln, s, len);
+end;
+
+procedure TEditorFrame.CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: integer);
+var
+  l, pos, i, n: integer;
+  sel: string;
+begin
+  if ssCtrl in Shift then
+  begin
+    if (CodeEditor.Lines.Count<CodeEditor.LinesInWindow) And (y>CodeEditor.Lines.Count*CodeEditor.LineHeight) then
+    begin
+  Highlight.JumpItem:=SelectedItem(-1, 0);
+  CodeEditor.Invalidate;
+      Exit;
+    end;
+    l := CodeEditor.PixelsToLogicalPos(Point(x, y)).y - 1;
+    pos := CodeEditor.PixelsToLogicalPos(Point(x, y)).x - 1;
+    sel := GetAtCursor(x, y);
+    for i := 0 to FFunctions.Count - 1 do
+      if Copy(FFunctions[i].Name, 1, System.Pos('(', FFunctions[i].Name)-1) = sel then
+      begin
+        Highlight.JumpItem := SelectedItem(l, pos);
+        CodeEditor.Invalidate;
+        Exit;
+      end;
+    for i := 0 to FVars.Count - 1 do
+      if FVars[i].Name = sel then
+      begin
+        Highlight.JumpItem := SelectedItem(l, pos);
+        CodeEditor.Invalidate;
+        Exit;
+      end;
+    for n := 0 to FDefRanges.Count - 1 do
+      for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
+        if (FDefRanges[n] as TDefRange).Vars[i].Name = sel then
+        begin
+          Highlight.JumpItem := SelectedItem(l, pos);
+          CodeEditor.Invalidate;
+          Exit;
+        end;
+  Highlight.JumpItem:=SelectedItem(-1, 0);
+  CodeEditor.Invalidate;
+  end;
+end;
+
+procedure TEditorFrame.CodeJump(p: TPoint);
+var
+  i, n: integer;
+  sel: string;
+begin
+  CodeEditor.LogicalCaretXY := p;
+  sel := GetCurrWord;
+  for i := 0 to FFunctions.Count - 1 do
+    if Copy(FFunctions[i].Name, 1, Pos('(', FFunctions[i].Name)-1)  = sel then
+    begin
+      CodeEditor.LogicalCaretXY := Point(0, FFunctions[i].Line);
+      Exit;
+    end;
+  for i := 0 to FVars.Count - 1 do
+    if FVars[i].Name = sel then
+    begin
+      CodeEditor.LogicalCaretXY := Point(FVars[i].Pos, FVars[i].Line);
+      Exit;
+    end;
+  for n := 0 to FDefRanges.Count - 1 do
+    for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
+      if (FDefRanges[n] as TDefRange).Vars[i].Name = sel then
+      begin
+        CodeEditor.LogicalCaretXY :=
+          Point((FDefRanges[n] as TDefRange).Vars[i].Pos, (FDefRanges[n] as
+          TDefRange).Vars[i].Line);
+        Exit;
+      end;
+
+end;
+
+procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: integer);
+begin
+  Highlight.JumpItem:=SelectedItem(-1, 0);
+  CodeEditor.Invalidate;
+  if (Button = mbLeft) and (ssCtrl in Shift) then
+    CodeJump(CodeEditor.PixelsToLogicalPos(Point(x, y)));
+end;
+
 procedure TEditorFrame.CodeEditorChange(Sender: TObject);
 var
   tmp: string;
   p: TPoint;
 begin
+  Highlight.JumpItem:=SelectedItem(-1, 0);
   tmp := GetCurrWord;
   p := Point(CodeEditor.CaretXPix, CodeEditor.CaretYPix + CodeEditor.LineHeight);
   p := CodeEditor.ClientToScreen(p);
@@ -451,6 +590,7 @@ begin
     Completion.Execute(GetCurrWord, p);
   if Assigned(FOnChange) then
     FOnChange(Self);
+  Invalidate;
 end;
 
 procedure TEditorFrame.CheckSelTimerTimer(Sender: TObject);

@@ -15,8 +15,12 @@ type
   TAALSynHighlight = class(TSynCustomHighlighter)
   private
     FStrAttr, FCommentAttr, FIdentifierAttr, FKeyAttr, FFunctionAttr,
-    FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr, FSelectAttr: TSynHighlighterAttributes;
+    FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr, FSelectAttr,
+    FJumpAttr: TSynHighlighterAttributes;
+    FJumpItem: TSelectedItem;
     FSelectText: string;
+    CurrLine: Integer;
+    procedure SetJumpAttr(v: TSynHighlighterAttributes);
     procedure SetStrAttr(v: TSynHighlighterAttributes);
     procedure SetComAttr(v: TSynHighlighterAttributes);
     procedure SetIdentAttr(v: TSynHighlighterAttributes);
@@ -52,7 +56,10 @@ type
     function GetDefaultAttribute(Index: integer): TSynHighlighterAttributes; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    property SelectedText: string read FSelectText write FSelectText;
+    property JumpItem: TSelectedItem read FJumpItem write FJumpItem;
   published
+    property JumpAttribute: TSynHighlighterAttributes read FJumpAttr write SetJumpAttr;
     property StringAttribute: TSynHighlighterAttributes read FStrAttr write SetStrAttr;
     property IdentifierAttribute: TSynHighlighterAttributes
       read FIdentifierAttr write SetIdentAttr;
@@ -69,10 +76,14 @@ type
     property VariableAttribute: TSynHighlighterAttributes read FVarAttr write SetVarAttr;
     property SelectAttribute: TSynHighlighterAttributes
       read FSelectAttr write SetSelectAttr;
-    property SelectedText: string read FSelectText write FSelectText;
   end;
 
 implementation
+
+procedure TAALSynHighlight.SetJumpAttr(v: TSynHighlighterAttributes);
+begin
+  FJumpAttr.Assign(v);
+end;
 
 procedure TAALSynHighlight.SetStrAttr(v: TSynHighlighterAttributes);
 begin
@@ -421,6 +432,9 @@ begin
   FTextAttr := TSynHighlighterAttributes.Create('Text', 'Text');
   FVarAttr := TSynHighlighterAttributes.Create('Variable', 'Variable');
   FSelectAttr := TSynHighlighterAttributes.Create('Selected', 'Selected');
+  FJumpAttr := TSynHighlighterAttributes.Create('Jump', 'Jump');
+  FJumpItem.Pos:=0;
+  FJumpItem.Line:=-1;
   FSelectText := '';
   for i := 0 to 255 do
     FHashList[i] := TList.Create;
@@ -432,6 +446,7 @@ begin
   FLineText := NewValue;
   // Next will start at "FTokenEnd", so set this to 1
   FTokenEnd := 1;
+  CurrLine:=LineNumber;
   Next;
 end;
 
@@ -515,7 +530,8 @@ begin
   else if FLineText[FTokenEnd] in ['0'..'9'] then
   begin
     FTok := tkNumber;
-    while (FTokenEnd <= l) and (FLineText[FTokenEnd] in ['0'..'9', '.','x', 'a'..'f', 'A'..'F']) do
+    while (FTokenEnd <= l) and (FLineText[FTokenEnd] in
+        ['0'..'9', '.', 'x', 'a'..'f', 'A'..'F']) do
       Inc(FTokenEnd);
     FTokLen := FTokenEnd - FTokenPos;
     FToken := copy(FLineText, FTokenPos, FTokLen);
@@ -573,6 +589,14 @@ function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
 begin
   if FTok = tkUndefined then
     CheckHash;
+  if (CurrLine=FJumpItem.Line) and (FJumpItem.Pos>=FTokenPos) and (FJumpItem.Pos<FTokenEnd) then
+  begin
+    Result := FJumpAttr;
+    Result.Assign(GetAttr(FTok));
+    Result.Style:=Result.Style+[fsUnderline, fsBold];
+    Result.Foreground:=clHighlight;
+  end
+  else
   if (Length(FSelectText) > 0) and (KeyComp(FSelectText)) then
   begin
     Result := FSelectAttr;
@@ -639,6 +663,7 @@ begin
   FTextAttr.Free;
   FVarAttr.Free;
   FSelectAttr.Free;
+  FJumpAttr.Free;
   for i := 0 to 255 do
     FreeLst(FHashList[i]);
   inherited;

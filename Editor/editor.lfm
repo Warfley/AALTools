@@ -24,6 +24,8 @@ object EditorFrame: TEditorFrame
     ParentFont = False
     TabOrder = 0
     OnKeyUp = CodeEditorKeyUp
+    OnMouseMove = CodeEditorMouseMove
+    OnMouseUp = CodeEditorMouseUp
     Gutter.Width = 67
     Gutter.MouseActions = <>
     RightGutter.Width = 0

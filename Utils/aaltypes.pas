@@ -17,6 +17,10 @@ type
     Kind: TTokenType;
   end;
 
+  TSelectedItem = record
+    Line, Pos: Integer;
+  end;
+
   TFuncList = specialize TFPGList<TFuncInfo>;
   TVarList = specialize TFPGList<TVarInfo>;
 
@@ -36,8 +40,16 @@ type
   end;
 
 function FuncInfo(Name: String; Line: Integer): TFuncInfo;
+function SelectedItem(Line, Pos: Integer): TSelectedItem;
 function VarInfo(Name: String; Line, Position: Integer): TVarInfo;
 implementation
+
+
+function SelectedItem(Line, Pos: Integer): TSelectedItem;
+begin
+  Result.Line:=Line;
+  Result.Pos:=Pos;
+end;
 
 function FuncInfo(Name: String; Line: Integer): TFuncInfo;
 begin

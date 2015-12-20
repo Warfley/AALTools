@@ -65,6 +65,7 @@ type
     property DefRanges: TObjectList read FDefRanges write SetRanges;
     property Font: TFont read GetFont write SetFont;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    procedure JumpTo(p: TPoint);
     { public declarations }
   end;
 
@@ -168,11 +169,12 @@ begin
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1 then
+      if (FVars[i].Line <= CodeEditor.LogicalCaretXY.y) and
+        (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
-      if (CodeEditor.BlockBegin.y >= (FDefRanges[x] as TDefRange).StartLine) and
-        (CodeEditor.BlockBegin.y <= (FDefRanges[x] as TDefRange).EndLine) then
+      if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
+        (CodeEditor.LogicalCaretXY.y - 1 < (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
           if Pos(LowerCase(Completion.CurrentString), LowerCase(
             (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1 then
@@ -252,8 +254,8 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1 then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
-      if (CodeEditor.BlockBegin.y >= (FDefRanges[x] as TDefRange).StartLine) and
-        (CodeEditor.BlockBegin.y <= (FDefRanges[x] as TDefRange).EndLine) then
+      if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
+        (CodeEditor.LogicalCaretXY.y - 1 < (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
           if Pos(LowerCase(Completion.CurrentString), LowerCase(
             (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1 then
@@ -303,6 +305,7 @@ procedure TEditorFrame.CompletionCodeCompletion(var Value: string;
   Shift: TShiftState);
 var
   p: integer;
+  ln: string;
 begin
   moveright := False;
   if Length(Value) = 0 then
@@ -312,7 +315,7 @@ begin
     if AnsiStartsText(Completion.CurrentString,
       Trim(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
       Value := Value + ' = '
-    else
+    else if SourceEnd.x = SourceStart.x + Length(Completion.CurrentString) then
       Value := Value + ' ';
   end
   else
@@ -328,6 +331,14 @@ begin
     else
       Value := Value + ' ';
   end;
+  ln := CodeEditor.Lines[SourceStart.y - 1];
+  Value := Copy(ln, SourceStart.x, pos(Completion.CurrentString, ln) -
+    SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
+    Length(Completion.CurrentString), Length(ln) -
+    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
+  Application.QueueAsyncCall(@MoveHorz,
+    -(Length(ln) - (pos(Completion.CurrentString, ln) +
+    Length(Completion.CurrentString)) + 1));
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
@@ -500,17 +511,18 @@ var
 begin
   if ssCtrl in Shift then
   begin
-    if (CodeEditor.Lines.Count<CodeEditor.LinesInWindow) And (y>CodeEditor.Lines.Count*CodeEditor.LineHeight) then
+    if (CodeEditor.Lines.Count < CodeEditor.LinesInWindow) and
+      (y > CodeEditor.Lines.Count * CodeEditor.LineHeight) then
     begin
-  Highlight.JumpItem:=SelectedItem(-1, 0);
-  CodeEditor.Invalidate;
+      Highlight.JumpItem := SelectedItem(-1, 0);
+      CodeEditor.Invalidate;
       Exit;
     end;
     l := CodeEditor.PixelsToLogicalPos(Point(x, y)).y - 1;
     pos := CodeEditor.PixelsToLogicalPos(Point(x, y)).x - 1;
     sel := GetAtCursor(x, y);
     for i := 0 to FFunctions.Count - 1 do
-      if Copy(FFunctions[i].Name, 1, System.Pos('(', FFunctions[i].Name)-1) = sel then
+      if Copy(FFunctions[i].Name, 1, System.Pos('(', FFunctions[i].Name) - 1) = sel then
       begin
         Highlight.JumpItem := SelectedItem(l, pos);
         CodeEditor.Invalidate;
@@ -525,14 +537,18 @@ begin
       end;
     for n := 0 to FDefRanges.Count - 1 do
       for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
-        if (FDefRanges[n] as TDefRange).Vars[i].Name = sel then
+        if (l >= (FDefRanges[n] as TDefRange).StartLine) and
+          (l <= (FDefRanges[n] as TDefRange).EndLine) and
+          ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
         begin
+          if (FDefRanges[n] as TDefRange).Vars[i].Line > l then
+            Continue;
           Highlight.JumpItem := SelectedItem(l, pos);
           CodeEditor.Invalidate;
           Exit;
         end;
-  Highlight.JumpItem:=SelectedItem(-1, 0);
-  CodeEditor.Invalidate;
+    Highlight.JumpItem := SelectedItem(-1, 0);
+    CodeEditor.Invalidate;
   end;
 end;
 
@@ -544,24 +560,32 @@ begin
   CodeEditor.LogicalCaretXY := p;
   sel := GetCurrWord;
   for i := 0 to FFunctions.Count - 1 do
-    if Copy(FFunctions[i].Name, 1, Pos('(', FFunctions[i].Name)-1)  = sel then
+    if Copy(FFunctions[i].Name, 1, Pos('(', FFunctions[i].Name) - 1) = sel then
     begin
-      CodeEditor.LogicalCaretXY := Point(0, FFunctions[i].Line);
+      CodeEditor.LogicalCaretXY :=
+        Point(Pos(FFunctions[i].Name, CodeEditor.Lines[FFunctions[i].Line]),
+        FFunctions[i].Line + 1);
       Exit;
     end;
   for i := 0 to FVars.Count - 1 do
     if FVars[i].Name = sel then
     begin
-      CodeEditor.LogicalCaretXY := Point(FVars[i].Pos, FVars[i].Line);
+      if FVars[i].Line >= p.y then
+        Continue;
+      CodeEditor.LogicalCaretXY := Point(FVars[i].Pos, FVars[i].Line + 1);
       Exit;
     end;
   for n := 0 to FDefRanges.Count - 1 do
     for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
-      if (FDefRanges[n] as TDefRange).Vars[i].Name = sel then
+      if (p.y - 1 >= (FDefRanges[n] as TDefRange).StartLine) and
+        (p.y - 1 <= (FDefRanges[n] as TDefRange).EndLine) and
+        ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
       begin
+        if (FDefRanges[n] as TDefRange).Vars[i].Line >= p.y then
+          Continue;
         CodeEditor.LogicalCaretXY :=
-          Point((FDefRanges[n] as TDefRange).Vars[i].Pos, (FDefRanges[n] as
-          TDefRange).Vars[i].Line);
+          Point((FDefRanges[n] as TDefRange).Vars[i].Pos,
+          (FDefRanges[n] as TDefRange).Vars[i].Line + 1);
         Exit;
       end;
 
@@ -570,7 +594,7 @@ end;
 procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
-  Highlight.JumpItem:=SelectedItem(-1, 0);
+  Highlight.JumpItem := SelectedItem(-1, 0);
   CodeEditor.Invalidate;
   if (Button = mbLeft) and (ssCtrl in Shift) then
     CodeJump(CodeEditor.PixelsToLogicalPos(Point(x, y)));
@@ -581,7 +605,7 @@ var
   tmp: string;
   p: TPoint;
 begin
-  Highlight.JumpItem:=SelectedItem(-1, 0);
+  Highlight.JumpItem := SelectedItem(-1, 0);
   tmp := GetCurrWord;
   p := Point(CodeEditor.CaretXPix, CodeEditor.CaretYPix + CodeEditor.LineHeight);
   p := CodeEditor.ClientToScreen(p);
@@ -665,6 +689,11 @@ procedure TEditorFrame.SetVar(l: TVarList);
 begin
   FVars.Clear;
   FVars.Assign(l);
+end;
+
+procedure TEditorFrame.JumpTo(p: TPoint);
+begin
+  CodeEditor.LogicalCaretXY := p;
 end;
 
 destructor TEditorFrame.Destroy;

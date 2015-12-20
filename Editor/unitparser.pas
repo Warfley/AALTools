@@ -90,6 +90,20 @@ begin
 end;
 
 procedure TUnitParser.ParseRange(var i: integer; endTok: string; RType: TRangeType);
+function searchfor(s: TStrings; str:String; out n: Integer): Boolean;
+var i: Integer;
+begin
+  n:=-1;
+  Result:=False;
+  for i:=0 to s.Count-1 do
+    if LowerCase(s[i]) =  LowerCase(str) then
+    begin
+      n:=i;
+      Result:=True;
+      Exit;
+    end;
+end;
+
 var
   x, n: integer;
   ln: string;
@@ -121,7 +135,7 @@ begin
   curr.EndLine := i;
   FMyRanges.Add(curr);
   for x := 0 to curr.Vars.Count - 1 do
-    if FCurr.Find(curr.Vars[x].Name, n) then
+    if searchfor(FCurr, curr.Vars[x].Name, n) then
       FCurr.Delete(n);
 end;
 

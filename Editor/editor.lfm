@@ -2,9 +2,9 @@ object EditorFrame: TEditorFrame
   Left = 0
   Height = 422
   Top = 0
-  Width = 1269
+  Width = 811
   ClientHeight = 422
-  ClientWidth = 1269
+  ClientWidth = 811
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
@@ -14,7 +14,7 @@ object EditorFrame: TEditorFrame
     Left = 0
     Height = 422
     Top = 0
-    Width = 1269
+    Width = 811
     Align = alClient
     Font.Height = -22
     Font.Name = 'Courier New'
@@ -469,6 +469,7 @@ object EditorFrame: TEditorFrame
     MouseLinkColor.Foreground = clBlue
     LineHighlightColor.Background = clNone
     LineHighlightColor.Foreground = clNone
+    TabWidth = 2
     OnChange = CodeEditorChange
     inline SynLeftGutterPartList1: TSynGutterPartList
       object SynGutterMarks1: TSynGutterMarks
@@ -520,20 +521,20 @@ object EditorFrame: TEditorFrame
     OnCodeCompletion = CompletionCodeCompletion
     ExecCommandID = ecSynCompletionExecute
     Editor = CodeEditor
-    left = 135
-    top = 150
+    left = 168
+    top = 8
   end
   object SelectHighlightTimer: TTimer
     Enabled = False
     Interval = 2000
     OnTimer = SelectHighlightTimerTimer
-    left = 376
-    top = 150
+    left = 296
+    top = 8
   end
   object CheckSelTimer: TTimer
     Interval = 200
     OnTimer = CheckSelTimerTimer
-    left = 710
-    top = 229
+    left = 64
+    top = 8
   end
 end

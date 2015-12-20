@@ -65,13 +65,14 @@ implementation
 
 {$R *.lfm}
 
-
 procedure TEditorFrame.MoveHorz(i: IntPtr);
 var
   p: TPoint;
 begin
   p := CodeEditor.LogicalCaretXY;
   p.x := p.x + i;
+  while Length(CodeEditor.Lines[p.y-1])<p.x-1 do
+    CodeEditor.Lines[p.y-1]:= CodeEditor.Lines[p.y-1]+' ';
   CodeEditor.LogicalCaretXY := p;
 end;
 
@@ -307,7 +308,7 @@ procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
     counter, c: integer;
   begin
     while (i >= 0) do
-      if isEnd(CodeEditor.Lines[i], 'func') then
+      if isEnd(CodeEditor.Lines[i], 'func') or isEnd(CodeEditor.Lines[i], 'endfunc') then
       begin
         Inc(i);
         Break;

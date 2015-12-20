@@ -32,6 +32,7 @@ type
     procedure SelectHighlightTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
+    FOnParserFinished: TNotifyEvent;
     moveright: boolean;
     currWord: string;
     FOnChange: TNotifyEvent;
@@ -53,6 +54,7 @@ type
     procedure MoveVert(i: IntPtr);
     function GetAtCursor(x, y: integer): string;
     procedure CodeJump(p: TPoint);
+    procedure ParserHasFinished(Sender:TObject);
     { private declarations }
   public
     procedure Save(p: string = '');
@@ -66,6 +68,7 @@ type
     property Font: TFont read GetFont write SetFont;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     procedure JumpTo(p: TPoint);
+    property OnParserFinished: TNotifyEvent read FOnParserFinished write FOnParserFinished;
     { public declarations }
   end;
 
@@ -138,6 +141,12 @@ begin
     'Keywords.lst');
   UpdateTimerTimer(nil);
   currWord := '';
+end;
+
+procedure TEditorFrame.ParserHasFinished(Sender: TObject);
+begin
+  if Assigned(FOnParserFinished) then
+    FOnParserFinished(Self);
 end;
 
 procedure TEditorFrame.CompletionExecute(Sender: TObject);
@@ -292,6 +301,7 @@ begin
   begin
     Parser.Free;
     Parser := TUnitParser.Create(True);
+    Parser.OnFinished:=@ParserHasFinished;
     Parser.Text := CodeEditor.Lines.Text;
     Parser.Funcs := FFunctions;
     Parser.Vars := FVars;

@@ -10,6 +10,7 @@ uses
 type
   TUnitParser = class(TThread)
   private
+    FOnVarFound, FOnFuncFound, FOnFinished: TNotifyEvent;
     FText: TStringList;
     FFunc: TFuncList;
     FRanges: TObjectList;
@@ -32,6 +33,9 @@ type
     property Vars: TVarList read FVars write FVars;
     constructor Create(CreateSuspended: boolean);
     destructor Destroy; override;
+    property OnVarFound: TNotifyEvent read FOnVarFound write FOnFuncFound;
+    property OnFuncFound: TNotifyEvent read FOnFuncFound write FOnFuncFound;
+    property OnFinished: TNotifyEvent read FOnFinished write FOnFinished;
   end;
 
 implementation
@@ -177,6 +181,8 @@ begin
       begin
         FCurr.Add(str);
         vars.Add(VarInfo(str, line, s));
+        if Assigned(FOnVarFound) then
+          Application.QueueAsyncCall(TDataEvent(FOnVarFound), PtrInt(Self));
       end;
     end;
     Inc(i);
@@ -213,6 +219,8 @@ begin
       end;
       str := Copy(ln, s, len);
       FMyFunc.Add(FuncInfo(str, i));
+      if Assigned(FOnFuncFound) then
+        Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
       ParseRange(i, 'endfunc', rtFunc);
     end
     else if isEnd(ln, 'if') then
@@ -230,6 +238,8 @@ begin
   Application.QueueAsyncCall(@UpdateTheShit, 0);
   while FWait do
     Sleep(20);
+  if Assigned(FOnFinished) then
+    Application.QueueAsyncCall(TDataEvent(FOnFinished), PtrInt(self));
 end;
 
 procedure TUnitParser.UpdateTheShit(Data: IntPtr);

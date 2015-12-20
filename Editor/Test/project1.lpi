@@ -111,7 +111,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="8">
       <Unit0>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -152,6 +152,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ListRecords"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="..\codeformatter.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CodeFormatter"/>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

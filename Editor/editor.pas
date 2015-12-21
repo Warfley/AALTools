@@ -53,10 +53,11 @@ type
     procedure MoveHorz(i: IntPtr);
     procedure MoveVert(i: IntPtr);
     function GetAtCursor(x, y: integer): string;
-    procedure CodeJump(p: TPoint);
     procedure ParserHasFinished(Sender: TObject);
     { private declarations }
   public
+    procedure SetFocus; override;
+    procedure CodeJump(p: TPoint);
     procedure StartFormatter;
     procedure Save(p: string = '');
     procedure Load(p: string = '');
@@ -143,6 +144,12 @@ begin
     'Keywords.lst');
   UpdateTimerTimer(nil);
   currWord := '';
+end;
+
+procedure TEditorFrame.SetFocus;
+begin
+  inherited;
+  CodeEditor.SetFocus;
 end;
 
 procedure TEditorFrame.ParserHasFinished(Sender: TObject);
@@ -351,7 +358,6 @@ begin
   Application.QueueAsyncCall(@MoveHorz,
     -(Length(ln) - (pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString)) + 1));
-
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
@@ -580,6 +586,7 @@ begin
       CodeEditor.LogicalCaretXY :=
         Point(Pos(FFunctions[i].Name, CodeEditor.Lines[FFunctions[i].Line]),
         FFunctions[i].Line + 1);
+      CodeEditor.TopLine := FFunctions[i].Line + 1;
       Exit;
     end;
   for i := 0 to FVars.Count - 1 do
@@ -588,6 +595,7 @@ begin
       if FVars[i].Line >= p.y then
         Continue;
       CodeEditor.LogicalCaretXY := Point(FVars[i].Pos, FVars[i].Line + 1);
+      CodeEditor.TopLine := FVars[i].Line + 1;
       Exit;
     end;
   for n := 0 to FDefRanges.Count - 1 do
@@ -601,9 +609,9 @@ begin
         CodeEditor.LogicalCaretXY :=
           Point((FDefRanges[n] as TDefRange).Vars[i].Pos,
           (FDefRanges[n] as TDefRange).Vars[i].Line + 1);
+        CodeEditor.TopLine := (FDefRanges[n] as TDefRange).Vars[i].Line + 1;
         Exit;
       end;
-
 end;
 
 procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;

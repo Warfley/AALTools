@@ -196,7 +196,8 @@ end;
 
 procedure TForm1.PageControl1Change(Sender: TObject);
 begin
-
+  if PageControl1.ActivePage.ComponentCount>0 then
+    (PageControl1.ActivePage.Components[0] as TEditorFrame).SetFocus;
 end;
 
 procedure TForm1.QuitItemClick(Sender: TObject);

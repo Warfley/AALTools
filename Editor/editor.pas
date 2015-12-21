@@ -348,9 +348,9 @@ begin
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString), Length(ln) -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz, -(Length(ln) -
-    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1));
-
+  Application.QueueAsyncCall(@MoveHorz,
+    -(Length(ln) - (pos(Completion.CurrentString, ln) +
+    Length(Completion.CurrentString)) + 1));
 
 end;
 
@@ -465,9 +465,7 @@ begin
       Application.QueueAsyncCall(@MoveHorz, 2);
     end;
   end
-  else if (Key = Ord('D')) and (ssCtrl in Shift) and
-    (MessageDlg('Code Formatieren', 'Codeformatter:'#10#13'Wirklich formatieren?',
-    mtConfirmation, mbYesNo, 'Confirmation') = mrYes) then
+  else if (Key = Ord('D')) and (ssCtrl in Shift) then
     StartFormatter;
   moveright := True;
 end;
@@ -640,19 +638,24 @@ var
   c: TCodeFormatter;
   i: integer;
 begin
-  c := TCodeFormatter.Create;
-  try
-    c.Lines.Clear;
-    c.Lines.AddStrings(CodeEditor.Lines);
-    c.Format;
-    for i := 0 to CodeEditor.Lines.Count - 1 do
-      if CodeEditor.Lines[i] <> c.Lines[i] then
-      begin
-        CodeEditor.TextBetweenPoints[Point(0, i + 1),
-          Point(Length(CodeEditor.Lines[i]), i + 1)] := c.Lines[i];
-      end;
-  finally
-    c.Free;
+  if MessageDlg('Code Formatieren', 'Codeformatter:'#10#13'Wirklich formatieren?',
+    mtConfirmation, mbYesNo, 'Confirmation') = mrYes then
+  begin
+    c := TCodeFormatter.Create;
+    try
+      c.Lines.Clear;
+      c.Lines.AddStrings(CodeEditor.Lines);
+      c.Format;
+      for i := 0 to CodeEditor.Lines.Count - 1 do
+        if CodeEditor.Lines[i] <> c.Lines[i] then
+        begin
+          CodeEditor.TextBetweenPoints[Point(0, i + 1),
+            Point(Length(CodeEditor.Lines[i]), i + 1)] := c.Lines[i];
+        end;
+    finally
+      c.Free;
+    end;
+
   end;
 end;
 

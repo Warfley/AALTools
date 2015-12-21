@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 135
+  Left = 462
   Height = 671
-  Top = 135
+  Top = 163
   Width = 807
   ActiveControl = PageControl1
   Caption = 'AAL Editor'
@@ -19,6 +19,7 @@ object Form1: TForm1
     Align = alClient
     ParentFont = False
     TabOrder = 0
+    OnChange = PageControl1Change
   end
   object MainMenu1: TMainMenu
     left = 206
@@ -68,6 +69,14 @@ object Form1: TForm1
         Caption = 'Beenden'
         ShortCut = 16465
         OnClick = QuitItemClick
+      end
+    end
+    object MenuItem2: TMenuItem
+      Caption = 'Tools'
+      object MenuItem3: TMenuItem
+        Caption = 'Code Formatieren'
+        ShortCut = 16452
+        OnClick = MenuItem3Click
       end
     end
     object MenuItem5: TMenuItem

@@ -14,6 +14,8 @@ type
 
   TForm1 = class(TForm)
     BGDLG: TColorDialog;
+    MenuItem2: TMenuItem;
+    MenuItem3: TMenuItem;
     SiteBarDLG: TColorDialog;
     FontDialog1: TFontDialog;
     MainMenu1: TMainMenu;
@@ -40,8 +42,10 @@ type
     procedure CloseFileItemClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure MenuItem3Click(Sender: TObject);
     procedure NewItemClick(Sender: TObject);
     procedure OpenItemClick(Sender: TObject);
+    procedure PageControl1Change(Sender: TObject);
     procedure QuitItemClick(Sender: TObject);
     procedure SaveItemClick(Sender: TObject);
     procedure SaveAsItemClick(Sender: TObject);
@@ -133,6 +137,11 @@ begin
     Application.QueueAsyncCall(TDataEvent(@NewItemClick), 0);
 end;
 
+procedure TForm1.MenuItem3Click(Sender: TObject);
+begin
+  (PageControl1.ActivePage.Components[0] as TEditorFrame).StartFormatter;
+end;
+
 procedure TForm1.NewItemClick(Sender: TObject);
 var
   tmp: TTabSheet;
@@ -183,6 +192,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TForm1.PageControl1Change(Sender: TObject);
+begin
+
 end;
 
 procedure TForm1.QuitItemClick(Sender: TObject);

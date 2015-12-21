@@ -16,6 +16,8 @@ type
     FSelectedParam: integer;
     procedure SetSelectedParam(x: integer);
     function GetFunc: string;
+    function GetSummarySize: integer;
+    function GetSummaryWidth: integer;
     procedure SetFunc(func: string);
     procedure SetInfo(inf: string);
   protected
@@ -31,6 +33,39 @@ type
 
 implementation
 
+function TEditorToolTip.GetSummarySize: integer;
+var
+  sl: TStringList;
+var
+  i: integer;
+begin
+  Result := 0;
+  sl := TStringList.Create;
+  try
+    sl.Text := FInfo;
+    for i := 0 to sl.Count - 1 do
+      Result := Result + Canvas.TextHeight(sl[i]);
+  finally
+    sl.Free;
+  end;
+end;
+
+function TEditorToolTip.GetSummaryWidth: integer;
+var
+  sl: TStringList;
+var
+  i: integer;
+begin
+  Result := 0;
+  sl := TStringList.Create;
+  try
+    sl.Text := FInfo;
+    for i := 0 to sl.Count - 1 do
+      Result := Max(Result, Canvas.GetTextWidth(sl[i]));
+  finally
+    sl.Free;
+  end;
+end;
 
 procedure TEditorToolTip.SetSelectedParam(x: integer);
 begin
@@ -57,8 +92,8 @@ begin
     Pos('(', func) - 1);
   for i := 0 to FParams.Count - 1 do
     FParams[i] := Trim(FParams[i]);
-  Self.Width := Max(Canvas.TextWidth(GetFunc), Canvas.TextWidth(FInfo)) + 4;
-  self.Height := Canvas.TextHeight(GetFunc) + Canvas.TextHeight(FInfo) + 4;
+  Self.Width := Max(Canvas.TextWidth(GetFunc), GetSummaryWidth) + 4;
+  self.Height := Canvas.TextHeight(GetFunc) + GetSummarySize + 4;
   Invalidate;
 end;
 
@@ -73,14 +108,15 @@ end;
 procedure TEditorToolTip.Paint;
 var
   p, i: integer;
+  sl: TStringList;
 begin
-  Canvas.Brush.Color:=Color;
-  Canvas.Brush.Style:=bsSolid;
-  Canvas.Pen.Style:=psSolid;
-  Canvas.Pen.Color:=$00333333;
-  Canvas.Rectangle(0,0, Width, Height);
+  Canvas.Brush.Color := Color;
+  Canvas.Brush.Style := bsSolid;
+  Canvas.Pen.Style := psSolid;
+  Canvas.Pen.Color := $00333333;
+  Canvas.Rectangle(0, 0, Width, Height);
   Canvas.Brush.Style := bsClear;
-  Canvas.Pen.Style:=psClear;
+  Canvas.Pen.Style := psClear;
   Canvas.Font := Font;
   p := 2;
   Canvas.TextOut(p, 1, FFunc + '(');
@@ -99,7 +135,18 @@ begin
     end;
   end;
   Canvas.TextOut(p, 1, ')');
-  Canvas.TextOut(2, Canvas.TextHeight(FFunc) + 3, FInfo);
+  p:=Canvas.TextHeight(FFunc)+3;
+  sl:=TStringList.Create;
+  try
+    sl.Text:=FInfo;
+    for i:=0 to sl.Count-1 do
+    begin
+      Canvas.TextOut(1, p, sl[i]);
+      inc(p, Canvas.TextHeight(sl[i]));
+    end;
+  finally
+    sl.Free;
+  end;
   inherited;
 end;
 
@@ -107,8 +154,8 @@ constructor TEditorToolTip.Create(AOwner: TComponent);
 begin
   inherited;
   FParams := TStringList.Create;
-  FSelectedParam:=-1;
-  Visible:=False;
+  FSelectedParam := -1;
+  Visible := False;
 end;
 
 destructor TEditorToolTip.Destroy;
@@ -119,12 +166,12 @@ end;
 
 procedure TEditorToolTip.ShowAt(X, Y, LineHight: integer);
 begin
-  if x + Width > Parent.Width then
-    x := Max(0, Parent.Width - Self.Width);
-  if y + Height > Parent.Height then
-    y := y - Height
-    else
-      y:=y+LineHight;
+  if x + Width > Parent.ClientWidth then
+    x := Max(0, Parent.ClientWidth - Self.Width);
+  if y - Height < 0 then
+    y := y + LineHight
+  else
+    y := y - Height;
   Left := X;
   Top := Y;
   Visible := True;

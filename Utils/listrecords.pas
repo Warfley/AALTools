@@ -13,6 +13,7 @@ type
 
   TFuncInfo = record
     Name: String;
+    Info: String;
     Line: Integer;
     class operator Equal (a, b: TFuncInfo) R: Boolean;
   end;

@@ -22,7 +22,7 @@ type
     FWait: boolean;
     procedure UpdateTheShit(Data: IntPtr);
     procedure SetText(s: string);
-    procedure ParseLine(ln: string; vars: TVarList; line: Integer);
+    procedure ParseLine(ln: string; vars: TVarList; line: integer);
     procedure ParseRange(var i: integer; endTok: string; RType: TRangeType);
   protected
     procedure Execute; override;
@@ -94,35 +94,37 @@ begin
 end;
 
 procedure TUnitParser.ParseRange(var i: integer; endTok: string; RType: TRangeType);
-function searchfor(s: TStrings; str:String; out n: Integer): Boolean;
-var i: Integer;
-begin
-  n:=-1;
-  Result:=False;
-  for i:=0 to s.Count-1 do
-    if LowerCase(s[i]) =  LowerCase(str) then
-    begin
-      n:=i;
-      Result:=True;
-      Exit;
-    end;
-end;
+
+  function searchfor(s: TStrings; str: string; out n: integer): boolean;
+  var
+    i: integer;
+  begin
+    n := -1;
+    Result := False;
+    for i := 0 to s.Count - 1 do
+      if LowerCase(s[i]) = LowerCase(str) then
+      begin
+        n := i;
+        Result := True;
+        Exit;
+      end;
+  end;
 
 var
   x, n: integer;
   ln: string;
   curr: TDefRange;
 begin
-  if i>=FText.Count then
-   Exit;
+  if i >= FText.Count then
+    Exit;
   curr := TDefRange.Create;
-  curr.RangeType:=RType;
+  curr.RangeType := RType;
   ln := FText[i];
   curr.StartLine := i;
   ParseLine(ln, curr.Vars, i);
-  inc(i);
-  if i<FText.Count then
-  ln := FText[i];
+  Inc(i);
+  if i < FText.Count then
+    ln := FText[i];
   while (i < FText.Count) and (not isEnd(LowerCase(ln), endTok)) and not Terminated do
   begin
     if isEnd(ln, 'if') then
@@ -143,7 +145,7 @@ begin
       FCurr.Delete(n);
 end;
 
-procedure TUnitParser.ParseLine(ln: string; vars: TVarList; line: Integer);
+procedure TUnitParser.ParseLine(ln: string; vars: TVarList; line: integer);
 
   function StringsContain(s: TStrings; str: string): boolean;
   var
@@ -176,14 +178,14 @@ begin
         Inc(len);
       end;
       str := Copy(ln, s, len);
-      if len>1 then
-      if not StringsContain(FCurr, str) then
-      begin
-        FCurr.Add(str);
-        vars.Add(VarInfo(str, line, s));
-        if Assigned(FOnVarFound) then
-          Application.QueueAsyncCall(TDataEvent(FOnVarFound), PtrInt(Self));
-      end;
+      if len > 1 then
+        if not StringsContain(FCurr, str) then
+        begin
+          FCurr.Add(str);
+          vars.Add(VarInfo(str, line, s));
+          if Assigned(FOnVarFound) then
+            Application.QueueAsyncCall(TDataEvent(FOnVarFound), PtrInt(Self));
+        end;
     end;
     Inc(i);
   end;
@@ -193,47 +195,73 @@ procedure TUnitParser.Execute;
 var
   i, x, s, len: integer;
   str, ln: string;
+  sl: TStringList;
 begin
   FCurr.Clear;
   FMyFunc.Clear;
   FMYVars.Clear;
   FMyRanges.Clear;
   i := 0;
-  while (i < FText.Count) and not Terminated do
-  begin
-    ln := trim(FText[i]);
-    if isEnd(ln, 'func') then
+  sl := TStringList.Create;
+  try
+    while (i < FText.Count) and not Terminated do
     begin
-      len := 0;
-      s := 5;
-      for x := 5 to Length(ln) do
-        if ln[x] in [#0..#32] then
-          Inc(s)
-        else
-          Break;
-      for x := s to Length(ln) do
+      ln := trim(FText[i]);
+      if AnsiStartsStr(';*', ln) then
       begin
-        Inc(len);
-        if ln[x] = ')' then
-          Break;
+        sl.Add(Copy(ln, 3, Length(ln)));
+      end
+      else
+      if isEnd(ln, 'func') then
+      begin
+        len := 0;
+        s := 5;
+        for x := 5 to Length(ln) do
+          if ln[x] in [#0..#32] then
+            Inc(s)
+          else
+            Break;
+        for x := s to Length(ln) do
+        begin
+          Inc(len);
+          if ln[x] = ')' then
+            Break;
+        end;
+        str := Copy(ln, s, len);
+        FMyFunc.Add(FuncInfo(str, i, sl.Text));
+        sl.Clear;
+        if Assigned(FOnFuncFound) then
+          Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
+        ParseRange(i, 'endfunc', rtFunc);
+      end
+      else if isEnd(ln, 'if') then
+      begin
+        sl.Clear;
+        ParseRange(i, 'endif', rtIf);
+      end
+      else if isEnd(ln, 'while') then
+      begin
+        sl.Clear;
+        ParseRange(i, 'wend', rtWhile);
+      end
+      else if isEnd(ln, 'for') then
+      begin
+        sl.Clear;
+        ParseRange(i, 'next', rtFor);
+      end
+      else
+      begin
+        if ln <> '' then
+          sl.Clear;
+        ParseLine(ln, FMyVars, i);
       end;
-      str := Copy(ln, s, len);
-      FMyFunc.Add(FuncInfo(str, i));
-      if Assigned(FOnFuncFound) then
-        Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
-      ParseRange(i, 'endfunc', rtFunc);
-    end
-    else if isEnd(ln, 'if') then
-      ParseRange(i, 'endif', rtIf)
-    else if isEnd(ln, 'while') then
-      ParseRange(i, 'wend', rtWhile)
-    else if isEnd(ln, 'for') then
-      ParseRange(i, 'next', rtFor)
-    else
-      ParseLine(ln, FMyVars, i);
-    Inc(i);
+      Inc(i);
+    end;
+  finally
+    sl.Free;
   end;
-  if Terminated then Exit;
+  if Terminated then
+    Exit;
   FWait := True;
   Application.QueueAsyncCall(@UpdateTheShit, 0);
   while FWait do

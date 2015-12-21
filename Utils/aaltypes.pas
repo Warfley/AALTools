@@ -9,7 +9,7 @@ uses
 
 type
   TTokenType = (tkComment, tkIdentifier, tkFunction, tkSymbol, tkNumber, tkSpace,
-    tkString, tkUnknown, tkVar, tkUndefined);
+    tkString, tkUnknown, tkVar, tkUndefined, tkDoc);
   PHashInfo = ^THashInfo;
 
   THashInfo = record
@@ -39,11 +39,10 @@ type
     property EndLine: integer read FEnd write FEnd;
   end;
 
-function FuncInfo(Name: String; Line: Integer): TFuncInfo;
+function FuncInfo(Name: String; Line: Integer; Inf: String=''): TFuncInfo;
 function SelectedItem(Line, Pos: Integer): TSelectedItem;
 function VarInfo(Name: String; Line, Position: Integer): TVarInfo;
 implementation
-
 
 function SelectedItem(Line, Pos: Integer): TSelectedItem;
 begin
@@ -51,10 +50,11 @@ begin
   Result.Pos:=Pos;
 end;
 
-function FuncInfo(Name: String; Line: Integer): TFuncInfo;
+function FuncInfo(Name: String; Line: Integer; Inf: String=''): TFuncInfo;
 begin
   Result.Name:=Name;
   Result.Line:=Line;
+  Result.Info:=Inf;
 end;
 
 function VarInfo(Name: String; Line, Position: Integer): TVarInfo;

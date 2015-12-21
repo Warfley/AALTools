@@ -14,12 +14,13 @@ type
 
   TAALSynHighlight = class(TSynCustomHighlighter)
   private
-    FStrAttr, FCommentAttr, FIdentifierAttr, FKeyAttr, FFunctionAttr,
-    FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr, FSelectAttr,
-    FJumpAttr: TSynHighlighterAttributes;
+    FStrAttr, FDocAttr, FCommentAttr, FIdentifierAttr, FKeyAttr,
+    FFunctionAttr, FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr,
+    FSelectAttr, FJumpAttr: TSynHighlighterAttributes;
     FJumpItem: TSelectedItem;
     FSelectText: string;
     CurrLine: integer;
+    procedure SetDocAttr(v: TSynHighlighterAttributes);
     procedure SetJumpAttr(v: TSynHighlighterAttributes);
     procedure SetStrAttr(v: TSynHighlighterAttributes);
     procedure SetComAttr(v: TSynHighlighterAttributes);
@@ -61,6 +62,8 @@ type
     property SelectedText: string read FSelectText write FSelectText;
     property JumpItem: TSelectedItem read FJumpItem write FJumpItem;
   published
+    property DocumentaryAttribute: TSynHighlighterAttributes
+      read FDocAttr write SetDocAttr;
     property JumpAttribute: TSynHighlighterAttributes read FJumpAttr write SetJumpAttr;
     property StringAttribute: TSynHighlighterAttributes read FStrAttr write SetStrAttr;
     property IdentifierAttribute: TSynHighlighterAttributes
@@ -86,6 +89,11 @@ implementation
 function TAALSynHighlight.GetLine: string;
 begin
   Result := FLineText;
+end;
+
+procedure TAALSynHighlight.SetDocAttr(v: TSynHighlighterAttributes);
+begin
+  FDocAttr.Assign(v);
 end;
 
 procedure TAALSynHighlight.SetJumpAttr(v: TSynHighlighterAttributes);
@@ -379,6 +387,25 @@ procedure TAALSynHighlight.LoadConfig(Path: string);
         FVarAttr.Background := tmp.BackColor
       else
         FVarAttr.Background := clNone;
+      // FDocAttr;
+      fs.Read(tmp, SizeOf(tmp));
+      FDocAttr.Foreground := tmp.FontCol;
+      FDocAttr.Style := [];
+      if tmp.Big then
+        FDocAttr.Style := FDocAttr.Style + [fsBold];
+      if tmp.Italics then
+        FDocAttr.Style := FDocAttr.Style + [fsItalic];
+      if tmp.Underline then
+        FDocAttr.Style := FDocAttr.Style + [fsUnderline];
+      if tmp.Frame then
+        FDocAttr.FrameEdges := sfeAround
+      else
+        FDocAttr.FrameEdges := sfeNone;
+      FDocAttr.FrameColor := tmp.FrameColor;
+      if tmp.Background then
+        FDocAttr.Background := tmp.BackColor
+      else
+        FVarAttr.Background := clNone;
       // FTextAttr;
       fs.Read(tmp, SizeOf(tmp));
       FTextAttr.Foreground := tmp.FontCol;
@@ -419,6 +446,7 @@ begin
     tkNumber: Result := FNumberAttr;
     tkSpace: Result := FSpaceAttr;
     tkString: Result := FStrAttr;
+    tkDoc: Result := FDocAttr;
     tkVar: Result := FVarAttr;
     else
       Result := FTextAttr;
@@ -441,6 +469,7 @@ begin
   FVarAttr := TSynHighlighterAttributes.Create('Variable', 'Variable');
   FSelectAttr := TSynHighlighterAttributes.Create('Selected', 'Selected');
   FJumpAttr := TSynHighlighterAttributes.Create('Jump', 'Jump');
+  FDocAttr := TSynHighlighterAttributes.Create('Doc', 'Doc');
   FJumpItem.Pos := 0;
   FJumpItem.Line := -1;
   FSelectText := '';
@@ -503,10 +532,13 @@ begin
   end
   else if FLineText[FTokenEnd] = ';' then
   begin
+    if (FTokenEnd < l) and (FLineText[FTokenEnd + 1] = '*') then
+      FTok := tkDoc
+    else
+      FTok := tkComment;
     FTokenEnd := l + 1;
     FTokLen := l - FTokenPos + 1;
     FToken := Copy(FLineText, FTokenPos, FTokLen);
-    FTok := tkComment;
   end
   else if not (FLineText[FTokenEnd] in ['_', '0'..'9', 'a'..'z',
     'A'..'Z', '$', '"']) then
@@ -661,7 +693,7 @@ destructor TAALSynHighlight.Destroy;
 var
   i: integer;
 begin
-
+  FDocAttr.Free;
   FStrAttr.Free;
   FCommentAttr.Free;
   FIdentifierAttr.Free;

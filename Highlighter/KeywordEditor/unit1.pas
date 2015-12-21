@@ -32,6 +32,15 @@ type
     Button8: TButton;
     IdentifierB: TToggleBox;
     FunctionB: TToggleBox;
+    Label10: TLabel;
+    DocB: TToggleBox;
+    DocBC: TColorButton;
+    DocBG: TToggleBox;
+    DocFB: TToggleBox;
+    DocFC: TColorButton;
+    DocI: TToggleBox;
+    DocTC: TColorButton;
+    DocU: TToggleBox;
     SymbolB: TToggleBox;
     NumberB: TToggleBox;
     SpaceB: TToggleBox;
@@ -282,6 +291,16 @@ begin
       tmp.Background := VariableBG.Checked;
       tmp.BackColor := VariableBC.ButtonColor;
       fs.Write(tmp, SizeOf(tmp));
+      // Doc
+      tmp.FontCol := DocTC.ButtonColor;
+      tmp.Big := DocB.Checked;
+      tmp.Italics := DocI.Checked;
+      tmp.Underline := DocU.Checked;
+      tmp.Frame := DocFB.Checked;
+      tmp.FrameColor := DocFC.ButtonColor;
+      tmp.Background := DocBG.Checked;
+      tmp.BackColor := DocBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
       // Other
       tmp.FontCol := OtherTC.ButtonColor;
       tmp.Big := OtherB.Checked;
@@ -397,6 +416,16 @@ begin
       VariableFC.ButtonColor := tmp.FrameColor;
       VariableBG.Checked := tmp.Background;
       VariableBC.ButtonColor := tmp.BackColor;
+      // Doc
+      fs.Read(tmp, SizeOf(tmp));
+      DocTC.ButtonColor := tmp.FontCol;
+      DocB.Checked := tmp.Big;
+      DocI.Checked := tmp.Italics;
+      DocU.Checked := tmp.Underline;
+      DocFB.Checked := tmp.Frame;
+      DocFC.ButtonColor := tmp.FrameColor;
+      DocBG.Checked := tmp.Background;
+      DocBC.ButtonColor := tmp.BackColor;
       // Other
       fs.Read(tmp, SizeOf(tmp));
       OtherTC.ButtonColor := tmp.FontCol;

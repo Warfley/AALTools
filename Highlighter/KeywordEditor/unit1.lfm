@@ -748,7 +748,7 @@ object Form1: TForm1
       object OtherBC: TColorButton
         Left = 496
         Height = 25
-        Top = 244
+        Top = 272
         Width = 75
         BorderWidth = 2
         ButtonColorSize = 16
@@ -758,7 +758,7 @@ object Form1: TForm1
       object OtherBG: TToggleBox
         Left = 416
         Height = 25
-        Top = 244
+        Top = 272
         Width = 74
         Caption = 'Background'
         TabOrder = 40
@@ -766,7 +766,7 @@ object Form1: TForm1
       object OtherFC: TColorButton
         Left = 336
         Height = 25
-        Top = 244
+        Top = 272
         Width = 75
         BorderWidth = 2
         ButtonColorSize = 16
@@ -776,7 +776,7 @@ object Form1: TForm1
       object OtherFB: TToggleBox
         Left = 272
         Height = 25
-        Top = 244
+        Top = 272
         Width = 56
         Caption = 'Frame'
         TabOrder = 41
@@ -784,7 +784,7 @@ object Form1: TForm1
       object OtherU: TToggleBox
         Left = 232
         Height = 25
-        Top = 244
+        Top = 272
         Width = 34
         Caption = 'U'
         TabOrder = 42
@@ -792,7 +792,7 @@ object Form1: TForm1
       object OtherI: TToggleBox
         Left = 192
         Height = 25
-        Top = 244
+        Top = 272
         Width = 34
         Caption = 'I'
         TabOrder = 43
@@ -800,7 +800,7 @@ object Form1: TForm1
       object OtherB: TToggleBox
         Left = 152
         Height = 25
-        Top = 244
+        Top = 272
         Width = 34
         Caption = 'B'
         TabOrder = 44
@@ -808,7 +808,7 @@ object Form1: TForm1
       object OtherTC: TColorButton
         Left = 72
         Height = 25
-        Top = 244
+        Top = 272
         Width = 75
         BorderWidth = 2
         ButtonColorSize = 16
@@ -818,7 +818,7 @@ object Form1: TForm1
       object Label9: TLabel
         Left = 0
         Height = 25
-        Top = 248
+        Top = 274
         Width = 45
         Caption = 'Other'
         ParentColor = False
@@ -826,7 +826,7 @@ object Form1: TForm1
       object Button7: TButton
         Left = 496
         Height = 25
-        Top = 296
+        Top = 304
         Width = 75
         Caption = 'Save'
         OnClick = Button7Click
@@ -835,11 +835,89 @@ object Form1: TForm1
       object Button8: TButton
         Left = 416
         Height = 25
-        Top = 296
+        Top = 304
         Width = 75
         Caption = 'Load'
         OnClick = Button8Click
         TabOrder = 46
+      end
+      object DocBC: TColorButton
+        Left = 496
+        Height = 25
+        Top = 244
+        Width = 75
+        BorderWidth = 2
+        ButtonColorSize = 16
+        ButtonColor = clBlack
+        Flat = True
+      end
+      object DocBG: TToggleBox
+        Left = 416
+        Height = 25
+        Top = 244
+        Width = 74
+        Caption = 'Background'
+        TabOrder = 47
+      end
+      object DocFC: TColorButton
+        Left = 336
+        Height = 25
+        Top = 244
+        Width = 75
+        BorderWidth = 2
+        ButtonColorSize = 16
+        ButtonColor = clBlack
+        Flat = True
+      end
+      object DocFB: TToggleBox
+        Left = 272
+        Height = 25
+        Top = 244
+        Width = 56
+        Caption = 'Frame'
+        TabOrder = 48
+      end
+      object DocU: TToggleBox
+        Left = 232
+        Height = 25
+        Top = 244
+        Width = 34
+        Caption = 'U'
+        TabOrder = 49
+      end
+      object DocI: TToggleBox
+        Left = 192
+        Height = 25
+        Top = 244
+        Width = 34
+        Caption = 'I'
+        TabOrder = 50
+      end
+      object DocB: TToggleBox
+        Left = 152
+        Height = 25
+        Top = 244
+        Width = 34
+        Caption = 'B'
+        TabOrder = 51
+      end
+      object DocTC: TColorButton
+        Left = 72
+        Height = 25
+        Top = 244
+        Width = 75
+        BorderWidth = 2
+        ButtonColorSize = 16
+        ButtonColor = clRed
+        Flat = True
+      end
+      object Label10: TLabel
+        Left = 0
+        Height = 25
+        Top = 246
+        Width = 32
+        Caption = 'Doc'
+        ParentColor = False
       end
     end
   end

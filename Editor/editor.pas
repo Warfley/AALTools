@@ -7,19 +7,29 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
-  Dialogs, Graphics, StdCtrls, strutils, CodeFormatter, ToolTip;
+  Dialogs, Graphics, StdCtrls, Buttons, strutils, CodeFormatter, ToolTip,
+  ListRecords, SynEditTypes;
 
 type
 
   { TEditorFrame }
 
   TEditorFrame = class(TFrame)
+    SearchButton: TButton;
+    ReplaceButton: TButton;
+    ReplaceAllButton: TButton;
     CodeEditor: TSynEdit;
     Completion: TSynCompletion;
+    SearchEdit: TEdit;
+    Label1: TLabel;
+    SearchBar: TPanel;
+    ReplaceEdit: TEdit;
     SelectHighlightTimer: TTimer;
     CheckSelTimer: TTimer;
+    CloseSearchButton: TSpeedButton;
     ToolTipTimer: TTimer;
     procedure CheckSelTimerTimer(Sender: TObject);
+    procedure CloseSearchButtonClick(Sender: TObject);
     procedure CodeEditorChange(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
@@ -30,13 +40,19 @@ type
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
     procedure CompletionExecute(Sender: TObject);
     procedure CompletionSearchPosition(var APosition: integer);
+    procedure ReplaceAllButtonClick(Sender: TObject);
+    procedure ReplaceButtonClick(Sender: TObject);
+    procedure SearchButtonClick(Sender: TObject);
+    procedure ReplaceEditKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure SearchEditKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure SelectHighlightTimerTimer(Sender: TObject);
     procedure ToolTipTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
-    topl: Integer;
+    topl: integer;
     FToolTip: TEditorToolTip;
-    currFunc: String;
+    currFunc: string;
+    currInfo: string;
     FOnParserFinished: TNotifyEvent;
     moveright: boolean;
     currWord: string;
@@ -44,7 +60,7 @@ type
     Highlight: TAALSynHighlight;
     FFunctions: TFuncList;
     FVars: TVarList;
-    FStdFunc: TStringList;
+    FStdFunc: TFuncList;
     FFileName: string;
     FKeyWords: TStringList;
     FDefRanges: TObjectList;
@@ -61,6 +77,7 @@ type
     procedure ParserHasFinished(Sender: TObject);
     { private declarations }
   public
+    procedure ShowSearch;
     procedure SetFocus; override;
     procedure CodeJump(p: TPoint);
     procedure StartFormatter;
@@ -83,6 +100,33 @@ type
 implementation
 
 {$R *.lfm}
+
+
+function isEnd(s, endTok: string): boolean;
+var
+  l, l2: integer;
+begin
+  s := Trim(s);
+  l := Length(endTok);
+  l2 := Length(s);
+  Result := False;
+  if l2 < l then
+  begin
+    Exit;
+  end
+  else
+  if (l2 > l) and (AnsiStartsText(endTok, s) and (s[l + 1] in [#0..#32])) then
+  begin
+    Result := True;
+    Exit;
+  end
+  else
+  if LowerCase(s) = endTok then
+  begin
+    Result := True;
+    Exit;
+  end;
+end;
 
 procedure TEditorFrame.MoveHorz(i: IntPtr);
 var
@@ -127,13 +171,46 @@ begin
     FDefRanges.Add(l[i]);
 end;
 
+
+procedure TEditorFrame.ShowSearch;
+begin
+  SearchBar.Show;
+  SearchEdit.SetFocus;
+end;
+
 constructor TEditorFrame.Create(TheOwner: TComponent);
+
+  procedure LoadFuncList;
+  var
+    sl1, sl2: TStringList;
+    i: integer;
+  begin
+    sl1 := TStringList.Create;
+    sl2 := TStringList.Create;
+    try
+      sl1.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+        'Funcs.lst');
+      for i := 0 to sl1.Count - 1 do
+        if sl1[i][1] = ';' then
+          sl2.Add(Copy(sl1[i], 2, Length(sl1[i])))
+        else
+        begin
+          FStdFunc.Add(FuncInfo(sl1[i], -1, sl2.Text));
+          sl2.Clear;
+        end;
+    finally
+      sl1.Free;
+      sl2.Free;
+    end;
+  end;
+
 begin
   inherited;
+  currInfo := '';
   CodeEditor.Lines.Add('');
   FOnChange := nil;
-  FToolTip:=TEditorToolTip.Create(self);
-  FToolTip.Parent:=CodeEditor;
+  FToolTip := TEditorToolTip.Create(self);
+  FToolTip.Parent := CodeEditor;
   moveright := True;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);
@@ -142,11 +219,10 @@ begin
   CodeEditor.Highlighter := Highlight;
   FFunctions := TFuncList.Create;
   FVars := TVarList.Create;
-  FStdFunc := TStringList.Create;
+  FStdFunc := TFuncList.Create;
   FKeyWords := TStringList.Create;
   FDefRanges := TObjectList.Create(False);
-  FStdFunc.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
-    'Funcs.lst');
+  LoadFuncList;
   FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
     'Keywords.lst');
   UpdateTimerTimer(nil);
@@ -187,7 +263,8 @@ begin
   if Length(Completion.CurrentString) = 0 then
   begin
     Completion.ItemList.AddStrings(FKeyWords);
-    Completion.ItemList.AddStrings(FStdFunc);
+    for i := 0 to FStdFunc.Count - 1 do
+      Completion.ItemList.Add(FStdFunc[i].Name);
     for i := 0 to FFunctions.Count - 1 do
       Completion.ItemList.Add(FFunctions[i].Name);
   end
@@ -213,8 +290,8 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FKeyWords[i])) = 1 then
         Completion.ItemList.Add(FKeyWords[i]);
     for i := 0 to FStdFunc.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FStdFunc[i])) = 1 then
-        Completion.ItemList.Add(FStdFunc[i]);
+      if Pos(LowerCase(Completion.CurrentString), LowerCase(FStdFunc[i].Name)) = 1 then
+        Completion.ItemList.Add(FStdFunc[i].Name);
     for i := 0 to FFunctions.Count - 1 do
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i].Name)) = 1 then
         Completion.ItemList.Add(FFunctions[i].Name);
@@ -269,7 +346,8 @@ begin
   if Length(Completion.CurrentString) = 0 then
   begin
     Completion.ItemList.AddStrings(FKeyWords);
-    Completion.ItemList.AddStrings(FStdFunc);
+    for i := 0 to FStdFunc.Count - 1 do
+      Completion.ItemList.Add(FStdFunc[i].Name);
     for i := 0 to FFunctions.Count - 1 do
       Completion.ItemList.Add(FFunctions[i].Name);
   end
@@ -294,14 +372,57 @@ begin
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FKeyWords[i])) = 1 then
         Completion.ItemList.Add(FKeyWords[i]);
     for i := 0 to FStdFunc.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FStdFunc[i])) = 1 then
-        Completion.ItemList.Add(FStdFunc[i]);
+      if Pos(LowerCase(Completion.CurrentString), LowerCase(FStdFunc[i].Name)) = 1 then
+        Completion.ItemList.Add(FStdFunc[i].Name);
     for i := 0 to FFunctions.Count - 1 do
       if Pos(LowerCase(Completion.CurrentString), LowerCase(FFunctions[i].Name)) = 1 then
         Completion.ItemList.Add(FFunctions[i].Name);
     Completion.ItemList.Add(Completion.CurrentString);
   end;
   Completion.ItemList.Add('');
+end;
+
+procedure TEditorFrame.ReplaceAllButtonClick(Sender: TObject);
+begin
+      if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [ssoReplace, ssoReplaceAll],
+        Point(0, 0)) = 0 then
+        ShowMessage('Keine Ergebnisse gefunden');
+end;
+
+procedure TEditorFrame.ReplaceButtonClick(Sender: TObject);
+begin
+  if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [ssoReplace],
+    CodeEditor.BlockEnd) = 0 then
+    if MessageDlg('Dateiende Erreicht',
+      'Die Suche hat das Dateiende erreicht, von Dateianfang erneut suchen?',
+      mtConfirmation, mbYesNo, 'Suche') = mrYes then
+      if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [ssoReplace],
+        Point(0, 0)) = 0 then
+        ShowMessage('Keine Ergebnisse gefunden');
+end;
+
+procedure TEditorFrame.SearchButtonClick(Sender: TObject);
+begin
+  if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [], CodeEditor.BlockEnd) = 0 then
+    if MessageDlg('Dateiende Erreicht',
+      'Die Suche hat das Dateiende erreicht, von Dateianfang erneut suchen?',
+      mtConfirmation, mbYesNo, 'Suche') = mrYes then
+      if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [], Point(0, 0)) = 0 then
+        ShowMessage('Keine Ergebnisse gefunden');
+end;
+
+procedure TEditorFrame.ReplaceEditKeyUp(Sender: TObject; var Key: word;
+  Shift: TShiftState);
+begin
+  if Key = 13 then
+    ReplaceButtonClick(nil);
+end;
+
+procedure TEditorFrame.SearchEditKeyUp(Sender: TObject; var Key: word;
+  Shift: TShiftState);
+begin
+  if Key = 13 then
+    SearchButtonClick(nil);
 end;
 
 procedure TEditorFrame.SelectHighlightTimerTimer(Sender: TObject);
@@ -313,8 +434,9 @@ end;
 
 procedure TEditorFrame.ToolTipTimerTimer(Sender: TObject);
 begin
-  ToolTipTimer.Enabled:=False;
-  FToolTip.Func:=currFunc;
+  ToolTipTimer.Enabled := False;
+  FToolTip.Info := currInfo;
+  FToolTip.Func := currFunc;
   FToolTip.ShowAt(CodeEditor.CaretXPix, CodeEditor.CaretYPix, CodeEditor.LineHeight);
   FToolTip.BringToFront;
 end;
@@ -370,39 +492,12 @@ begin
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString), Length(ln) -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz,
-    -(Length(ln) - (pos(Completion.CurrentString, ln) +
-    Length(Completion.CurrentString)) + 1));
+  Application.QueueAsyncCall(@MoveHorz, -(Length(ln) -
+    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1));
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
   Shift: TShiftState);
-
-  function isEnd(s, endTok: string): boolean;
-  var
-    l, l2: integer;
-  begin
-    s := Trim(s);
-    l := Length(endTok);
-    l2 := Length(s);
-    Result := False;
-    if l2 < l then
-    begin
-      Exit;
-    end
-    else
-    if (l2 > l) and (AnsiStartsText(endTok, s) and (s[l + 1] in [#0..#32])) then
-    begin
-      Result := True;
-      Exit;
-    end
-    else
-    if LowerCase(s) = endTok then
-    begin
-      Result := True;
-      Exit;
-    end;
-  end;
 
   function GotClosed(i: integer; sTok, eTok: string): boolean;
   var
@@ -487,7 +582,9 @@ begin
     end;
   end
   else if (Key = Ord('D')) and (ssCtrl in Shift) then
-    StartFormatter;
+    StartFormatter
+  else if (Key = Ord('F')) and (ssCtrl in Shift) then
+    ShowSearch;
   moveright := True;
 end;
 
@@ -652,7 +749,7 @@ begin
     Completion.Execute(GetCurrWord, p);
   if Assigned(FOnChange) then
     FOnChange(Self);
-  Invalidate;
+  CodeEditor.Invalidate;
 end;
 
 
@@ -684,83 +781,87 @@ end;
 
 procedure TEditorFrame.CheckSelTimerTimer(Sender: TObject);
 
-function isParam(out n: Integer; out s:String): Boolean;
-var i, len: Integer;
-  ln: String;
-  param: Integer;
-  d: Integer;
-begin
-  Result:=False;
-  n:=0;
-  d:=1;
-  i:=CodeEditor.LogicalCaretXY.x-1;
-  ln:=CodeEditor.Lines[CodeEditor.LogicalCaretXY.y-1];
-  while (i>0) and (d>0) do
+  function isParam(out n: integer; out s: string): boolean;
+  var
+    i, len: integer;
+    ln: string;
+    d: integer;
   begin
-    if ln[i] = ')' then
-      inc(d)
-    else if ln[i] = '(' then
-      dec(d);
-    if (d=1) and (ln[i]=',') then
-      inc(n);
-    dec(i);
-  end;
-  if d=0 then
-  begin
-    len:=0;
-    while (i>0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+    Result := False;
+    n := 0;
+    d := 1;
+    i := CodeEditor.LogicalCaretXY.x - 1;
+    ln := CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1];
+    while (i > 0) and (i <= Length(ln)) and (d > 0) do
     begin
-      dec(i);
-      inc(len);
+      if ln[i] = ')' then
+        Inc(d)
+      else if ln[i] = '(' then
+        Dec(d);
+      if (d = 1) and (ln[i] = ',') then
+        Inc(n);
+      Dec(i);
     end;
-    if len>0 then
-    s:=Copy(ln, i+1, len);
-    Result:=True;
+    if d = 0 then
+    begin
+      len := 0;
+      while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+      begin
+        Dec(i);
+        Inc(len);
+      end;
+      if len > 0 then
+        s := Copy(ln, i + 1, len);
+      Result := True;
+    end;
   end;
-end;
 
-function isStdFunc(s: String; out x: Integer): Boolean;
-var i:Integer;
-begin
-  for i:=0 to FStdFunc.Count-1 do
+  function isStdFunc(s: string; out x: integer): boolean;
+  var
+    i: integer;
   begin
-    if AnsiStartsText(s+'(', FStdFunc[i]) then
+    Result := False;
+    for i := 0 to FStdFunc.Count - 1 do
     begin
-      Result:=True;
-      x:=i;
-      Exit;
+      if AnsiStartsText(s + '(', FStdFunc[i].Name) then
+      begin
+        Result := True;
+        x := i;
+        Exit;
+      end;
     end;
   end;
-end;
 
-function isInFunc(s: String; out x: Integer): Boolean;
-var i:Integer;
-begin
-  for i:=0 to FFunctions.Count-1 do
+  function isInFunc(s: string; out x: integer): boolean;
+  var
+    i: integer;
   begin
-    if AnsiStartsText(s+'(', FFunctions[i].Name) then
+    Result := False;
+    for i := 0 to FFunctions.Count - 1 do
     begin
-      Result:=True;
-      x:=i;
-      Exit;
+      if AnsiStartsText(s + '(', FFunctions[i].Name) then
+      begin
+        Result := True;
+        x := i;
+        Exit;
+      end;
     end;
   end;
-end;
 
 var
-  s, m: String;
-  i, n: Integer;
+  s, m, inf: string;
+  i, n: integer;
   tmp: string;
 begin
-  if (CodeEditor.TopLine<>Topl) then
+  if (CodeEditor.TopLine <> Topl) then
   begin
     if FToolTip.Visible then
     begin
       FToolTip.Hide;
       CodeEditor.Invalidate;
-      currFunc:='';
+      currFunc := '';
     end;
-    topl:=CodeEditor.TopLine;
+    topl := CodeEditor.TopLine;
   end;
   tmp := lowercase(GetCurrWord());
   if tmp <> currWord then
@@ -772,38 +873,60 @@ begin
     SelectHighlightTimer.Enabled := False;
     SelectHighlightTimer.Enabled := True;
   end;
-  m:='';
+  m := '';
+  inf := '';
   if isParam(n, s) then
   begin
     if isStdFunc(s, i) then
-      m:=FStdFunc[i]
-    else if isInFunc(s, i) then
-      m:=FFunctions[i].Name;
-  end
-  else
-  begin
-    n:=-1;
-    if isStdFunc(tmp, i) then
-      m:=FStdFunc[i]
-    else if isInFunc(tmp, i) then
-      m:=FFunctions[i].Name;
-  end;
-  FToolTip.SelectedParam:=n;
-  if Length(m)>0 then
-  begin
-    if LowerCase(m)<>LowerCase(currFunc) then
     begin
-      currFunc:=m;
-      FToolTip.Hide;
-      ToolTipTimer.Enabled:=False;
-      ToolTipTimer.Enabled:=True;
+      m := FStdFunc[i].Name;
+      inf := FStdFunc[i].Info;
+    end
+    else if isInFunc(s, i) then
+    begin
+      m := FFunctions[i].Name;
+      inf := FFunctions[i].Info;
     end;
   end
   else
   begin
-    currFunc:='';
+    n := -1;
+    if isStdFunc(tmp, i) then
+    begin
+      m := FStdFunc[i].Name;
+      inf := FStdFunc[i].Info;
+    end
+    else if isInFunc(tmp, i) then
+    begin
+      m := FFunctions[i].Name;
+      inf := FFunctions[i].Info;
+    end;
+  end;
+  if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'func') then
+    m := '';
+  FToolTip.SelectedParam := n;
+  if Length(m) > 0 then
+  begin
+    if LowerCase(m) <> LowerCase(currFunc) then
+    begin
+      currInfo := inf;
+      currFunc := m;
+      FToolTip.Hide;
+      ToolTipTimer.Enabled := False;
+      ToolTipTimer.Enabled := True;
+    end;
+  end
+  else
+  begin
+    currFunc := '';
     FToolTip.Hide;
   end;
+end;
+
+procedure TEditorFrame.CloseSearchButtonClick(Sender: TObject);
+begin
+  SearchBar.Hide;
+  CodeEditor.SetFocus;
 end;
 
 function TEditorFrame.GetCurrWord(): string;

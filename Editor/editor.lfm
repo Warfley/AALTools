@@ -540,4 +540,11 @@ object EditorFrame: TEditorFrame
     left = 64
     top = 8
   end
+  object ToolTipTimer: TTimer
+    Enabled = False
+    Interval = 2000
+    OnTimer = ToolTipTimerTimer
+    left = 424
+    top = 8
+  end
 end

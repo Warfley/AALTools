@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
-  Dialogs, Graphics, StdCtrls, strutils, CodeFormatter;
+  Dialogs, Graphics, StdCtrls, strutils, CodeFormatter, ToolTip;
 
 type
 
@@ -18,6 +18,7 @@ type
     Completion: TSynCompletion;
     SelectHighlightTimer: TTimer;
     CheckSelTimer: TTimer;
+    ToolTipTimer: TTimer;
     procedure CheckSelTimerTimer(Sender: TObject);
     procedure CodeEditorChange(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -30,8 +31,12 @@ type
     procedure CompletionExecute(Sender: TObject);
     procedure CompletionSearchPosition(var APosition: integer);
     procedure SelectHighlightTimerTimer(Sender: TObject);
+    procedure ToolTipTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
+    topl: Integer;
+    FToolTip: TEditorToolTip;
+    currFunc: String;
     FOnParserFinished: TNotifyEvent;
     moveright: boolean;
     currWord: string;
@@ -127,6 +132,8 @@ begin
   inherited;
   CodeEditor.Lines.Add('');
   FOnChange := nil;
+  FToolTip:=TEditorToolTip.Create(self);
+  FToolTip.Parent:=CodeEditor;
   moveright := True;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);
@@ -299,9 +306,17 @@ end;
 
 procedure TEditorFrame.SelectHighlightTimerTimer(Sender: TObject);
 begin
-  Highlight.SelectedText := currWord;
   SelectHighlightTimer.Enabled := False;
+  Highlight.SelectedText := currWord;
   CodeEditor.Invalidate;
+end;
+
+procedure TEditorFrame.ToolTipTimerTimer(Sender: TObject);
+begin
+  ToolTipTimer.Enabled:=False;
+  FToolTip.Func:=currFunc;
+  FToolTip.ShowAt(CodeEditor.CaretXPix, CodeEditor.CaretYPix, CodeEditor.LineHeight);
+  FToolTip.BringToFront;
 end;
 
 procedure TEditorFrame.UpdateTimerTimer(Sender: TObject);
@@ -668,9 +683,85 @@ begin
 end;
 
 procedure TEditorFrame.CheckSelTimerTimer(Sender: TObject);
+
+function isParam(out n: Integer; out s:String): Boolean;
+var i, len: Integer;
+  ln: String;
+  param: Integer;
+  d: Integer;
+begin
+  Result:=False;
+  n:=0;
+  d:=1;
+  i:=CodeEditor.LogicalCaretXY.x-1;
+  ln:=CodeEditor.Lines[CodeEditor.LogicalCaretXY.y-1];
+  while (i>0) and (d>0) do
+  begin
+    if ln[i] = ')' then
+      inc(d)
+    else if ln[i] = '(' then
+      dec(d);
+    if (d=1) and (ln[i]=',') then
+      inc(n);
+    dec(i);
+  end;
+  if d=0 then
+  begin
+    len:=0;
+    while (i>0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+    begin
+      dec(i);
+      inc(len);
+    end;
+    if len>0 then
+    s:=Copy(ln, i+1, len);
+    Result:=True;
+  end;
+end;
+
+function isStdFunc(s: String; out x: Integer): Boolean;
+var i:Integer;
+begin
+  for i:=0 to FStdFunc.Count-1 do
+  begin
+    if AnsiStartsText(s+'(', FStdFunc[i]) then
+    begin
+      Result:=True;
+      x:=i;
+      Exit;
+    end;
+  end;
+end;
+
+function isInFunc(s: String; out x: Integer): Boolean;
+var i:Integer;
+begin
+  for i:=0 to FFunctions.Count-1 do
+  begin
+    if AnsiStartsText(s+'(', FFunctions[i].Name) then
+    begin
+      Result:=True;
+      x:=i;
+      Exit;
+    end;
+  end;
+end;
+
 var
+  s, m: String;
+  i, n: Integer;
   tmp: string;
 begin
+  if (CodeEditor.TopLine<>Topl) then
+  begin
+    if FToolTip.Visible then
+    begin
+      FToolTip.Hide;
+      CodeEditor.Invalidate;
+      currFunc:='';
+    end;
+    topl:=CodeEditor.TopLine;
+  end;
   tmp := lowercase(GetCurrWord());
   if tmp <> currWord then
   begin
@@ -680,6 +771,38 @@ begin
     //Reset
     SelectHighlightTimer.Enabled := False;
     SelectHighlightTimer.Enabled := True;
+  end;
+  m:='';
+  if isParam(n, s) then
+  begin
+    if isStdFunc(s, i) then
+      m:=FStdFunc[i]
+    else if isInFunc(s, i) then
+      m:=FFunctions[i].Name;
+  end
+  else
+  begin
+    n:=-1;
+    if isStdFunc(tmp, i) then
+      m:=FStdFunc[i]
+    else if isInFunc(tmp, i) then
+      m:=FFunctions[i].Name;
+  end;
+  FToolTip.SelectedParam:=n;
+  if Length(m)>0 then
+  begin
+    if LowerCase(m)<>LowerCase(currFunc) then
+    begin
+      currFunc:=m;
+      FToolTip.Hide;
+      ToolTipTimer.Enabled:=False;
+      ToolTipTimer.Enabled:=True;
+    end;
+  end
+  else
+  begin
+    currFunc:='';
+    FToolTip.Hide;
   end;
 end;
 
@@ -750,6 +873,7 @@ destructor TEditorFrame.Destroy;
 var
   i: integer;
 begin
+  FToolTip.Free;
   if not (Parser.Finished) then
     Parser.Terminate;
   Parser.Free;

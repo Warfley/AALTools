@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
   Dialogs, Graphics, StdCtrls, Buttons, strutils, CodeFormatter, ToolTip,
-  ListRecords, SynEditTypes;
+  ListRecords, SynEditTypes, Math;
 
 type
 
@@ -370,6 +370,7 @@ begin
     Completion.ItemList.Add(Completion.CurrentString);
   end;
   Completion.ItemList.Add('');
+  Completion.Position := min(Max(Completion.Position, 0), Completion.ItemList.Count - 1);
 end;
 
 procedure TEditorFrame.ReplaceAllButtonClick(Sender: TObject);
@@ -477,12 +478,12 @@ begin
       SetLength(Value, Pos('(', Value));
       Value := Value + ')';
     end
-    else if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'func')
-      And AnsiEndsStr(Value, TrimLeft(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
-      begin
-        Value:=Value+'()';
-        Application.QueueAsyncCall(@MoveHorz, -1);
-      end
+    else if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'func') and
+      AnsiEndsStr(Value, TrimLeft(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+    begin
+      Value := Value + '()';
+      Application.QueueAsyncCall(@MoveHorz, -1);
+    end
     else
       Value := Value + ' ';
   end;
@@ -491,8 +492,9 @@ begin
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString), Length(ln) -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz, -(Length(ln) -
-    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1));
+  Application.QueueAsyncCall(@MoveHorz,
+    -(Length(ln) - (pos(Completion.CurrentString, ln) +
+    Length(Completion.CurrentString)) + 1));
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;

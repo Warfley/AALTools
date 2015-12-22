@@ -42,7 +42,45 @@ type
 function FuncInfo(Name: String; Line: Integer; Inf: String=''): TFuncInfo;
 function SelectedItem(Line, Pos: Integer): TSelectedItem;
 function VarInfo(Name: String; Line, Position: Integer): TVarInfo;
+function isEnd(s, endTok: string): boolean;
 implementation
+
+
+function isEnd(s, endTok: string): boolean;
+function getFirstTok(str: String): String;
+var i, len: Integer;
+begin
+  len:=1;
+  if length(str)>1 then
+  begin
+    i:=2;
+    while (str[i] in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) do
+    begin
+      inc(i);
+      inc(len);
+    end;
+  end;
+  Result:=Copy(str, 1, len);
+end;
+
+var
+  l, l2: integer;
+begin
+  s := Trim(s);
+  s:=getFirstTok(s);
+  l := Length(endTok);
+  l2 := Length(s);
+  Result := False;
+  if l2 < l then
+  begin
+    Exit;
+  end
+  else if LowerCase(s) = endTok then
+  begin
+    Result := True;
+    Exit;
+  end;
+end;
 
 function SelectedItem(Line, Pos: Integer): TSelectedItem;
 begin

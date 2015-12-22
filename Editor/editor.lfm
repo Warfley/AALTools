@@ -9,7 +9,7 @@ object EditorFrame: TEditorFrame
   ParentFont = False
   TabOrder = 0
   DesignLeft = 516
-  DesignTop = 202
+  DesignTop = 156
   inline CodeEditor: TSynEdit
     Left = 0
     Height = 400

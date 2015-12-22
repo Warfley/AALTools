@@ -102,33 +102,6 @@ implementation
 
 {$R *.lfm}
 
-
-function isEnd(s, endTok: string): boolean;
-var
-  l, l2: integer;
-begin
-  s := Trim(s);
-  l := Length(endTok);
-  l2 := Length(s);
-  Result := False;
-  if l2 < l then
-  begin
-    Exit;
-  end
-  else
-  if (l2 > l) and (AnsiStartsText(endTok, s) and (s[l + 1] in [#0..#32])) then
-  begin
-    Result := True;
-    Exit;
-  end
-  else
-  if LowerCase(s) = endTok then
-  begin
-    Result := True;
-    Exit;
-  end;
-end;
-
 procedure TEditorFrame.MoveHorz(i: IntPtr);
 var
   p: TPoint;
@@ -332,7 +305,13 @@ procedure TEditorFrame.CompleteKeyDown(Sender: TObject; var Key: word;
 begin
   if (Key = 8) and (Length(Completion.CurrentString) > 0) and
     (Completion.CurrentString[1] = '$') then
-    Completion.Deactivate;
+    Completion.Deactivate
+  else
+  if (key in [17, 18]) then
+    Completion.Deactivate
+  else if key = 9 then
+    key := 13;
+
 end;
 
 procedure TEditorFrame.CompletionSearchPosition(var APosition: integer);
@@ -395,8 +374,8 @@ end;
 
 procedure TEditorFrame.ReplaceAllButtonClick(Sender: TObject);
 begin
-  if CodeEditor.SearchReplaceEx(SearchEdit.Text, '',
-    [ssoReplace, ssoReplaceAll], Point(0, 0)) = 0 then
+  if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [ssoReplace, ssoReplaceAll],
+    Point(0, 0)) = 0 then
     ShowMessage('Keine Ergebnisse gefunden');
 end;
 
@@ -479,7 +458,7 @@ begin
     Exit;
   if (Value[1] = '$') then
   begin
-    if Value[Length(Value)]=']' then
+    if Value[Length(Value)] = ']' then
       Application.QueueAsyncCall(@MoveHorz, -1)
     else
     if Completion.CurrentString = Trim(
@@ -498,6 +477,12 @@ begin
       SetLength(Value, Pos('(', Value));
       Value := Value + ')';
     end
+    else if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'func')
+      And AnsiEndsStr(Value, TrimLeft(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+      begin
+        Value:=Value+'()';
+        Application.QueueAsyncCall(@MoveHorz, -1);
+      end
     else
       Value := Value + ' ';
   end;
@@ -506,9 +491,8 @@ begin
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString), Length(ln) -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz,
-    -(Length(ln) - (pos(Completion.CurrentString, ln) +
-    Length(Completion.CurrentString)) + 1));
+  Application.QueueAsyncCall(@MoveHorz, -(Length(ln) -
+    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1));
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;

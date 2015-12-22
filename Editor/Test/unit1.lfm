@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 271
   Height = 547
-  Top = 66
+  Top = 19
   Width = 807
   ActiveControl = PageControl1
   Caption = 'AAL Editor'

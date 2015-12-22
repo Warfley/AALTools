@@ -40,33 +40,6 @@ type
 
 implementation
 
-
-function isEnd(s, endTok: string): boolean;
-var
-  l, l2: integer;
-begin
-  s := Trim(s);
-  l := Length(endTok);
-  l2 := Length(s);
-  Result := False;
-  if l2 < l then
-  begin
-    Exit;
-  end
-  else
-  if (l2 > l) and (AnsiStartsText(endTok, s) and (s[l + 1] in [#0..#32])) then
-  begin
-    Result := True;
-    Exit;
-  end
-  else
-  if LowerCase(s) = endTok then
-  begin
-    Result := True;
-    Exit;
-  end;
-end;
-
 procedure TUnitParser.SetText(s: string);
 begin
   FText.Text := s;

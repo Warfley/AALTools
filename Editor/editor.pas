@@ -456,13 +456,18 @@ var
 begin
   moveright := False;
   if Length(Value) = 0 then
-    Exit;
-  if (Value[1] = '$') then
+    Value:=Completion.CurrentString
+  else if (Value[1] = '$') then
   begin
     if Value[Length(Value)] = ']' then
       Application.QueueAsyncCall(@MoveHorz, -1)
-    else
-    if Completion.CurrentString = Trim(
+    else if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'dim') and
+      AnsiEndsStr(Value, TrimLeft(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+    begin
+      Value := Value + '[]';
+      Application.QueueAsyncCall(@MoveHorz, -1);
+    end
+    else if Completion.CurrentString = Trim(
       CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1]) then
       Value := Value + ' = '
     else if SourceEnd.x = SourceStart.x + Length(Completion.CurrentString) then

@@ -1,11 +1,11 @@
 object Form1: TForm1
-  Left = 462
-  Height = 671
-  Top = 163
+  Left = 271
+  Height = 547
+  Top = 66
   Width = 807
   ActiveControl = PageControl1
   Caption = 'AAL Editor'
-  ClientHeight = 641
+  ClientHeight = 527
   ClientWidth = 807
   Menu = MainMenu1
   OnClose = FormClose
@@ -13,7 +13,7 @@ object Form1: TForm1
   LCLVersion = '1.7'
   object PageControl1: TPageControl
     Left = 0
-    Height = 641
+    Height = 527
     Top = 0
     Width = 807
     Align = alClient

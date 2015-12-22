@@ -65,6 +65,7 @@ type
     FKeyWords: TStringList;
     FDefRanges: TObjectList;
     Parser: TUnitParser;
+    procedure CompleteKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     function GetCurrWord: string;
     function GetFont: TFont;
     procedure SetFont(f: TFont);
@@ -207,6 +208,7 @@ constructor TEditorFrame.Create(TheOwner: TComponent);
 begin
   inherited;
   currInfo := '';
+  Completion.OnKeyDown := @CompleteKeyDown;
   CodeEditor.Lines.Add('');
   FOnChange := nil;
   FToolTip := TEditorToolTip.Create(self);
@@ -298,6 +300,7 @@ begin
     Completion.ItemList.Add(Completion.CurrentString);
   end;
   Completion.ItemList.Add('');
+  Completion.Position := 0;
 end;
 
 procedure TEditorFrame.Save(p: string = '');
@@ -322,6 +325,14 @@ begin
     FFileName := p;
     UpdateTimerTimer(nil);
   end;
+end;
+
+procedure TEditorFrame.CompleteKeyDown(Sender: TObject; var Key: word;
+  Shift: TShiftState);
+begin
+  if (Key = 8) and (Length(Completion.CurrentString) > 0) and
+    (Completion.CurrentString[1] = '$') then
+    Completion.Deactivate;
 end;
 
 procedure TEditorFrame.CompletionSearchPosition(var APosition: integer);
@@ -384,9 +395,9 @@ end;
 
 procedure TEditorFrame.ReplaceAllButtonClick(Sender: TObject);
 begin
-      if CodeEditor.SearchReplaceEx(SearchEdit.Text, '', [ssoReplace, ssoReplaceAll],
-        Point(0, 0)) = 0 then
-        ShowMessage('Keine Ergebnisse gefunden');
+  if CodeEditor.SearchReplaceEx(SearchEdit.Text, '',
+    [ssoReplace, ssoReplaceAll], Point(0, 0)) = 0 then
+    ShowMessage('Keine Ergebnisse gefunden');
 end;
 
 procedure TEditorFrame.ReplaceButtonClick(Sender: TObject);
@@ -468,8 +479,11 @@ begin
     Exit;
   if (Value[1] = '$') then
   begin
-    if AnsiStartsText(Completion.CurrentString,
-      Trim(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+    if Value[Length(Value)]=']' then
+      Application.QueueAsyncCall(@MoveHorz, -1)
+    else
+    if Completion.CurrentString = Trim(
+      CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1]) then
       Value := Value + ' = '
     else if SourceEnd.x = SourceStart.x + Length(Completion.CurrentString) then
       Value := Value + ' ';
@@ -492,8 +506,9 @@ begin
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
     Length(Completion.CurrentString), Length(ln) -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz, -(Length(ln) -
-    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1));
+  Application.QueueAsyncCall(@MoveHorz,
+    -(Length(ln) - (pos(Completion.CurrentString, ln) +
+    Length(Completion.CurrentString)) + 1));
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;

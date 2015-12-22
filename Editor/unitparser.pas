@@ -178,6 +178,8 @@ begin
         Inc(len);
       end;
       str := Copy(ln, s, len);
+      if (i<=Length(ln)) and (ln[i] = '[') then
+        str:=str+'[]';
       if len > 1 then
         if not StringsContain(FCurr, str) then
         begin

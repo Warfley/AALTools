@@ -1,4 +1,5 @@
 And
+ByRef
 Dim
 Else
 EndIf
@@ -10,6 +11,5 @@ Next
 Or
 Return
 To
-Then
 While
 WEnd

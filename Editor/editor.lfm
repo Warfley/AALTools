@@ -522,15 +522,15 @@ object EditorFrame: TEditorFrame
     Visible = False
     object Label1: TLabel
       Left = 0
-      Height = 25
+      Height = 15
       Top = 4
-      Width = 51
+      Width = 35
       Caption = 'Suche:'
       ParentColor = False
     end
     object SearchEdit: TEdit
       Left = 56
-      Height = 33
+      Height = 23
       Top = 0
       Width = 152
       OnKeyUp = SearchEditKeyUp
@@ -547,7 +547,7 @@ object EditorFrame: TEditorFrame
     end
     object ReplaceEdit: TEdit
       Left = 288
-      Height = 33
+      Height = 23
       Top = 0
       Width = 152
       OnKeyUp = ReplaceEditKeyUp

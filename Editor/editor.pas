@@ -246,15 +246,17 @@ begin
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if (FVars[i].Line <= CodeEditor.LogicalCaretXY.y) and
+      if (FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) and
         (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
         (CodeEditor.LogicalCaretXY.y - 1 < (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
-          if Pos(LowerCase(Completion.CurrentString), LowerCase(
-            (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1 then
+          if ((FDefRanges[x] as TDefRange).Vars[i].Line <=
+            CodeEditor.LogicalCaretXY.y - 1) and
+            (Pos(LowerCase(Completion.CurrentString), LowerCase(
+            (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1) then
             Completion.ItemList.Add((FDefRanges[x] as TDefRange).Vars[i].Name);
     if not StringsContain(Completion.ItemList, Completion.CurrentString) then
       Completion.ItemList.Add(Completion.CurrentString);
@@ -344,14 +346,17 @@ begin
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1 then
+      if (FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) and
+        (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
         (CodeEditor.LogicalCaretXY.y - 1 < (FDefRanges[x] as TDefRange).EndLine) then
         for i := 0 to (FDefRanges[x] as TDefRange).Vars.Count - 1 do
-          if Pos(LowerCase(Completion.CurrentString), LowerCase(
-            (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1 then
+          if ((FDefRanges[x] as TDefRange).Vars[i].Line <=
+            CodeEditor.LogicalCaretXY.y - 1) and
+            (Pos(LowerCase(Completion.CurrentString), LowerCase(
+            (FDefRanges[x] as TDefRange).Vars[i].Name)) = 1) then
             Completion.ItemList.Add((FDefRanges[x] as TDefRange).Vars[i].Name);
     if not StringsContain(Completion.ItemList, Completion.CurrentString) then
       Completion.ItemList.Add(Completion.CurrentString);
@@ -452,25 +457,25 @@ procedure TEditorFrame.CompletionCodeCompletion(var Value: string;
   Shift: TShiftState);
 var
   p: integer;
-  ln: string;
+  ln, rpval: string;
 begin
+  ln := CodeEditor.Lines[SourceStart.y - 1];
   moveright := False;
   if Length(Value) = 0 then
-    Value:=Completion.CurrentString
+    Value := Completion.CurrentString
   else if (Value[1] = '$') then
   begin
     if Value[Length(Value)] = ']' then
       Application.QueueAsyncCall(@MoveHorz, -1)
-    else if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'dim') and
-      AnsiEndsStr(Value, TrimLeft(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+    else if isEnd(ln, 'dim') and AnsiEndsStr(Value, Trim(ln)) then
     begin
       Value := Value + '[]';
       Application.QueueAsyncCall(@MoveHorz, -1);
     end
-    else if Completion.CurrentString = Trim(
-      CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1]) then
+    else if Completion.CurrentString = Trim(ln) then
       Value := Value + ' = '
-    else if SourceEnd.x = SourceStart.x + Length(Completion.CurrentString) then
+    else if (SourceEnd.x = SourceStart.x + Length(Completion.CurrentString)) and
+      not isEnd(ln, 'global') then
       Value := Value + ' ';
   end
   else
@@ -483,23 +488,24 @@ begin
       SetLength(Value, Pos('(', Value));
       Value := Value + ')';
     end
-    else if isEnd(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1], 'func') and
-      AnsiEndsStr(Value, TrimLeft(CodeEditor.Lines[CodeEditor.LogicalCaretXY.y - 1])) then
+    else if isEnd(ln, 'func') and AnsiEndsStr(Value, TrimRight(ln)) then
     begin
       Value := Value + '()';
       Application.QueueAsyncCall(@MoveHorz, -1);
     end
-    else
+    else if not ((pos(Completion.CurrentString, ln) + Length(
+      Completion.CurrentString) <= length(ln)) and
+      (ln[pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)] in
+      [#0..#32])) then
       Value := Value + ' ';
   end;
-  ln := CodeEditor.Lines[SourceStart.y - 1];
+  rpval := Value;
   Value := Copy(ln, SourceStart.x, pos(Completion.CurrentString, ln) -
     SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
-    Length(Completion.CurrentString), Length(ln) -
+    Length(Completion.CurrentString), SourceEnd.x -
     (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz,
-    -(Length(ln) - (pos(Completion.CurrentString, ln) +
-    Length(Completion.CurrentString)) + 1));
+  Application.QueueAsyncCall(@MoveHorz, -(Length(Value) -
+    (Pos(rpval, Value) + Length(rpval) - 1)));
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
@@ -532,9 +538,10 @@ procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
   end;
 
 var
-  ln, pref: string;
+  ln, pref, tmp: string;
   i, x, l: integer;
   b: boolean;
+  p: TPoint;
 begin
   if (Key = 13) and moveright then
   begin
@@ -592,6 +599,14 @@ begin
   else if (Key = Ord('F')) and (ssCtrl in Shift) then
     ShowSearch;
   moveright := True;
+  if key in [Ord('A')..Ord('Z'), Ord('0')..Ord('9')] then
+  begin
+    tmp := GetCurrWord;
+    p := Point(CodeEditor.CaretXPix, CodeEditor.CaretYPix + CodeEditor.LineHeight);
+    p := CodeEditor.ClientToScreen(p);
+    if (Length(tmp) > 1) and (tmp[1] = '$') then
+      Completion.Execute(GetCurrWord, p);
+  end;
 end;
 
 
@@ -742,17 +757,9 @@ begin
 end;
 
 procedure TEditorFrame.CodeEditorChange(Sender: TObject);
-var
-  tmp: string;
-  p: TPoint;
 begin
   Highlight.JumpItem := SelectedItem(-1, 0);
-  tmp := GetCurrWord;
-  p := Point(CodeEditor.CaretXPix, CodeEditor.CaretYPix + CodeEditor.LineHeight);
-  p := CodeEditor.ClientToScreen(p);
   UpdateTimerTimer(nil);
-  if (Length(tmp) > 1) and (tmp[1] = '$') then
-    Completion.Execute(GetCurrWord, p);
   if Assigned(FOnChange) then
     FOnChange(Self);
   CodeEditor.Invalidate;

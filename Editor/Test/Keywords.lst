@@ -6,6 +6,7 @@ EndIf
 EndFunc
 For
 Func
+Global
 If
 Next
 Or

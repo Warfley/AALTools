@@ -156,8 +156,11 @@ begin
       if len > 1 then
         if not StringsContain(FCurr, str) then
         begin
+          if isEnd(ln, 'global') then
+            FMYVars.Add(VarInfo(str, line, s))
+          else
+            vars.Add(VarInfo(str, line, s));
           FCurr.Add(str);
-          vars.Add(VarInfo(str, line, s));
           if Assigned(FOnVarFound) then
             Application.QueueAsyncCall(TDataEvent(FOnVarFound), PtrInt(Self));
         end;

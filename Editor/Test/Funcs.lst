@@ -23,6 +23,11 @@ Timer()
 ;Param: $pos = position (0 based) of character to extract
 ;Return: Returns extracted character on success, otherwise if string is shorter than $pos it returns -1
 CharAt($string, $pos)
+;Summary: Gets an unique handle to the window by class (if $windowTitle="") or by title (if $windowClass="") if both is not empty the window must have given class and title
+;Param: $windowClass = Classname of window
+;Param: $windowTitle = Title of window
+;Return: Returns an unique handle to the window (this handle never changes no matter what the title of window is)
+GetWindowHandle($windowClass, $windowTitle)
 ;Summary: Left clicks with mouse at a specific position in background (so mouse will not be moved)
 ;Param: $WindowName = Name of the window to click in
 ;Param: $x = x-position to click relative to window
@@ -33,9 +38,9 @@ ClickLeftBackground($WindowName, $x, $y)
 ;Return: Returns an unique handle to the loaded image in memory
 LoadImageFromBMP($FileName)
 ;Summary: Takes a screenshot of given window 
-;Param: $WindowName = Name window to take screenshot of (if $WindowName="" then whole dekstop will be screened)
+;Param: $UniqueWindowHandle = Window Handle (returned by GetWindowHandle or 0) to take screenshot of (if $UniqueWindowHandle=0 then whole dekstop will be screened)
 ;Return: Returns an unique handle to the image in memory
-CaptureWindowByName($WindowName)
+CaptureWindow($UniqueWindowHandle)
 ;Summary: Gets color in RGB-Format at a spcific position of loaded image
 ;Param: $UniqueImageHandle = created by LoadImageFromBMP or CaptureWindowByName
 ;Param: $x = x-position of pixel to get color of
@@ -97,6 +102,87 @@ SearchForImageNextToPosition($UniqueImageHandle, $UniqueImageHandleSearch, $x, $
 ;Param: $overlap = Overlap to use, the higher this number the higher is the chance to find best similar image but it will also take much longer (recommended is a number between 2.0 and 3.0)
 ;Return: Returns an Array with 3 entries: [0] = x; [1] = y; [2] = similarity (minimum = 0.0, worst equality; maximum = 1.0, best equality)
 SearchForSimilarImage($UniqueImageHandle, $UniqueImageHandleSearch, $x, $y, $width, $height, $accuracy, $overlap)
+;Summary: Saves an given image as *.bmp
+;Param: $UniqueImageHandle = Handle of image to save to file
+;Param: $NameOfFile = Name of file to save to
+SaveImage($UniqueImageHandle, $NameOfFile)
+;Summary: Sleeps given amount of time
+;Param: $TimeInMs = Time to sleep in ms
+Sleep($TimeInMs)
+;Summary: Creates a Graphical User-Interface Window to interact with
+;Param: $Title = Title of window
+;Param: $x = Starting x-Position of window
+;Param: $y = Starting y-Position of window
+;Param: $width = Width of window
+;Param: $height = Height of window
+;Param: $style = Style of window (you normaly can leave this 0)
+;Return: Returns an unique handle to the created window
+CreateWindow($Title, $x, $y, $width, $height, $style)
+;Summary: Creates a button on a given window
+;Param: $Window = Handle to window where the control should be created on (returned by CreateWindow)
+;Param: $Title = Text of control
+;Param: $x = Starting x-Position
+;Param: $y = Starting y-Position
+;Param: $width = Width
+;Param: $height = Height
+;Param: $style = Style of control (you normaly can leave this 0)
+;Param: $styleEx = Extended style of control (you normaly can leave this 0)
+;Return: Returns an unique handle to the created control
+CreateButton($Window, $Title, $x, $y, $width, $height, $style, $styleEx)
+;Summary: Creates a label on a given window
+;Param: $Window = Handle to window where the control should be created on (returned by CreateWindow)
+;Param: $Title = Text of control
+;Param: $x = Starting x-Position
+;Param: $y = Starting y-Position
+;Param: $width = Width
+;Param: $height = Height
+;Param: $style = Style of control (you normaly can leave this 0)
+;Param: $styleEx = Extended style of control (you normaly can leave this 0)
+;Return: Returns an unique handle to the created control
+CreateLabel($Window, $Title, $x, $y, $width, $height, $style, $styleEx)
+;Summary: Creates a checkbox on a given window
+;Param: $Window = Handle to window where the control should be created on (returned by CreateWindow)
+;Param: $Title = Text of control
+;Param: $x = Starting x-Position
+;Param: $y = Starting y-Position
+;Param: $width = Width
+;Param: $height = Height
+;Param: $style = Style of control (you normaly can leave this 0)
+;Param: $styleEx = Extended style of control (you normaly can leave this 0)
+;Return: Returns an unique handle to the created control
+CreateCheckbox($Window, $Title, $x, $y, $width, $height, $style, $styleEx)
+;Summary: Creates a Inputbox on a given window
+;Param: $Window = Handle to window where the control should be created on (returned by CreateWindow)
+;Param: $Title = Text of control
+;Param: $x = Starting x-Position
+;Param: $y = Starting y-Position
+;Param: $width = Width
+;Param: $height = Height
+;Param: $style = Style of control (you normaly can leave this 0)
+;Param: $styleEx = Extended style of control (you normaly can leave this 0)
+;Return: Returns an unique handle to the created control
+CreateInputbox($Window, $Title, $x, $y, $width, $height, $style, $styleEx)
+;Summary: Sets a a function for given control which should be executed when the event happened
+;Param: $Control = Handle to a control returned by CreateCheckbox or CreateButton
+;Param: $Event = Event to react on (possible values: "onClick")
+;Param: $FunctionName = Functionname of function to call when event happened
+SetOnEvent($Control, $Event, $FunctionName)
+;Summary: Counts the character in a given string
+;Param: $string = string to count characters
+;Return: Returns length of string
+StrLen($string)
+;Summary: Extracts an substring of an given string
+;Param: $string = String to extract string from
+;Param: $position = Position to start extracting
+;Param: $length = Length of string to extract
+;Return: Returns extracted string
+StrSubStr($string, $position, $length)
+;Summary: Finds the position of first occurence of given string in another string
+;Param: $string = String to search in
+;Param: $substring = String to find in $string
+;Param: $position = Position to start searching from
+;Return: Returns -1 if string was nor found, otherwise the position of found string
+StrContains($string, $substring, $position)
 ;Summary: Mainly used for debugging; prints the variable/array and its internal structure onto console
 ;Param: $var = variable to print
 _Debug_Dump($var)

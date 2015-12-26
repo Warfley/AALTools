@@ -111,7 +111,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="9">
+    <Units Count="10">
       <Unit0>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -162,6 +162,13 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ToolTip"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="..\formeditor.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormEditFrame"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="FormEditor"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

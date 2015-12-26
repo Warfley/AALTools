@@ -8,8 +8,8 @@ object EditorFrame: TEditorFrame
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
-  DesignLeft = 516
-  DesignTop = 156
+  DesignLeft = 479
+  DesignTop = 126
   inline CodeEditor: TSynEdit
     Left = 0
     Height = 400

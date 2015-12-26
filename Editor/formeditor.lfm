@@ -1,0 +1,9 @@
+object FormEditFrame: TFormEditFrame
+  Left = 0
+  Height = 385
+  Top = 0
+  Width = 647
+  TabOrder = 0
+  DesignLeft = 244
+  DesignTop = 116
+end

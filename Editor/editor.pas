@@ -59,6 +59,7 @@ type
     FOnChange: TNotifyEvent;
     Highlight: TAALSynHighlight;
     FFunctions: TFuncList;
+    FRequiredFiles: TStringList;
     FVars: TVarList;
     FStdFunc: TFuncList;
     FFileName: string;
@@ -197,6 +198,7 @@ begin
   FStdFunc := TFuncList.Create;
   FKeyWords := TStringList.Create;
   FDefRanges := TObjectList.Create(False);
+  FRequiredFiles:=TStringList.Create;
   LoadFuncList;
   FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
     'Keywords.lst');
@@ -447,6 +449,7 @@ begin
     Parser.Text := CodeEditor.Lines.Text;
     Parser.Funcs := FFunctions;
     Parser.Vars := FVars;
+    Parser.RequiredFiles:=FRequiredFiles;
     Parser.Ranges := FDefRanges;
     Parser.Start;
   end;
@@ -783,7 +786,7 @@ begin
         if CodeEditor.Lines[i] <> c.Lines[i] then
         begin
           CodeEditor.TextBetweenPoints[Point(0, i + 1),
-            Point(Length(CodeEditor.Lines[i]), i + 1)] := c.Lines[i];
+            Point(Length(CodeEditor.Lines[i])+1, i + 1)] := c.Lines[i];
         end;
     finally
       c.Free;
@@ -818,7 +821,7 @@ procedure TEditorFrame.CheckSelTimerTimer(Sender: TObject);
     if d = 0 then
     begin
       len := 0;
-      while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+      while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '#']) do
       begin
         Dec(i);
         Inc(len);
@@ -960,14 +963,14 @@ begin
 
   if i < 1 then
     i := 1;
-  if (i < slen) and (ln[i + 1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$']) and
+  if (i < slen) and (ln[i + 1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$', '#']) and
     ((i > 0) or (ln[i] in [#0..#32])) then
     Inc(i);
 
   while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
     Dec(i);
 
-  if (i > 0) and (ln[i] = '$') then
+  if (i > 0) and (ln[i] in ['$', '#']) then
   begin
     Inc(len);
     s := i;
@@ -1015,6 +1018,7 @@ begin
   Parser.Free;
   for i := 0 to FDefRanges.Count - 1 do
     FDefRanges.Items[i].Free;
+  FRequiredFiles.Free;
   FDefRanges.Free;
   FFunctions.Free;
   FVars.Free;

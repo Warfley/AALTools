@@ -541,7 +541,7 @@ begin
     FToken := Copy(FLineText, FTokenPos, FTokLen);
   end
   else if not (FLineText[FTokenEnd] in ['_', '0'..'9', 'a'..'z',
-    'A'..'Z', '$', '"']) then
+    'A'..'Z', '$', '"', '#']) then
   begin
     Inc(FTokenEnd);
     FToken := FLineText[FTokenPos];
@@ -556,6 +556,15 @@ begin
     Inc(FTokLen);
     FToken := copy(FLineText, FTokenPos, FTokLen);
     FTok := tkVar;
+  end
+  else if FLineText[FTokenEnd] = '#' then
+  begin
+    FTokLen:=1;
+    while FLineText[FTokenEnd+FTokLen] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-'] do
+      inc(FTokLen);
+    Inc(FTokenEnd, FTokLen);
+    FToken := copy(FLineText, FTokenPos, FTokLen);
+    FTok := tkFunction;
   end
   else if FLineText[FTokenEnd] = '"' then
   begin

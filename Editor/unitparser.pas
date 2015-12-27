@@ -15,8 +15,10 @@ type
     FFunc: TFuncList;
     FRanges: TObjectList;
     FVars: TVarList;
+    FRequiredFiles: TStringList;
     FMyFunc: TFuncList;
     FMyRanges: TObjectList;
+    FMyRequiredFiles: TStringList;
     FMYVars: TVarList;
     FCurr: TStringList;
     FWait: boolean;
@@ -27,6 +29,7 @@ type
   protected
     procedure Execute; override;
   public
+    property RequiredFiles: TStringList read FRequiredFiles write FRequiredFiles;
     property Text: string write SetText;
     property Funcs: TFuncList read FFunc write FFunc;
     property Ranges: TObjectList read FRanges write FRanges;
@@ -40,6 +43,19 @@ type
 
 implementation
 
+function StringsContain(s: TStrings; str: string): boolean;
+var
+  i: integer;
+begin
+  Result := False;
+  for i := 0 to s.Count - 1 do
+    if LowerCase(str) = LowerCase(s[i]) then
+    begin
+      Result := True;
+      Break;
+    end;
+end;
+
 procedure TUnitParser.SetText(s: string);
 begin
   FText.Text := s;
@@ -52,6 +68,7 @@ begin
   FMYVars := TVarList.Create;
   FCurr := TStringList.Create;
   FText := TStringList.Create;
+  FMyRequiredFiles := TStringList.Create;
   FreeOnTerminate := False;
   inherited Create(CreateSuspended);
 end;
@@ -61,6 +78,7 @@ begin
   FMYVars.Free;
   FMyFunc.Free;
   FMyRanges.Free;
+  FMyRequiredFiles.Free;
   FCurr.Free;
   FText.Free;
   inherited Destroy;
@@ -120,19 +138,6 @@ end;
 
 procedure TUnitParser.ParseLine(ln: string; vars: TVarList; line: integer);
 
-  function StringsContain(s: TStrings; str: string): boolean;
-  var
-    i: integer;
-  begin
-    Result := False;
-    for i := 0 to s.Count - 1 do
-      if LowerCase(str) = LowerCase(s[i]) then
-      begin
-        Result := True;
-        Break;
-      end;
-  end;
-
 var
   i, s, len: integer;
   str: string;
@@ -151,8 +156,8 @@ begin
         Inc(len);
       end;
       str := Copy(ln, s, len);
-      if (i<=Length(ln)) and (ln[i] = '[') then
-        str:=str+'[]';
+      if (i <= Length(ln)) and (ln[i] = '[') then
+        str := str + '[]';
       if len > 1 then
         if not StringsContain(FCurr, str) then
         begin
@@ -190,49 +195,64 @@ begin
         sl.Add(Copy(ln, 3, Length(ln)));
       end
       else
-      if isEnd(ln, 'func') then
-      begin
-        len := 0;
-        s := 5;
-        for x := 5 to Length(ln) do
-          if ln[x] in [#0..#32] then
-            Inc(s)
-          else
-            Break;
-        for x := s to Length(ln) do
+      if isEnd(ln, '#include') then
+        if pos('"', ln) > 0 then
         begin
-          Inc(len);
-          if ln[x] = ')' then
-            Break;
-        end;
-        str := Copy(ln, s, len);
-        FMyFunc.Add(FuncInfo(str, i, sl.Text));
-        sl.Clear;
-        if Assigned(FOnFuncFound) then
-          Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
-        ParseRange(i, 'endfunc', rtFunc);
-      end
-      else if isEnd(ln, 'if') then
-      begin
-        sl.Clear;
-        ParseRange(i, 'endif', rtIf);
-      end
-      else if isEnd(ln, 'while') then
-      begin
-        sl.Clear;
-        ParseRange(i, 'wend', rtWhile);
-      end
-      else if isEnd(ln, 'for') then
-      begin
-        sl.Clear;
-        ParseRange(i, 'next', rtFor);
-      end
-      else
-      begin
-        if ln <> '' then
+          str := ln;
+          Delete(str, 1, pos('"', str));
+          if pos('"', str) = 0 then
+          begin
+            inc(i);
+            Continue;
+          end;
+          Delete(str, Pos('"', str), length(str));
+          if not StringsContain(FMyRequiredFiles, str) then
+            FMyRequiredFiles.Add(str);
+        end
+        else
+        if isEnd(ln, 'func') then
+        begin
+          len := 0;
+          s := 5;
+          for x := 5 to Length(ln) do
+            if ln[x] in [#0..#32] then
+              Inc(s)
+            else
+              Break;
+          for x := s to Length(ln) do
+          begin
+            Inc(len);
+            if ln[x] = ')' then
+              Break;
+          end;
+          str := Copy(ln, s, len);
+          FMyFunc.Add(FuncInfo(str, i, sl.Text));
           sl.Clear;
-        ParseLine(ln, FMyVars, i);
-      end;
+          if Assigned(FOnFuncFound) then
+            Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
+          ParseRange(i, 'endfunc', rtFunc);
+        end
+        else if isEnd(ln, 'if') then
+        begin
+          sl.Clear;
+          ParseRange(i, 'endif', rtIf);
+        end
+        else if isEnd(ln, 'while') then
+        begin
+          sl.Clear;
+          ParseRange(i, 'wend', rtWhile);
+        end
+        else if isEnd(ln, 'for') then
+        begin
+          sl.Clear;
+          ParseRange(i, 'next', rtFor);
+        end
+        else
+        begin
+          if ln <> '' then
+            sl.Clear;
+          ParseLine(ln, FMyVars, i);
+        end;
       Inc(i);
     end;
   finally
@@ -259,6 +279,8 @@ begin
   FRanges.Clear;
   for i := 0 to FMyRanges.Count - 1 do
     FRanges.Add(FMyRanges[i]);
+  FRequiredFiles.Clear;
+  FRequiredFiles.AddStrings(FMyRequiredFiles);
   FWait := False;
 end;
 

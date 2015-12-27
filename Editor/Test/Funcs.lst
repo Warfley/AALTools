@@ -1,3 +1,8 @@
+;Summary: Includes the given File
+;Param: String Const to the give File
+#include(Path)
+;Summary: Defines to only include each file once to prevent recursion
+#include-once
 ;Summary: Reads one line from console window
 ;Return: Returns read line
 ConsoleRead()

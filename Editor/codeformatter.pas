@@ -73,7 +73,7 @@ type
 
   function getTokenkind(token: string): TTokenType;
   begin
-    if token[1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$', '"', ';'] then
+    if token[1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$', '"', ';', '#'] then
       Result := ttNormal
     else if token[1] in ['(', '[', '.'] then
       Result := ttNearSym
@@ -114,11 +114,19 @@ begin
         sl.Add(copy(ln, TokStart, TokLen));
       end
       else if not (ln[TokEnd] in ['_', '0'..'9', 'a'..'z', 'A'..'Z',
-        '$', '"']) then
+        '$', '"', '#']) then
       begin
         Inc(TokEnd);
         sl.Add(ln[TokStart]);
       end
+  else if ln[TokEnd] = '#' then
+  begin
+    TokLen:=1;
+    while ln[TokEnd+TokLen] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-'] do
+      inc(TokLen);
+    Inc(TokEnd, TokLen);
+    sl.Add(copy(ln, TokStart, TokLen))
+  end
       else if ln[TokEnd] = '$' then
       begin
         Inc(TokEnd);

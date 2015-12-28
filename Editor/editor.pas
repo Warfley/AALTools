@@ -496,10 +496,10 @@ begin
       Value := Value + '()';
       Application.QueueAsyncCall(@MoveHorz, -1);
     end
-    else if (pos(Completion.CurrentString, ln) > 0) and (not ((pos(Completion.CurrentString, ln) + Length(
-      Completion.CurrentString) <= length(ln)) and
-      (ln[pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)] in
-      [#0..#32]))) then
+    else if (pos(Completion.CurrentString, ln) > 0) and
+      (not ((pos(Completion.CurrentString, ln) + Length(Completion.CurrentString) <=
+      length(ln)) and (ln[pos(Completion.CurrentString, ln) +
+      Length(Completion.CurrentString)] in [#0..#32]))) then
       Value := Value + ' ';
   end;
   rpval := Value;
@@ -662,9 +662,45 @@ end;
 
 procedure TEditorFrame.CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: integer);
+
+  function GetCurrFunc(sel: string; out f: TFuncInfo): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to FFunctions.Count - 1 do
+      if LowerCase(Copy(FFunctions[i].Name, 1, Pos('(', FFunctions[i].Name) - 1)) =
+        LowerCase(sel) then
+      begin
+        Result := True;
+        f := FFunctions[i];
+        if f.FileName = '' then
+          exit;
+      end;
+  end;
+
+  function GetCurrVar(sel: string; out v: TVarInfo): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to FVars.Count - 1 do
+    begin
+      if isEnd(FVars[i].Name, sel) then
+      begin
+        Result := True;
+        v := FVars[i];
+        if v.FileName = '' then
+          exit;
+      end;
+    end;
+  end;
+
 var
   l, pos, i, n: integer;
   sel: string;
+  f: TFuncInfo;
+  v: TVarInfo;
 begin
   if ssCtrl in Shift then
   begin
@@ -678,32 +714,25 @@ begin
     l := CodeEditor.PixelsToLogicalPos(Point(x, y)).y - 1;
     pos := CodeEditor.PixelsToLogicalPos(Point(x, y)).x - 1;
     sel := GetAtCursor(x, y);
-    for i := 0 to FFunctions.Count - 1 do
-      if Copy(FFunctions[i].Name, 1, System.Pos('(', FFunctions[i].Name) - 1) = sel then
-      begin
-        Highlight.JumpItem := SelectedItem(l, pos);
-        CodeEditor.Invalidate;
-        Exit;
-      end;
-    for i := 0 to FVars.Count - 1 do
-      if FVars[i].Name = sel then
-      begin
-        Highlight.JumpItem := SelectedItem(l, pos);
-        CodeEditor.Invalidate;
-        Exit;
-      end;
-    for n := 0 to FDefRanges.Count - 1 do
-      for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
-        if (l >= (FDefRanges[n] as TDefRange).StartLine) and
-          (l <= (FDefRanges[n] as TDefRange).EndLine) and
-          ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
-        begin
-          if (FDefRanges[n] as TDefRange).Vars[i].Line > l then
-            Continue;
-          Highlight.JumpItem := SelectedItem(l, pos);
-          CodeEditor.Invalidate;
-          Exit;
-        end;
+    if GetCurrFunc(sel, f) or GetCurrVar(sel, v) then
+    begin
+      Highlight.JumpItem := SelectedItem(l, pos);
+      CodeEditor.Invalidate;
+      Exit;
+    end
+    else
+      for n := 0 to FDefRanges.Count - 1 do
+        for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
+          if (l >= (FDefRanges[n] as TDefRange).StartLine) and
+            (l <= (FDefRanges[n] as TDefRange).EndLine) and
+            ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
+          begin
+            if (FDefRanges[n] as TDefRange).Vars[i].Line > l then
+              Continue;
+            Highlight.JumpItem := SelectedItem(l, pos);
+            CodeEditor.Invalidate;
+            Exit;
+          end;
     Highlight.JumpItem := SelectedItem(-1, 0);
     CodeEditor.Invalidate;
   end;
@@ -740,6 +769,7 @@ procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
   begin
     Result := False;
     for i := 0 to FVars.Count - 1 do
+    begin
       if isEnd(FVars[i].Name, sel) then
       begin
         Result := True;
@@ -747,10 +777,12 @@ procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
         if v.FileName = '' then
           exit;
       end;
+    end;
   end;
 
 var
   sel: string;
+  i, n, l: integer;
   v: TVarInfo;
   f: TFuncInfo;
 begin
@@ -773,8 +805,23 @@ begin
           CodeJump(Point(Pos(Copy(v.Name, 1, Pos('[', v.Name) - 1),
             CodeEditor.Lines[v.Line]), v.Line + 1))
         else
-          CodeJump(Point(Pos(v.Name, CodeEditor.Lines[v.Line]), v.Line + 1));
+          CodeJump(Point(v.Pos, v.Line + 1));
       end;
+    end
+    else
+    begin
+      l := CodeEditor.LogicalCaretXY.y - 1;
+      for n := 0 to FDefRanges.Count - 1 do
+        for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
+          if (l >= (FDefRanges[n] as TDefRange).StartLine) and
+            (l <= (FDefRanges[n] as TDefRange).EndLine) and
+            ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
+          begin
+            if (FDefRanges[n] as TDefRange).Vars[i].Line > l then
+              Continue;
+            CodeJump(Point((FDefRanges[n] as TDefRange).Vars[i].Pos,
+              (FDefRanges[n] as TDefRange).Vars[i].Line + 1));
+          end;
     end;
   end;
 

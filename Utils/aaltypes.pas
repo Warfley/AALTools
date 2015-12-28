@@ -75,7 +75,7 @@ begin
   begin
     Exit;
   end
-  else if LowerCase(s) = endTok then
+  else if LowerCase(s) = LowerCase(endTok) then
   begin
     Result := True;
     Exit;

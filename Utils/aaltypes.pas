@@ -39,9 +39,9 @@ type
     property EndLine: integer read FEnd write FEnd;
   end;
 
-function FuncInfo(Name: String; Line: Integer; Inf: String=''): TFuncInfo;
+function FuncInfo(Name: String; Line: Integer; Inf: String=''; FName: String=''): TFuncInfo;
 function SelectedItem(Line, Pos: Integer): TSelectedItem;
-function VarInfo(Name: String; Line, Position: Integer): TVarInfo;
+function VarInfo(Name: String; Line, Position: Integer; FName: String=''): TVarInfo;
 function isEnd(s, endTok: string): boolean;
 implementation
 
@@ -88,18 +88,20 @@ begin
   Result.Pos:=Pos;
 end;
 
-function FuncInfo(Name: String; Line: Integer; Inf: String=''): TFuncInfo;
+function FuncInfo(Name: String; Line: Integer; Inf: String=''; FName: String=''): TFuncInfo;
 begin
   Result.Name:=Name;
   Result.Line:=Line;
   Result.Info:=Inf;
+  Result.FileName:=FName;
 end;
 
-function VarInfo(Name: String; Line, Position: Integer): TVarInfo;
+function VarInfo(Name: String; Line, Position: Integer; FName: String=''): TVarInfo;
 begin
   Result.Name:=Name;
   Result.Line:=Line;
   Result.Pos:=Position;
+  Result.FileName:=FName;
 end;
 
 constructor TDefRange.Create;

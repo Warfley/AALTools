@@ -198,7 +198,7 @@ begin
   FStdFunc := TFuncList.Create;
   FKeyWords := TStringList.Create;
   FDefRanges := TObjectList.Create(False);
-  FRequiredFiles:=TStringList.Create;
+  FRequiredFiles := TStringList.Create;
   LoadFuncList;
   FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
     'Keywords.lst');
@@ -449,7 +449,7 @@ begin
     Parser.Text := CodeEditor.Lines.Text;
     Parser.Funcs := FFunctions;
     Parser.Vars := FVars;
-    Parser.RequiredFiles:=FRequiredFiles;
+    Parser.RequiredFiles := FRequiredFiles;
     Parser.Ranges := FDefRanges;
     Parser.Start;
   end;
@@ -496,10 +496,10 @@ begin
       Value := Value + '()';
       Application.QueueAsyncCall(@MoveHorz, -1);
     end
-    else if not ((pos(Completion.CurrentString, ln) + Length(
+    else if (pos(Completion.CurrentString, ln) > 0) and (not ((pos(Completion.CurrentString, ln) + Length(
       Completion.CurrentString) <= length(ln)) and
       (ln[pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)] in
-      [#0..#32])) then
+      [#0..#32]))) then
       Value := Value + ' ';
   end;
   rpval := Value;
@@ -710,53 +710,74 @@ begin
 end;
 
 procedure TEditorFrame.CodeJump(p: TPoint);
-var
-  i, n: integer;
-  sel: string;
 begin
   CodeEditor.LogicalCaretXY := p;
-  sel := GetCurrWord;
-  for i := 0 to FFunctions.Count - 1 do
-    if Copy(FFunctions[i].Name, 1, Pos('(', FFunctions[i].Name) - 1) = sel then
-    begin
-      CodeEditor.LogicalCaretXY :=
-        Point(Pos(FFunctions[i].Name, CodeEditor.Lines[FFunctions[i].Line]),
-        FFunctions[i].Line + 1);
-      CodeEditor.TopLine := FFunctions[i].Line + 1;
-      Exit;
-    end;
-  for i := 0 to FVars.Count - 1 do
-    if FVars[i].Name = sel then
-    begin
-      if FVars[i].Line >= p.y then
-        Continue;
-      CodeEditor.LogicalCaretXY := Point(FVars[i].Pos, FVars[i].Line + 1);
-      CodeEditor.TopLine := FVars[i].Line + 1;
-      Exit;
-    end;
-  for n := 0 to FDefRanges.Count - 1 do
-    for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
-      if (p.y - 1 >= (FDefRanges[n] as TDefRange).StartLine) and
-        (p.y - 1 <= (FDefRanges[n] as TDefRange).EndLine) and
-        ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
-      begin
-        if (FDefRanges[n] as TDefRange).Vars[i].Line >= p.y then
-          Continue;
-        CodeEditor.LogicalCaretXY :=
-          Point((FDefRanges[n] as TDefRange).Vars[i].Pos,
-          (FDefRanges[n] as TDefRange).Vars[i].Line + 1);
-        CodeEditor.TopLine := (FDefRanges[n] as TDefRange).Vars[i].Line + 1;
-        Exit;
-      end;
+  CodeEditor.TopLine := p.y;
 end;
 
 procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
+
+  function GetCurrFunc(sel: string; out f: TFuncInfo): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to FFunctions.Count - 1 do
+      if LowerCase(Copy(FFunctions[i].Name, 1, Pos('(', FFunctions[i].Name) - 1)) =
+        LowerCase(sel) then
+      begin
+        Result := True;
+        f := FFunctions[i];
+        if f.FileName = '' then
+          exit;
+      end;
+  end;
+
+  function GetCurrVar(sel: string; out v: TVarInfo): boolean;
+  var
+    i: integer;
+  begin
+    Result := False;
+    for i := 0 to FVars.Count - 1 do
+      if isEnd(FVars[i].Name, sel) then
+      begin
+        Result := True;
+        v := FVars[i];
+        if v.FileName = '' then
+          exit;
+      end;
+  end;
+
+var
+  sel: string;
+  v: TVarInfo;
+  f: TFuncInfo;
 begin
   Highlight.JumpItem := SelectedItem(-1, 0);
   CodeEditor.Invalidate;
   if (Button = mbLeft) and (ssCtrl in Shift) then
-    CodeJump(CodeEditor.PixelsToLogicalPos(Point(x, y)));
+  begin
+    CodeEditor.LogicalCaretXY := CodeEditor.PixelsToLogicalPos(Point(x, y));
+    sel := GetCurrWord;
+    if GetCurrFunc(sel, f) then
+    begin
+      if (f.FileName = '') then
+        CodeJump(Point(Pos(f.Name, CodeEditor.Lines[f.Line]), f.Line + 1));
+    end
+    else if GetCurrVar(sel, v) then
+    begin
+      if (FileName = '') then
+      begin
+        if pos('[', v.Name) > 0 then
+          CodeJump(Point(Pos(Copy(v.Name, 1, Pos('[', v.Name) - 1),
+            CodeEditor.Lines[v.Line]), v.Line + 1))
+        else
+          CodeJump(Point(Pos(v.Name, CodeEditor.Lines[v.Line]), v.Line + 1));
+      end;
+    end;
+  end;
+
 end;
 
 procedure TEditorFrame.CodeEditorChange(Sender: TObject);
@@ -786,7 +807,7 @@ begin
         if CodeEditor.Lines[i] <> c.Lines[i] then
         begin
           CodeEditor.TextBetweenPoints[Point(0, i + 1),
-            Point(Length(CodeEditor.Lines[i])+1, i + 1)] := c.Lines[i];
+            Point(Length(CodeEditor.Lines[i]) + 1, i + 1)] := c.Lines[i];
         end;
     finally
       c.Free;

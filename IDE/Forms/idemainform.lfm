@@ -1,11 +1,77 @@
 object MainForm: TMainForm
-  Left = 232
-  Height = 299
-  Top = 137
-  Width = 475
+  Left = 276
+  Height = 438
+  Top = 102
+  Width = 954
   Caption = 'AAL IDE'
+  Menu = MainFormMenu
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '1.7'
+  object MainFormMenu: TMainMenu
+    left = 78
+    top = 47
+    object FileMenuItem: TMenuItem
+      Caption = 'Datei'
+      object NewMenuItem: TMenuItem
+        Caption = 'Neu'
+        object NewProjectItem: TMenuItem
+          Caption = 'Projekt'
+          ShortCut = 24654
+          OnClick = NewProjectItemClick
+        end
+        object NewFileItem: TMenuItem
+          Caption = 'AAL Datei'
+          ShortCut = 16462
+        end
+        object NewFormItem: TMenuItem
+          Caption = 'AAL Form'
+        end
+      end
+      object MenuSplitItem1: TMenuItem
+        Caption = '-'
+      end
+      object CloseFileItem: TMenuItem
+        Caption = 'Schließen'
+        ShortCut = 16471
+      end
+      object CloseAllItem: TMenuItem
+        Caption = 'Alle schließen'
+        ShortCut = 24663
+      end
+      object MenuSplitItem2: TMenuItem
+        Caption = '-'
+      end
+      object QuitMenuItem: TMenuItem
+        Caption = 'Beenden'
+        ShortCut = 16465
+      end
+    end
+    object EditMenuItem: TMenuItem
+      Caption = 'Bearbeiten'
+      object UndoMenuItem: TMenuItem
+        Caption = 'Rückgängig'
+        ShortCut = 16474
+      end
+      object RedoMenuItem: TMenuItem
+        Caption = 'Wiederherstellen'
+        ShortCut = 16473
+      end
+      object MenuSplitItem3: TMenuItem
+        Caption = '-'
+      end
+      object SearchMenuItem: TMenuItem
+        Caption = 'Suchen'
+        ShortCut = 16454
+      end
+      object MenuSplitItem4: TMenuItem
+        Caption = '-'
+      end
+      object FormatMenuItem: TMenuItem
+        Caption = 'Code Formatieren'
+        ShortCut = 16452
+      end
+    end
+  end
 end

@@ -17,6 +17,7 @@ type
     FName: string;
     FGUIBased: Boolean;
     FOpendFile: string;
+    FOnChange: TNotifyEvent;
     procedure SetMainFile(f: string);
     function GetMainFile: string;
     procedure SetProjectDir(p: string);
@@ -31,6 +32,7 @@ type
     destructor Destroy; override;
     procedure Load;
     procedure Save;
+    procedure Clear;
     procedure ReadFromFile(f: string);
     procedure WriteToFile(f: string);
     property MainFile: string read GetMainFile write SetMainFile;
@@ -41,6 +43,7 @@ type
     property Name: string read FName write FName;
     property GUIBased: Boolean read FGUIBased write FGUIBased;
     property OpendFile: String read FOpendFile write FOpendFile;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 implementation
@@ -59,11 +62,15 @@ begin
   end;
   FProjectDir := p;
   FChanged := True;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TAALProject.FilesChange(Sender: TObject);
 begin
   FChanged := True;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TAALProject.SetMainFile(f: string);
@@ -72,6 +79,8 @@ begin
   if FilenameIsAbsolute(F) then
     F := CreateRelativePath(F, FProjectDir, True);
   FMainFile := F;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 function TAALProject.GetMainFile: string;
@@ -112,6 +121,17 @@ begin
   Result:=FMainFile;
 end;
 
+procedure TAALProject.Clear;
+begin
+  FFiles.Clear;
+  FMainFile:='';
+  FName:='';
+  FProjectDir:='';
+  FChanged:=False;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
 procedure TAALProject.DeleteFile(f: string);
 var
   i: integer;
@@ -150,9 +170,14 @@ begin
     FGUIBased := ProjFile.DocumentElement.FindNode('Apptype').TextContent='GUI';
     FOpendFile:=ProjFile.DocumentElement.FindNode('FocusedFile').TextContent;
     FilesNode := ProjFile.DocumentElement.FindNode('Files');
+    FFiles.BeginUpdate;
+    try
     for i := 0 to FilesNode.ChildNodes.Count - 1 do
       if FilesNode.ChildNodes.Item[i].NodeName = 'File' then
         FFiles.Add(FilesNode.ChildNodes.Item[i].TextContent);
+    finally
+      FFiles.EndUpdate;
+    end;
   finally
     ProjFile.Free;
   end;

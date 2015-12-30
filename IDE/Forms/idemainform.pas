@@ -6,16 +6,35 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  Project, IDEStartupScreen;
+  Menus, Project, IDEStartupScreen;
 
 type
 
   { TMainForm }
 
   TMainForm = class(TForm)
+    MainFormMenu: TMainMenu;
+    FileMenuItem: TMenuItem;
+    CloseFileItem: TMenuItem;
+    CloseAllItem: TMenuItem;
+    EditMenuItem: TMenuItem;
+    FormatMenuItem: TMenuItem;
+    MenuSplitItem4: TMenuItem;
+    MenuSplitItem3: TMenuItem;
+    SearchMenuItem: TMenuItem;
+    RedoMenuItem: TMenuItem;
+    UndoMenuItem: TMenuItem;
+    QuitMenuItem: TMenuItem;
+    MenuSplitItem2: TMenuItem;
+    MenuSplitItem1: TMenuItem;
+    NewFormItem: TMenuItem;
+    NewFileItem: TMenuItem;
+    NewMenuItem: TMenuItem;
+    NewProjectItem: TMenuItem;
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure NewProjectItemClick(Sender: TObject);
   private
     FCurrentProject: TAALProject;
     FLastOpend: TStringList;
@@ -54,6 +73,7 @@ begin
   begin
     StringsDelete(FLastOpend, StartupScreen.SelectedPath);
     FLastOpend.Insert(0, StartupScreen.SelectedPath);
+    FCurrentProject.ReadFromFile(StartupScreen.SelectedPath);
     Self.Show;
   end
   else
@@ -85,6 +105,11 @@ procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   FLastOpend.Free;
   FCurrentProject.Free;
+end;
+
+procedure TMainForm.NewProjectItemClick(Sender: TObject);
+begin
+  if FCurrentProject.Changed And (MessageDlg() = mrYes)
 end;
 
 end.

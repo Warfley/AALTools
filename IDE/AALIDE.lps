@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="12">
+      <Unit0>
+        <Filename Value="AALIDE.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="28"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="Forms\idemainform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="IDEMainForm"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="44"/>
+        <CursorPos X="43" Y="53"/>
+        <UsageCount Value="28"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="Common\project.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Project"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="34"/>
+        <CursorPos X="7" Y="194"/>
+        <UsageCount Value="28"/>
+        <Loaded Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="StartupScreen"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="IDEStartupScreen"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="260"/>
+        <CursorPos X="12" Y="268"/>
+        <UsageCount Value="28"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="C:\Developer\lazarus\components\lazutils\fileutil.pas"/>
+        <UnitName Value="FileUtil"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="120"/>
+        <CursorPos X="10" Y="129"/>
+        <UsageCount Value="13"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="C:\Developer\lazarus\components\lazutils\fileutil.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="330"/>
+        <CursorPos X="3" Y="333"/>
+        <UsageCount Value="13"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="C:\Developer\lazarus\components\lazutils\lazfileutils.pas"/>
+        <UnitName Value="LazFileUtils"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="57"/>
+        <CursorPos X="10" Y="66"/>
+        <UsageCount Value="13"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="C:\Developer\lazarus\components\lazutils\lazfileutils.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="264"/>
+        <CursorPos X="40" Y="269"/>
+        <UsageCount Value="13"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="C:\Developer\FPC\src\packages\fcl-xml\src\dom.pp"/>
+        <UnitName Value="DOM"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="86"/>
+        <CursorPos X="8" Y="89"/>
+        <UsageCount Value="13"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="C:\Developer\lazarus\lcl\include\customform.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2197"/>
+        <CursorPos Y="2206"/>
+        <UsageCount Value="13"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="C:\Developer\lazarus\lcl\include\messagedialogs.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="169"/>
+        <CursorPos Y="179"/>
+        <UsageCount Value="10"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="C:\Developer\lazarus\lcl\forms.pp"/>
+        <UnitName Value="Forms"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="55"/>
+        <CursorPos X="3" Y="64"/>
+        <UsageCount Value="10"/>
+      </Unit11>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="177" TopLine="162"/>
+      </Position1>
+      <Position2>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="178" TopLine="163"/>
+      </Position2>
+      <Position3>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="179" TopLine="164"/>
+      </Position3>
+      <Position4>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="180" TopLine="165"/>
+      </Position4>
+      <Position5>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="181" TopLine="166"/>
+      </Position5>
+      <Position6>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="182" TopLine="167"/>
+      </Position6>
+      <Position7>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="183" TopLine="168"/>
+      </Position7>
+      <Position8>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="184" TopLine="169"/>
+      </Position8>
+      <Position9>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="183" TopLine="169"/>
+      </Position9>
+      <Position10>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="185" TopLine="170"/>
+      </Position10>
+      <Position11>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="187" TopLine="172"/>
+      </Position11>
+      <Position12>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="183" TopLine="172"/>
+      </Position12>
+      <Position13>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="185" TopLine="172"/>
+      </Position13>
+      <Position14>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="188" TopLine="173"/>
+      </Position14>
+      <Position15>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="189" TopLine="174"/>
+      </Position15>
+      <Position16>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="190" TopLine="175"/>
+      </Position16>
+      <Position17>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="192" TopLine="177"/>
+      </Position17>
+      <Position18>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="194" TopLine="179"/>
+      </Position18>
+      <Position19>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="199" TopLine="190"/>
+      </Position19>
+      <Position20>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="200" TopLine="190"/>
+      </Position20>
+      <Position21>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="201" TopLine="190"/>
+      </Position21>
+      <Position22>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="202" TopLine="190"/>
+      </Position22>
+      <Position23>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="203" TopLine="190"/>
+      </Position23>
+      <Position24>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="205" TopLine="190"/>
+      </Position24>
+      <Position25>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="209" Column="21" TopLine="203"/>
+      </Position25>
+      <Position26>
+        <Filename Value="Forms\idemainform.pas"/>
+        <Caret Line="62" Column="24" TopLine="44"/>
+      </Position26>
+      <Position27>
+        <Filename Value="Forms\idemainform.pas"/>
+        <Caret Line="48" Column="21" TopLine="39"/>
+      </Position27>
+      <Position28>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="216" Column="21" TopLine="207"/>
+      </Position28>
+      <Position29>
+        <Filename Value="Forms\idemainform.pas"/>
+        <Caret Line="53" Column="31" TopLine="46"/>
+      </Position29>
+      <Position30>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <Caret Line="87" Column="25" TopLine="61"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

@@ -33,7 +33,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="2">
+    <Units Count="4">
       <Unit0>
         <Filename Value="AALIDE.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -41,10 +41,24 @@
       <Unit1>
         <Filename Value="Forms\idemainform.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="IDEMainForm"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="Common\project.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Project"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="Forms\idestartupscreen.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="StartupScreen"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="IDEStartupScreen"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -55,7 +69,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Forms"/>
+      <OtherUnitFiles Value="Forms;Common"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

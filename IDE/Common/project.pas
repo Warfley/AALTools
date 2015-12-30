@@ -24,6 +24,7 @@ type
     procedure SetAbsoluteFileName(i: integer; f: string);
     procedure FilesChange(Sender: TObject);
   public
+    function GetMainFileRel: String;
     function AddFile(F: string): integer;
     procedure DeleteFile(f: string);
     constructor Create;
@@ -32,7 +33,7 @@ type
     procedure Save;
     procedure ReadFromFile(f: string);
     procedure WriteToFile(f: string);
-    property MainFile: string read FMainFile write FMainFile;
+    property MainFile: string read GetMainFile write SetMainFile;
     property FilePath[i: integer]: string read GetAbsoluteFileName;
     property Files: TStringList read FFiles;
     property ProjectDir: string read FProjectDir write SetProjectDir;
@@ -104,6 +105,11 @@ begin
   if FilenameIsAbsolute(F) then
     F := CreateRelativePath(F, FProjectDir, True);
   FFiles.Add(F);
+end;
+
+function TAALProject.GetMainFileRel:String;
+begin
+  Result:=FMainFile;
 end;
 
 procedure TAALProject.DeleteFile(f: string);
@@ -186,6 +192,7 @@ begin
     // Createing file Nodes
     FilesNode := ProjFile.CreateElement('Files');
     ProjFile.DocumentElement.AppendChild(FilesNode);
+    FilesNode.AppendChild(ProjFile.CreateTextNode(' '));
     for i := 0 to FFiles.Count - 1 do
     begin
       tmp := ProjFile.CreateElement('File');

@@ -595,6 +595,7 @@ object StartupScreen: TStartupScreen
       Height = 23
       Top = 220
       Width = 154
+      OnChange = NewProjectNameEditChange
       TabOrder = 1
       Text = 'AALProjekt1'
     end

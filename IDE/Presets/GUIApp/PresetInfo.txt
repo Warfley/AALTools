@@ -1,0 +1,3 @@
+MainFile=MainFile.apr
+FocusedFile=Form1.afm
+AppType=GUI

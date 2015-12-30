@@ -4,6 +4,7 @@ object MainForm: TMainForm
   Top = 137
   Width = 475
   Caption = 'AAL IDE'
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '1.7'

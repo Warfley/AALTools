@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  Menus, Project, IDEStartupScreen;
+  Menus, Project, IDEStartupScreen, ProjectInspector;
 
 type
 
@@ -21,6 +21,7 @@ type
     FormatMenuItem: TMenuItem;
     MenuSplitItem4: TMenuItem;
     MenuSplitItem3: TMenuItem;
+    ProjectInspector1: TProjectInspector;
     SearchMenuItem: TMenuItem;
     RedoMenuItem: TMenuItem;
     UndoMenuItem: TMenuItem;
@@ -74,6 +75,7 @@ begin
     StringsDelete(FLastOpend, StartupScreen.SelectedPath);
     FLastOpend.Insert(0, StartupScreen.SelectedPath);
     FCurrentProject.ReadFromFile(StartupScreen.SelectedPath);
+    ProjectInspector1.Project:=FCurrentProject;
     Self.Show;
   end
   else
@@ -109,7 +111,7 @@ end;
 
 procedure TMainForm.NewProjectItemClick(Sender: TObject);
 begin
-  if FCurrentProject.Changed And (MessageDlg() = mrYes)
+  //if FCurrentProject.Changed And (MessageDlg() = mrYes)
 end;
 
 end.

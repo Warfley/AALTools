@@ -15,7 +15,7 @@ type
     FProjectDir: string;
     FChanged: boolean;
     FName: string;
-    FGUIBased: Boolean;
+    FGUIBased: boolean;
     FOpendFile: string;
     FOnChange: TNotifyEvent;
     procedure SetMainFile(f: string);
@@ -25,7 +25,7 @@ type
     procedure SetAbsoluteFileName(i: integer; f: string);
     procedure FilesChange(Sender: TObject);
   public
-    function GetMainFileRel: String;
+    function GetMainFileRel: string;
     function AddFile(F: string): integer;
     procedure DeleteFile(f: string);
     constructor Create;
@@ -41,8 +41,8 @@ type
     property ProjectDir: string read FProjectDir write SetProjectDir;
     property Changed: boolean read FChanged;
     property Name: string read FName write FName;
-    property GUIBased: Boolean read FGUIBased write FGUIBased;
-    property OpendFile: String read FOpendFile write FOpendFile;
+    property GUIBased: boolean read FGUIBased write FGUIBased;
+    property OpendFile: string read FOpendFile write FOpendFile;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
@@ -88,7 +88,7 @@ begin
   if FilenameIsAbsolute(FMainFile) then
     Result := FMainFile
   else
-    Result:=CreateAbsolutePath(FMainFile, FProjectDir);
+    Result := CreateAbsolutePath(FMainFile, FProjectDir);
 end;
 
 function TAALProject.GetAbsoluteFileName(i: integer): string;
@@ -99,7 +99,7 @@ begin
   if FilenameIsAbsolute(P) then
     Result := P
   else
-    Result:=CreateAbsolutePath(P, FProjectDir);
+    Result := CreateAbsolutePath(P, FProjectDir);
 end;
 
 procedure TAALProject.SetAbsoluteFileName(i: integer; f: string);
@@ -116,18 +116,18 @@ begin
   FFiles.Add(F);
 end;
 
-function TAALProject.GetMainFileRel:String;
+function TAALProject.GetMainFileRel: string;
 begin
-  Result:=FMainFile;
+  Result := FMainFile;
 end;
 
 procedure TAALProject.Clear;
 begin
   FFiles.Clear;
-  FMainFile:='';
-  FName:='';
-  FProjectDir:='';
-  FChanged:=False;
+  FMainFile := '';
+  FName := '';
+  FProjectDir := '';
+  FChanged := False;
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -165,16 +165,17 @@ var
 begin
   try
     FFiles.Clear;
-    ReadXMLFile(ProjFile, IncludeTrailingPathDelimiter(FProjectDir) + FName + '.aalproj');
+    ReadXMLFile(ProjFile, IncludeTrailingPathDelimiter(FProjectDir) +
+      FName + '.aalproj');
     FMainFile := ProjFile.DocumentElement.FindNode('MainFile').TextContent;
-    FGUIBased := ProjFile.DocumentElement.FindNode('Apptype').TextContent='GUI';
-    FOpendFile:=ProjFile.DocumentElement.FindNode('FocusedFile').TextContent;
+    FGUIBased := ProjFile.DocumentElement.FindNode('Apptype').TextContent = 'GUI';
+    FOpendFile := ProjFile.DocumentElement.FindNode('FocusedFile').TextContent;
     FilesNode := ProjFile.DocumentElement.FindNode('Files');
     FFiles.BeginUpdate;
     try
-    for i := 0 to FilesNode.ChildNodes.Count - 1 do
-      if FilesNode.ChildNodes.Item[i].NodeName = 'File' then
-        FFiles.Add(FilesNode.ChildNodes.Item[i].TextContent);
+      for i := 0 to FilesNode.ChildNodes.Count - 1 do
+        if FilesNode.ChildNodes.Item[i].NodeName = 'File' then
+          FFiles.Add(FilesNode.ChildNodes.Item[i].TextContent);
     finally
       FFiles.EndUpdate;
     end;
@@ -189,7 +190,7 @@ var
   ProjFile: TXMLDocument;
   FilesNode, tmp, t: TDOMNode;
   i: integer;
-  s: String;
+  s: string;
 begin
   ProjFile := TXMLDocument.Create;
   try
@@ -204,9 +205,9 @@ begin
     tmp := ProjFile.CreateElement('Apptype');
     ProjFile.DocumentElement.AppendChild(tmp);
     if FGUIBased then
-      s:='GUI'
+      s := 'GUI'
     else
-      s:='CONSOLE';
+      s := 'CONSOLE';
     t := ProjFile.CreateTextNode(s);
     tmp.AppendChild(t);
     // Create Focused Node
@@ -217,7 +218,8 @@ begin
     // Createing file Nodes
     FilesNode := ProjFile.CreateElement('Files');
     ProjFile.DocumentElement.AppendChild(FilesNode);
-    FilesNode.AppendChild(ProjFile.CreateTextNode(' '));
+    if FFiles.Count = 0 then
+      FilesNode.AppendChild(ProjFile.CreateTextNode(' '));
     for i := 0 to FFiles.Count - 1 do
     begin
       tmp := ProjFile.CreateElement('File');
@@ -225,7 +227,8 @@ begin
       t := ProjFile.CreateTextNode(FFiles[i]);
       tmp.AppendChild(t);
     end;
-    WriteXMLFile(ProjFile, IncludeTrailingPathDelimiter(FProjectDir) + FName + '.aalproj');
+    WriteXMLFile(ProjFile, IncludeTrailingPathDelimiter(FProjectDir) +
+      FName + '.aalproj');
   finally
     ProjFile.Free;
   end;

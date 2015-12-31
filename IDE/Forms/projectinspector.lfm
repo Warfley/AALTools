@@ -18,6 +18,7 @@ object ProjectInspector: TProjectInspector
     Images = FileIconList
     ReadOnly = True
     TabOrder = 0
+    OnClick = ProjectFileTreeViewClick
     Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
   object FileInfoPanel: TPanel
@@ -48,6 +49,7 @@ object ProjectInspector: TProjectInspector
       EditLabel.ParentColor = False
       ReadOnly = True
       TabOrder = 0
+      Visible = False
     end
     object AddButton: TButton
       Left = 189

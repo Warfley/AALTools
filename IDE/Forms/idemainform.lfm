@@ -1,14 +1,27 @@
 object MainForm: TMainForm
-  Left = 276
+  Left = 215
   Height = 438
-  Top = 102
+  Top = 156
   Width = 954
   Caption = 'AAL IDE'
+  ClientHeight = 418
+  ClientWidth = 954
   Menu = MainFormMenu
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '1.7'
+  inline ProjectInspector1: TProjectInspector
+    Height = 418
+    Align = alLeft
+    ClientHeight = 418
+    inherited ProjectFileTreeView: TTreeView
+      Height = 234
+    end
+    inherited FileInfoPanel: TPanel
+      Top = 281
+    end
+  end
   object MainFormMenu: TMainMenu
     left = 78
     top = 47

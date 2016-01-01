@@ -28,15 +28,18 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="2">
+    <RequiredPackages Count="3">
       <Item1>
-        <PackageName Value="LazControls"/>
+        <PackageName Value="SynEdit"/>
       </Item1>
       <Item2>
-        <PackageName Value="LCL"/>
+        <PackageName Value="LazControls"/>
       </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="13">
       <Unit0>
         <Filename Value="AALIDE.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -70,6 +73,42 @@
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="ProjectInspector"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="..\Utils\aaltypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AALTypes"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\Utils\listrecords.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\Editor\codeformatter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\Editor\editor.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="Editor"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\Editor\formeditor.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\Editor\tooltip.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\Editor\unitparser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\Highlighter\aalhighlighter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -80,7 +119,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Forms;Common"/>
+      <OtherUnitFiles Value="Forms;Common;..\Utils;..\Editor;..\Highlighter"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

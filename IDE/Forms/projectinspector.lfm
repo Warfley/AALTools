@@ -6,8 +6,8 @@ object ProjectInspector: TProjectInspector
   ClientHeight = 393
   ClientWidth = 272
   TabOrder = 0
-  DesignLeft = 228
-  DesignTop = 138
+  DesignLeft = 279
+  DesignTop = 130
   object ProjectFileTreeView: TTreeView
     Left = 0
     Height = 209
@@ -19,6 +19,7 @@ object ProjectInspector: TProjectInspector
     ReadOnly = True
     TabOrder = 0
     OnClick = ProjectFileTreeViewClick
+    OnDblClick = ProjectFileTreeViewDblClick
     Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
   object FileInfoPanel: TPanel

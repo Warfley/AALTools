@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, TreeFilterEdit, Forms, Controls, ComCtrls,
-  ExtCtrls, StdCtrls, Project, Dialogs;
+  ExtCtrls, StdCtrls, Project, Dialogs, AALTypes;
 
 type
 
@@ -23,13 +23,16 @@ type
     ProjectFileTreeView: TTreeView;
     TreeFilterEdit1: TTreeFilterEdit;
     procedure ProjectFileTreeViewClick(Sender: TObject);
+    procedure ProjectFileTreeViewDblClick(Sender: TObject);
   private
     FProject: TAALProject;
+    FOpenEditor: TOpenEditorEvent;
     procedure SetProject(p: TAALProject);
     procedure ProjChanged(Sender: TObject);
     { private declarations }
   public
     property Project: TAALProject read FProject write SetProject;
+    property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
     { public declarations }
   end;
 
@@ -52,6 +55,15 @@ begin
       PathEdit.Visible := True;
   end;
 
+end;
+
+procedure TProjectInspector.ProjectFileTreeViewDblClick(Sender: TObject);
+begin
+  if Assigned(ProjectFileTreeView.Selected) And Assigned(FOpenEditor) then
+    if ProjectFileTreeView.Selected.Data = Pointer(-1) then
+      FOpenEditor(FProject.MainFile, Point(-1, -1))
+    else if IntPtr(ProjectFileTreeView.Selected.Data) >= 0 then
+      FOpenEditor(FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)], Point(-1, -1))
 end;
 
 procedure TProjectInspector.SetProject(p: TAALProject);
@@ -107,6 +119,8 @@ begin
   tmp.Data := Pointer(-1);
   for i := 0 to FProject.Files.Count - 1 do
   begin
+    if not FileExists(FProject.FilePath[i]) then
+      Continue;
     s := FProject.Files[i];
     p := CreateDirNode(ExtractFilePath(s));
     ext := ExtractFileExt(s);

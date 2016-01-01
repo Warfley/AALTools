@@ -12,6 +12,8 @@ type
     tkString, tkUnknown, tkVar, tkUndefined, tkDoc);
   PHashInfo = ^THashInfo;
 
+  TOpenEditorEvent = procedure(Filename: String; Pos: TPoint);
+
   THashInfo = record
     Key: ansistring;
     Kind: TTokenType;

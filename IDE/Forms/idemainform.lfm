@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 215
+  Left = 407
   Height = 438
-  Top = 156
+  Top = 140
   Width = 954
   Caption = 'AAL IDE'
   ClientHeight = 418
@@ -15,8 +15,11 @@ object MainForm: TMainForm
     Height = 418
     Align = alLeft
     ClientHeight = 418
+    DesignLeft = 228
+    DesignTop = 138
     inherited ProjectFileTreeView: TTreeView
       Height = 234
+      OnDblClick = nil
     end
     inherited FileInfoPanel: TPanel
       Top = 281

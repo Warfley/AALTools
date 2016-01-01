@@ -49,6 +49,7 @@ type
     procedure ToolTipTimerTimer(Sender: TObject);
     procedure UpdateTimerTimer(Sender: TObject);
   private
+    FOpenEditor: TOpenEditorEvent;
     topl: integer;
     FToolTip: TEditorToolTip;
     currFunc: string;
@@ -96,6 +97,7 @@ type
     procedure JumpTo(p: TPoint);
     property OnParserFinished: TNotifyEvent read FOnParserFinished
       write FOnParserFinished;
+    property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
     { public declarations }
   end;
 
@@ -795,7 +797,9 @@ begin
     if GetCurrFunc(sel, f) then
     begin
       if (f.FileName = '') then
-        CodeJump(Point(Pos(f.Name, CodeEditor.Lines[f.Line]), f.Line + 1));
+        CodeJump(Point(Pos(f.Name, CodeEditor.Lines[f.Line]), f.Line + 1))
+      else if Assigned(FOpenEditor) then
+        FOpenEditor(f.FileName, Point(1, f.Line + 1));
     end
     else if GetCurrVar(sel, v) then
     begin
@@ -806,7 +810,9 @@ begin
             CodeEditor.Lines[v.Line]), v.Line + 1))
         else
           CodeJump(Point(v.Pos, v.Line + 1));
-      end;
+      end
+      else if Assigned(FOpenEditor) then
+        FOpenEditor(v.FileName, Point(v.Pos+1, v.Line + 1));
     end
     else
     begin

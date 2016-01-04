@@ -14,12 +14,14 @@ type
   TFuncInfo = record
     Name: String;
     Info: String;
+    FileName: String;
     Line: Integer;
     class operator Equal (a, b: TFuncInfo) R: Boolean;
   end;
 
   TVarInfo = record
     Name: String;
+    FileName: String;
     Line: Integer;
     Pos: Integer;
     class operator Equal (a, b: TVarInfo) R: Boolean;

@@ -190,12 +190,12 @@ begin
     while (i < FText.Count) and not Terminated do
     begin
       ln := trim(FText[i]);
+
       if AnsiStartsStr(';*', ln) then
-      begin
-        sl.Add(Copy(ln, 3, Length(ln)));
-      end
+        sl.Add(Copy(ln, 3, Length(ln)))
       else
       if isEnd(ln, '#include') then
+      begin
         if pos('"', ln) > 0 then
         begin
           str := ln;
@@ -208,6 +208,7 @@ begin
           Delete(str, Pos('"', str), length(str));
           if not StringsContain(FMyRequiredFiles, str) then
             FMyRequiredFiles.Add(str);
+        end;
         end
         else
         if isEnd(ln, 'func') then

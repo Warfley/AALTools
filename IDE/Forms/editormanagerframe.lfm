@@ -1,0 +1,20 @@
+object EditorManager: TEditorManager
+  Left = 0
+  Height = 655
+  Top = 0
+  Width = 916
+  ClientHeight = 655
+  ClientWidth = 916
+  TabOrder = 0
+  DesignLeft = 534
+  DesignTop = 270
+  object EditorControl: TPageControl
+    Left = 0
+    Height = 655
+    Top = 0
+    Width = 916
+    Align = alClient
+    TabOrder = 0
+    OnMouseUp = EditorControlMouseUp
+  end
+end

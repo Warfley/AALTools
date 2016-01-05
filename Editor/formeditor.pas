@@ -12,12 +12,14 @@ type
   private
     FFileName: string;
     FEditorControls: TObjectList;
+    FOnChange: TNotifyEvent;
     { private declarations }
   public
     procedure Save(p: string = '');
     procedure Load(p: string = '');
     { public declarations }
     property FileName: string read FFileName write FFileName;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 implementation

@@ -1,28 +1,38 @@
 object MainForm: TMainForm
-  Left = 407
+  Left = 397
   Height = 438
-  Top = 140
+  Top = 149
   Width = 954
   Caption = 'AAL IDE'
-  ClientHeight = 418
+  ClientHeight = 408
   ClientWidth = 954
   Menu = MainFormMenu
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   LCLVersion = '1.7'
+  inline EditorManager1: TEditorManager
+    Left = 347
+    Height = 408
+    Width = 607
+    Align = alClient
+    ClientHeight = 408
+    ClientWidth = 607
+    inherited EditorControl: TPageControl
+      Height = 408
+      Width = 607
+    end
+  end
   inline ProjectInspector1: TProjectInspector
-    Height = 418
+    Height = 408
     Align = alLeft
-    ClientHeight = 418
-    DesignLeft = 228
-    DesignTop = 138
+    ClientHeight = 408
+    TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 234
-      OnDblClick = nil
+      Height = 172
     end
     inherited FileInfoPanel: TPanel
-      Top = 281
+      Top = 229
     end
   end
   object MainFormMenu: TMainMenu
@@ -46,6 +56,22 @@ object MainForm: TMainForm
         end
       end
       object MenuSplitItem1: TMenuItem
+        Caption = '-'
+      end
+      object SaveFileItem: TMenuItem
+        Caption = 'Speichern'
+        ShortCut = 16467
+        OnClick = SaveFileItemClick
+      end
+      object SaveAsItem: TMenuItem
+        Caption = 'Speichern Unter'
+        ShortCut = 24659
+      end
+      object SaveAllItem: TMenuItem
+        Caption = 'Alle Speichern'
+        ShortCut = 49235
+      end
+      object MenuSplitItem5: TMenuItem
         Caption = '-'
       end
       object CloseFileItem: TMenuItem

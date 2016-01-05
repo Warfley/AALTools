@@ -14,6 +14,7 @@ type
 
   TProjectInspector = class(TFrame)
     AddButton: TButton;
+    SetMainFormButton: TButton;
     RenameButton: TButton;
     DeleteButton: TButton;
     FileIconList: TImageList;
@@ -22,8 +23,10 @@ type
     PathEdit: TLabeledEdit;
     ProjectFileTreeView: TTreeView;
     TreeFilterEdit1: TTreeFilterEdit;
+    procedure FrameResize(Sender: TObject);
     procedure ProjectFileTreeViewClick(Sender: TObject);
     procedure ProjectFileTreeViewDblClick(Sender: TObject);
+    procedure SetMainFormButtonClick(Sender: TObject);
   private
     FProject: TAALProject;
     FOpenEditor: TOpenEditorEvent;
@@ -53,17 +56,38 @@ begin
       PathEdit.Text := FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)]
     else
       PathEdit.Visible := True;
+    SetMainFormButton.Visible :=
+      ExtractFileExt(ProjectFileTreeView.Selected.Text) = '.afm';
+    SetMainFormButton.Enabled :=
+      (IntPtr(ProjectFileTreeView.Selected.Data) >= 0) and not
+      (FProject.MainForm = FProject.Files[IntPtr(ProjectFileTreeView.Selected.Data)]);
   end;
 
 end;
 
+procedure TProjectInspector.FrameResize(Sender: TObject);
+begin
+  FileInfoPanel.Height:=(ClientHeight-Label1.Height) div 3;
+end;
+
 procedure TProjectInspector.ProjectFileTreeViewDblClick(Sender: TObject);
 begin
-  if Assigned(ProjectFileTreeView.Selected) And Assigned(FOpenEditor) then
+  if Assigned(ProjectFileTreeView.Selected) and Assigned(FOpenEditor) then
     if ProjectFileTreeView.Selected.Data = Pointer(-1) then
-      FOpenEditor(FProject.MainFile, Point(-1, -1))
+      FOpenEditor(FProject.MainFile, Point(0, 0))
     else if IntPtr(ProjectFileTreeView.Selected.Data) >= 0 then
-      FOpenEditor(FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)], Point(-1, -1))
+      FOpenEditor(FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)],
+        Point(0, 0));
+end;
+
+procedure TProjectInspector.SetMainFormButtonClick(Sender: TObject);
+begin
+  if Assigned(ProjectFileTreeView.Selected) and
+    (ExtractFileExt(ProjectFileTreeView.Selected.Text) = '.afm') then
+  begin
+    FProject.MainForm := FProject.Files[IntPtr(ProjectFileTreeView.Selected.Data)];
+    SetMainFormButton.Enabled := False;
+  end;
 end;
 
 procedure TProjectInspector.SetProject(p: TAALProject);

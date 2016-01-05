@@ -12,7 +12,13 @@ type
     tkString, tkUnknown, tkVar, tkUndefined, tkDoc);
   PHashInfo = ^THashInfo;
 
-  TOpenEditorEvent = procedure(Filename: String; Pos: TPoint);
+  TOpenEditorEvent = procedure(Filename: string; Pos: TPoint) of object;
+
+  TCheckIncludeEvent = function(FileName, IncludeFile: String): Boolean of object;
+  TAddIncludeEvent = procedure(FileName, IncludeFile: String) of object;
+
+  TOpenFunctionEvent = function(FileName, FuncName: string; Params: TStringList;
+    CreateNew: Boolean): string of object;
 
   THashInfo = record
     Key: ansistring;
@@ -20,13 +26,15 @@ type
   end;
 
   TSelectedItem = record
-    Line, Pos: Integer;
+    Line, Pos: integer;
   end;
 
+  TOpendFileList = specialize TFPGList<TOpendFileInfo>;
   TFuncList = specialize TFPGList<TFuncInfo>;
   TVarList = specialize TFPGList<TVarInfo>;
 
   TRangeType = (rtFunc, rtWhile, rtIf, rtFor);
+
   TDefRange = class
   private
     FStart, FEnd: integer;
@@ -41,35 +49,41 @@ type
     property EndLine: integer read FEnd write FEnd;
   end;
 
-function FuncInfo(Name: String; Line: Integer; Inf: String=''; FName: String=''): TFuncInfo;
-function SelectedItem(Line, Pos: Integer): TSelectedItem;
-function VarInfo(Name: String; Line, Position: Integer; FName: String=''): TVarInfo;
+function OpendFileInfo(Name: string; Line: integer = 1;
+  Pos: integer = 1): TOpendFileInfo;
+function FuncInfo(Name: string; Line: integer; Inf: string = '';
+  FName: string = ''): TFuncInfo;
+function SelectedItem(Line, Pos: integer): TSelectedItem;
+function VarInfo(Name: string; Line, Position: integer; FName: string = ''): TVarInfo;
 function isEnd(s, endTok: string): boolean;
+
 implementation
 
 
 function isEnd(s, endTok: string): boolean;
-function getFirstTok(str: String): String;
-var i, len: Integer;
-begin
-  len:=1;
-  if length(str)>1 then
+
+  function getFirstTok(str: string): string;
+  var
+    i, len: integer;
   begin
-    i:=2;
-    while (str[i] in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) do
+    len := 1;
+    if length(str) > 1 then
     begin
-      inc(i);
-      inc(len);
+      i := 2;
+      while (str[i] in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) do
+      begin
+        Inc(i);
+        Inc(len);
+      end;
     end;
+    Result := Copy(str, 1, len);
   end;
-  Result:=Copy(str, 1, len);
-end;
 
 var
   l, l2: integer;
 begin
   s := Trim(s);
-  s:=getFirstTok(s);
+  s := getFirstTok(s);
   l := Length(endTok);
   l2 := Length(s);
   Result := False;
@@ -84,26 +98,35 @@ begin
   end;
 end;
 
-function SelectedItem(Line, Pos: Integer): TSelectedItem;
+function OpendFileInfo(Name: string; Line: integer = 1;
+  Pos: integer = 1): TOpendFileInfo;
 begin
-  Result.Line:=Line;
-  Result.Pos:=Pos;
+  Result.Name := Name;
+  Result.Line := Line;
+  Result.Pos := Pos;
 end;
 
-function FuncInfo(Name: String; Line: Integer; Inf: String=''; FName: String=''): TFuncInfo;
+function SelectedItem(Line, Pos: integer): TSelectedItem;
 begin
-  Result.Name:=Name;
-  Result.Line:=Line;
-  Result.Info:=Inf;
-  Result.FileName:=FName;
+  Result.Line := Line;
+  Result.Pos := Pos;
 end;
 
-function VarInfo(Name: String; Line, Position: Integer; FName: String=''): TVarInfo;
+function FuncInfo(Name: string; Line: integer; Inf: string = '';
+  FName: string = ''): TFuncInfo;
 begin
-  Result.Name:=Name;
-  Result.Line:=Line;
-  Result.Pos:=Position;
-  Result.FileName:=FName;
+  Result.Name := Name;
+  Result.Line := Line;
+  Result.Info := Inf;
+  Result.FileName := FName;
+end;
+
+function VarInfo(Name: string; Line, Position: integer; FName: string = ''): TVarInfo;
+begin
+  Result.Name := Name;
+  Result.Line := Line;
+  Result.Pos := Position;
+  Result.FileName := FName;
 end;
 
 constructor TDefRange.Create;
@@ -118,4 +141,3 @@ begin
 end;
 
 end.
-

@@ -5,7 +5,7 @@ unit Project;
 interface
 
 uses
-  Classes, SysUtils, DOM, XMLRead, XMLWrite, FileUtil, Dialogs;
+  Classes, SysUtils, DOM, XMLRead, XMLWrite, FileUtil, Dialogs, AALTypes, ListRecords;
 
 type
   TAALProject = class
@@ -16,15 +16,22 @@ type
     FChanged: boolean;
     FName: string;
     FGUIBased: boolean;
-    FOpendFile: string;
+    FMainForm: string;
+    FFocusedFile: integer;
+    FOpendFiles: TOpendFileList;
     FOnChange: TNotifyEvent;
+    FCheckInclude: TCheckIncludeEvent;
+    FAddInclude: TAddIncludeEvent;
     procedure SetMainFile(f: string);
     function GetMainFile: string;
+    procedure SetMainForm(s: string);
+    procedure SetOpendFiles(s: TOpendFileList);
     procedure SetProjectDir(p: string);
     function GetAbsoluteFileName(i: integer): string;
     procedure SetAbsoluteFileName(i: integer; f: string);
     procedure FilesChange(Sender: TObject);
   public
+    function GetAbsPath(Rel: string): string;
     function GetMainFileRel: string;
     function AddFile(F: string): integer;
     procedure DeleteFile(f: string);
@@ -42,8 +49,12 @@ type
     property Changed: boolean read FChanged;
     property Name: string read FName write FName;
     property GUIBased: boolean read FGUIBased write FGUIBased;
-    property OpendFile: string read FOpendFile write FOpendFile;
+    property MainForm: string read FMainForm write SetMainForm;
+    property OpendFiles: TOpendFileList read FOpendFiles write SetOpendFiles;
+    property FocusedFile: integer read FFocusedFile write FFocusedFile;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property CheckInclude: TCheckIncludeEvent read FCheckInclude write FCheckInclude;
+    property AddInclude: TAddIncludeEvent read FAddInclude write FAddInclude;
   end;
 
 implementation
@@ -71,6 +82,21 @@ begin
   FChanged := True;
   if Assigned(FOnChange) then
     FOnChange(Self);
+end;
+
+procedure TAALProject.SetMainForm(s: string);
+begin
+  FChanged := True;
+  if FilenameIsAbsolute(s) then
+    s := CreateRelativePath(s, FProjectDir, True);
+  FMainForm := s;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+procedure TAALProject.SetOpendFiles(s: TOpendFileList);
+begin
+  FOpendFiles.Assign(s);
 end;
 
 procedure TAALProject.SetMainFile(f: string);
@@ -109,6 +135,13 @@ begin
   FFiles[i] := F;
 end;
 
+function TAALProject.GetAbsPath(Rel: string): string;
+begin
+  if not FilenameIsAbsolute(Rel) then
+    Rel := CreateAbsolutePath(Rel, FProjectDir);
+  Result := Rel;
+end;
+
 function TAALProject.AddFile(F: string): integer;
 begin
   if FilenameIsAbsolute(F) then
@@ -128,6 +161,7 @@ begin
   FName := '';
   FProjectDir := '';
   FChanged := False;
+  FOpendFiles.Clear;
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -148,20 +182,33 @@ end;
 constructor TAALProject.Create;
 begin
   FFiles := TStringList.Create;
+  FOpendFiles := TOpendFileList.Create;
   FFiles.OnChange := @FilesChange;
 end;
 
 destructor TAALProject.Destroy;
 begin
   FFiles.Free;
+  FOpendFiles.Free;
   inherited;
 end;
 
 procedure TAALProject.Load;
+
+  procedure GetInt(s1, s2: string; out l, p: integer);
+  begin
+    if not TryStrToInt(s1, l) then
+      l := 1;
+    if not TryStrToInt(s2, p) then
+      p := 1;
+  end;
+
 var
   ProjFile: TXMLDocument;
   FilesNode: TDOMNode;
   i: integer;
+  s1, s2: string;
+  p, l: integer;
 begin
   try
     FFiles.Clear;
@@ -169,7 +216,8 @@ begin
       FName + '.aalproj');
     FMainFile := ProjFile.DocumentElement.FindNode('MainFile').TextContent;
     FGUIBased := ProjFile.DocumentElement.FindNode('Apptype').TextContent = 'GUI';
-    FOpendFile := ProjFile.DocumentElement.FindNode('FocusedFile').TextContent;
+    if FGUIBased then
+      FMainForm := ProjFile.DocumentElement.FindNode('MainForm').TextContent;
     FilesNode := ProjFile.DocumentElement.FindNode('Files');
     FFiles.BeginUpdate;
     try
@@ -179,6 +227,20 @@ begin
     finally
       FFiles.EndUpdate;
     end;
+    FilesNode := ProjFile.DocumentElement.FindNode('OpendFiles');
+    for i := 0 to FilesNode.ChildNodes.Count - 1 do
+      if FilesNode.ChildNodes.Item[i].NodeName = 'Opend' then
+        with TDOMElement(FilesNode.ChildNodes.Item[i]) do
+        begin
+          FFocusedFile := 0;
+          s1 := GetAttribute('Line');
+          s2 := GetAttribute('Pos');
+          GetInt(s1, s2, l, p);
+          if GetAttribute('Focused') = '1' then
+            FFocusedFile := FOpendFiles.Add(OpendFileInfo(TextContent, l, p))
+          else
+            FOpendFiles.Add(OpendFileInfo(TextContent, l, p));
+        end;
   finally
     ProjFile.Free;
   end;
@@ -210,11 +272,14 @@ begin
       s := 'CONSOLE';
     t := ProjFile.CreateTextNode(s);
     tmp.AppendChild(t);
-    // Create Focused Node
-    tmp := ProjFile.CreateElement('FocusedFile');
-    ProjFile.DocumentElement.AppendChild(tmp);
-    t := ProjFile.CreateTextNode(FOpendFile);
-    tmp.AppendChild(t);
+    // Create MainForm Node
+    if FGUIBased then
+    begin
+      tmp := ProjFile.CreateElement('MainForm');
+      ProjFile.DocumentElement.AppendChild(tmp);
+      t := ProjFile.CreateTextNode(FMainForm);
+      tmp.AppendChild(t);
+    end;
     // Createing file Nodes
     FilesNode := ProjFile.CreateElement('Files');
     ProjFile.DocumentElement.AppendChild(FilesNode);
@@ -227,11 +292,31 @@ begin
       t := ProjFile.CreateTextNode(FFiles[i]);
       tmp.AppendChild(t);
     end;
+    // Createing OpendFile Nodes
+    FilesNode := ProjFile.CreateElement('OpendFiles');
+    ProjFile.DocumentElement.AppendChild(FilesNode);
+    if FOpendFiles.Count = 0 then
+      FilesNode.AppendChild(ProjFile.CreateTextNode(' '));
+    for i := 0 to FOpendFiles.Count - 1 do
+    begin
+      tmp := ProjFile.CreateElement('Opend');
+      if i = FFocusedFile then
+        TDOMElement(tmp).SetAttribute('Focused', '1');
+      TDOMElement(tmp).SetAttribute('Line', IntToStr(FOpendFiles[i].Line));
+      TDOMElement(tmp).SetAttribute('Pos', IntToStr(FOpendFiles[i].Pos));
+      FilesNode.AppendChild(tmp);
+      t := ProjFile.CreateTextNode(FOpendFiles[i].Name);
+      tmp.AppendChild(t);
+    end;
+    // Write To File
     WriteXMLFile(ProjFile, IncludeTrailingPathDelimiter(FProjectDir) +
       FName + '.aalproj');
   finally
     ProjFile.Free;
   end;
+  if Assigned(FCheckInclude) and Assigned(FAddInclude) and FGUIBased then
+    if not FCheckInclude(MainFile, MainForm) then
+      FAddInclude(MainFile, FMainForm);
   FChanged := False;
 end;
 

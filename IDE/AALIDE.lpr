@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, lazcontrols, IDEMainForm, Project, IDEStartupScreen, ProjectInspector,
-  AALTypes
+  AALTypes, Editor, FormEditor, EditorManagerFrame
   { you can add units after this };
 
 {$R *.res}

@@ -94,7 +94,6 @@ type
     property DefRanges: TObjectList read FDefRanges write SetRanges;
     property Font: TFont read GetFont write SetFont;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    procedure JumpTo(p: TPoint);
     property OnParserFinished: TNotifyEvent read FOnParserFinished
       write FOnParserFinished;
     property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
@@ -1075,11 +1074,6 @@ procedure TEditorFrame.SetVar(l: TVarList);
 begin
   FVars.Clear;
   FVars.Assign(l);
-end;
-
-procedure TEditorFrame.JumpTo(p: TPoint);
-begin
-  CodeEditor.LogicalCaretXY := p;
 end;
 
 destructor TEditorFrame.Destroy;

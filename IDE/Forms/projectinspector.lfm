@@ -1,19 +1,21 @@
 object ProjectInspector: TProjectInspector
   Left = 0
-  Height = 393
+  Height = 475
   Top = 0
-  Width = 272
-  ClientHeight = 393
-  ClientWidth = 272
+  Width = 347
+  ClientHeight = 475
+  ClientWidth = 347
+  OnResize = FrameResize
   TabOrder = 0
-  DesignLeft = 279
-  DesignTop = 130
+  DesignLeft = 350
+  DesignTop = 185
   object ProjectFileTreeView: TTreeView
     Left = 0
-    Height = 209
-    Top = 47
-    Width = 272
+    Height = 239
+    Top = 57
+    Width = 347
     Align = alClient
+    Anchors = [akTop, akLeft, akRight]
     DefaultItemHeight = 32
     Images = FileIconList
     ReadOnly = True
@@ -23,29 +25,31 @@ object ProjectInspector: TProjectInspector
     Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
   object FileInfoPanel: TPanel
+    AnchorSideTop.Control = ProjectFileTreeView
+    AnchorSideTop.Side = asrBottom
     Left = 0
-    Height = 137
-    Top = 256
-    Width = 272
+    Height = 179
+    Top = 296
+    Width = 347
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 137
-    ClientWidth = 272
+    ClientHeight = 179
+    ClientWidth = 347
     TabOrder = 1
     object PathEdit: TLabeledEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 24
-      Width = 256
+      Width = 331
       Anchors = [akTop, akLeft, akRight]
       EditLabel.AnchorSideLeft.Control = PathEdit
       EditLabel.AnchorSideRight.Control = PathEdit
       EditLabel.AnchorSideRight.Side = asrBottom
       EditLabel.AnchorSideBottom.Control = PathEdit
       EditLabel.Left = 8
-      EditLabel.Height = 15
-      EditLabel.Top = 6
-      EditLabel.Width = 256
+      EditLabel.Height = 25
+      EditLabel.Top = -4
+      EditLabel.Width = 331
       EditLabel.Caption = 'Pfad'
       EditLabel.ParentColor = False
       ReadOnly = True
@@ -53,18 +57,18 @@ object ProjectInspector: TProjectInspector
       Visible = False
     end
     object AddButton: TButton
-      Left = 189
-      Height = 25
-      Top = 105
-      Width = 75
+      Left = 235
+      Height = 33
+      Top = 139
+      Width = 104
       Anchors = [akRight, akBottom]
       Caption = 'Hinzufügen'
       TabOrder = 1
     end
     object DeleteButton: TButton
-      Left = 112
-      Height = 25
-      Top = 105
+      Left = 155
+      Height = 32
+      Top = 139
       Width = 75
       Anchors = [akRight, akBottom]
       Caption = 'Löschen'
@@ -72,18 +76,30 @@ object ProjectInspector: TProjectInspector
     end
     object RenameButton: TButton
       Left = 8
-      Height = 25
-      Top = 105
-      Width = 91
+      Height = 33
+      Top = 139
+      Width = 120
+      Anchors = [akLeft, akBottom]
       Caption = 'Umbenennen'
       TabOrder = 3
+    end
+    object SetMainFormButton: TButton
+      Left = 195
+      Height = 33
+      Top = 72
+      Width = 144
+      Anchors = [akTop, akRight]
+      Caption = 'Hauptformular'
+      OnClick = SetMainFormButtonClick
+      TabOrder = 4
+      Visible = False
     end
   end
   object Label1: TLabel
     Left = 0
     Height = 24
     Top = 0
-    Width = 272
+    Width = 347
     Align = alTop
     AutoSize = False
     Caption = '  Projekt Dateien'
@@ -92,9 +108,9 @@ object ProjectInspector: TProjectInspector
   end
   object TreeFilterEdit1: TTreeFilterEdit
     Left = 0
-    Height = 23
+    Height = 33
     Top = 24
-    Width = 272
+    Width = 347
     ButtonWidth = 23
     NumGlyphs = 1
     Align = alTop

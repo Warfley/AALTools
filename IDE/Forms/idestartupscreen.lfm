@@ -2,11 +2,11 @@ object StartupScreen: TStartupScreen
   Left = 319
   Height = 325
   Top = 119
-  Width = 606
+  Width = 605
   BorderStyle = bsToolWindow
   Caption = 'AAL IDE'
   ClientHeight = 325
-  ClientWidth = 606
+  ClientWidth = 605
   Color = clWhite
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -309,9 +309,9 @@ object StartupScreen: TStartupScreen
     OnPaint = LastOpendPanelPaint
     object Label1: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 136
-      Width = 84
+      Width = 126
       Caption = 'Zuletzt geöffnet'
       ParentColor = False
     end
@@ -550,10 +550,10 @@ object StartupScreen: TStartupScreen
     end
   end
   object Button1: TButton
-    Left = 525
+    Left = 512
     Height = 25
     Top = 297
-    Width = 75
+    Width = 88
     Caption = 'Schließen'
     ModalResult = 3
     TabOrder = 1
@@ -584,15 +584,15 @@ object StartupScreen: TStartupScreen
     end
     object Label2: TLabel
       Left = 6
-      Height = 15
+      Height = 25
       Top = 224
-      Width = 32
+      Width = 47
       Caption = 'Name'
       ParentColor = False
     end
     object NewProjectNameEdit: TEdit
       Left = 64
-      Height = 23
+      Height = 33
       Top = 220
       Width = 154
       OnChange = NewProjectNameEditChange
@@ -601,7 +601,7 @@ object StartupScreen: TStartupScreen
     end
     object NewProjectDirEdit: TDirectoryEdit
       Left = 64
-      Height = 23
+      Height = 33
       Top = 256
       Width = 318
       ShowHidden = False
@@ -612,9 +612,9 @@ object StartupScreen: TStartupScreen
     end
     object Label3: TLabel
       Left = 6
-      Height = 15
+      Height = 25
       Top = 260
-      Width = 37
+      Width = 56
       Caption = 'Ordner'
       ParentColor = False
     end
@@ -631,7 +631,7 @@ object StartupScreen: TStartupScreen
       Left = 6
       Height = 25
       Top = 287
-      Width = 75
+      Width = 83
       Caption = 'Schließen'
       OnClick = ClosePanelButtonClick
       TabOrder = 4

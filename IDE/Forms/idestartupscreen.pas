@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Buttons,
-  ExtCtrls, StdCtrls, ComCtrls, EditBtn, png, Project, strutils;
+  ExtCtrls, StdCtrls, ComCtrls, EditBtn, png, Project, strutils, AALTypes;
 
 type
 
@@ -191,11 +191,17 @@ begin
         if AnsiStartsStr('MainFile=', sl[i]) then
           mf := Trim(Copy(sl[i], pos('=', sl[i]) + 1, length(sl[i]) - pos('=', sl[i])))
         else if AnsiStartsStr('FocusedFile=', sl[i]) then
-          p.OpendFile := Trim(Copy(sl[i], pos('=', sl[i]) + 1,
-            length(sl[i]) - pos('=', sl[i])))
+          p.FocusedFile := StrToInt(Trim(Copy(sl[i], pos('=', sl[i]) + 1,
+            length(sl[i]) - pos('=', sl[i]))))
+        else if AnsiStartsStr('OpendFile=', sl[i]) then
+          p.OpendFiles.Add(OpendFileInfo(Trim(Copy(sl[i], pos('=', sl[i]) + 1,
+            length(sl[i]) - pos('=', sl[i])))))
         else if AnsiStartsStr('AppType=', sl[i]) then
           p.GUIBased := Trim(Copy(sl[i], pos('=', sl[i]) + 1,
-            length(sl[i]) - pos('=', sl[i]))) = 'GUI';
+            length(sl[i]) - pos('=', sl[i]))) = 'GUI'
+        else if AnsiStartsStr('MainForm=', sl[i]) then
+          p.MainForm:=Trim(Copy(sl[i], pos('=', sl[i]) + 1,
+            length(sl[i]) - pos('=', sl[i])));
     finally
       sl.Free;
     end;
@@ -206,8 +212,8 @@ begin
     end;
     CopyFile(preset + mf, path + p.Name + '.apr');
     p.MainFile := path + p.Name + '.apr';
-    if p.OpendFile = mf then
-      p.OpendFile := p.GetMainFileRel;
+    if p.OpendFiles[p.FocusedFile].Name = mf then
+      p.OpendFiles[p.FocusedFile] := OpendFileInfo(p.GetMainFileRel);
     p.Save;
     FPath := path + p.Name + '.aalproj';
   finally

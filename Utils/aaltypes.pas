@@ -13,7 +13,7 @@ type
   PHashInfo = ^THashInfo;
 
   TOpenEditorEvent = procedure(Filename: string; Pos: TPoint) of object;
-
+  TCloseEditorEvent = procedure(Filename: String) of object;
   TCheckIncludeEvent = function(FileName, IncludeFile: String): Boolean of object;
   TAddIncludeEvent = procedure(FileName, IncludeFile: String) of object;
 

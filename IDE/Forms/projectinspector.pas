@@ -14,6 +14,7 @@ type
 
   TProjectInspector = class(TFrame)
     AddButton: TButton;
+    OpenAALFileDialog: TOpenDialog;
     SetMainFormButton: TButton;
     RenameButton: TButton;
     DeleteButton: TButton;
@@ -23,6 +24,8 @@ type
     PathEdit: TLabeledEdit;
     ProjectFileTreeView: TTreeView;
     TreeFilterEdit1: TTreeFilterEdit;
+    procedure AddButtonClick(Sender: TObject);
+    procedure DeleteButtonClick(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure ProjectFileTreeViewClick(Sender: TObject);
     procedure ProjectFileTreeViewDblClick(Sender: TObject);
@@ -30,12 +33,14 @@ type
   private
     FProject: TAALProject;
     FOpenEditor: TOpenEditorEvent;
+    FCloseEditor: TCloseEditorEvent;
     procedure SetProject(p: TAALProject);
     procedure ProjChanged(Sender: TObject);
     { private declarations }
   public
     property Project: TAALProject read FProject write SetProject;
     property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
+    property CloseEditor: TCloseEditorEvent read FCloseEditor write FCloseEditor;
     { public declarations }
   end;
 
@@ -45,6 +50,7 @@ implementation
 
 procedure TProjectInspector.ProjectFileTreeViewClick(Sender: TObject);
 begin
+  DeleteButton.Enabled := False;
   if Assigned(ProjectFileTreeView.Selected) then
   begin
     PathEdit.Visible := True;
@@ -53,7 +59,10 @@ begin
     else if ProjectFileTreeView.Selected.Data = Pointer(-2) then
       PathEdit.Text := FProject.ProjectDir
     else if IntPtr(ProjectFileTreeView.Selected.Data) >= 0 then
-      PathEdit.Text := FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)]
+    begin
+      DeleteButton.Enabled := True;
+      PathEdit.Text := FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)];
+    end
     else
       PathEdit.Visible := True;
     SetMainFormButton.Visible :=
@@ -67,7 +76,79 @@ end;
 
 procedure TProjectInspector.FrameResize(Sender: TObject);
 begin
-  FileInfoPanel.Height:=(ClientHeight-Label1.Height) div 3;
+  FileInfoPanel.Height := (ClientHeight - Label1.Height) div 3;
+end;
+
+procedure TProjectInspector.AddButtonClick(Sender: TObject);
+var
+  i: integer;
+  hasForm: boolean;
+begin
+  if OpenAALFileDialog.Execute then
+  begin
+    hasForm := (ExtractFileExt(OpenAALFileDialog.FileName) = '.aal1') and
+      FileExists(ChangeFileExt(OpenAALFileDialog.FileName, '.afm'));
+    if Pos(FProject.ProjectDir, OpenAALFileDialog.FileName) < 1 then
+      if MessageDlg('Datei nicht im Projektverzeichnis', 'Die gewählte Datei ' +
+        'befindet sich nicht im Projektverzeichnis'#10#13 +
+        'Wollen sie die Datei in das Projektverzeichnis kopieren?',
+        mtConfirmation, mbYesNo, 'Kopieren') = mrYes then
+      begin
+        if hasForm then
+          CopyFile(ChangeFileExt(OpenAALFileDialog.FileName, '.afm'),
+            IncludeTrailingPathDelimiter(FProject.ProjectDir) +
+            ChangeFileExt(ExtractFileName(OpenAALFileDialog.FileName), '.afm'));
+        CopyFile(OpenAALFileDialog.FileName,
+          IncludeTrailingPathDelimiter(FProject.ProjectDir) +
+          ExtractFileName(OpenAALFileDialog.FileName));
+        OpenAALFileDialog.FileName :=
+          IncludeTrailingPathDelimiter(FProject.ProjectDir) +
+          ExtractFileName(OpenAALFileDialog.FileName);
+      end;
+    if Assigned(FOpenEditor) then
+      FOpenEditor(OpenAALFileDialog.FileName, Point(0, 0));
+    for i := 0 to FProject.Files.Count - 1 do
+      if FProject.FilePath[i] = OpenAALFileDialog.FileName then
+        exit;
+    FProject.AddFile(OpenAALFileDialog.FileName);
+    if hasForm then
+    begin
+      OpenAALFileDialog.FileName := ChangeFileExt(OpenAALFileDialog.FileName, '.afm');
+      if Assigned(FOpenEditor) then
+        FOpenEditor(OpenAALFileDialog.FileName, Point(0, 0));
+      for i := 0 to FProject.Files.Count - 1 do
+        if FProject.FilePath[i] = OpenAALFileDialog.FileName then
+          exit;
+      FProject.AddFile(OpenAALFileDialog.FileName);
+    end;
+  end;
+end;
+
+procedure TProjectInspector.DeleteButtonClick(Sender: TObject);
+var
+  fm, p: string;
+begin
+  if MessageDlg('Wirklich löschen', 'Diese Datei wirklich löschen',
+    mtConfirmation, mbYesNo, 'Bestätigen') = mrYes then
+  begin
+    fm := '';
+    p := FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)];
+    if ExtractFileExt(p) = '.aal1' then
+      fm := ChangeFileExt(p, '.afm')
+    else if ExtractFileExt(p) = '.afm' then
+      fm := ChangeFileExt(p, '.aal1');
+    if FileExists(fm) then
+    begin
+      DeleteFile(fm);
+      if Assigned(FCloseEditor) then
+        FCloseEditor(fm);
+      FProject.DeleteFile(fm);
+    end;
+    DeleteFile(p);
+    if Assigned(FCloseEditor) then
+      FCloseEditor(p);
+    FProject.DeleteFile(p);
+  end;
 end;
 
 procedure TProjectInspector.ProjectFileTreeViewDblClick(Sender: TObject);
@@ -143,8 +224,6 @@ begin
   tmp.Data := Pointer(-1);
   for i := 0 to FProject.Files.Count - 1 do
   begin
-    if not FileExists(FProject.FilePath[i]) then
-      Continue;
     s := FProject.Files[i];
     p := CreateDirNode(ExtractFilePath(s));
     ext := ExtractFileExt(s);

@@ -7,8 +7,8 @@ object ProjectInspector: TProjectInspector
   ClientWidth = 347
   OnResize = FrameResize
   TabOrder = 0
-  DesignLeft = 350
-  DesignTop = 185
+  DesignLeft = 730
+  DesignTop = 178
   object ProjectFileTreeView: TTreeView
     Left = 0
     Height = 239
@@ -63,6 +63,7 @@ object ProjectInspector: TProjectInspector
       Width = 104
       Anchors = [akRight, akBottom]
       Caption = 'Hinzufügen'
+      OnClick = AddButtonClick
       TabOrder = 1
     end
     object DeleteButton: TButton
@@ -72,16 +73,9 @@ object ProjectInspector: TProjectInspector
       Width = 75
       Anchors = [akRight, akBottom]
       Caption = 'Löschen'
+      Enabled = False
+      OnClick = DeleteButtonClick
       TabOrder = 2
-    end
-    object RenameButton: TButton
-      Left = 8
-      Height = 33
-      Top = 139
-      Width = 120
-      Anchors = [akLeft, akBottom]
-      Caption = 'Umbenennen'
-      TabOrder = 3
     end
     object SetMainFormButton: TButton
       Left = 195
@@ -91,7 +85,7 @@ object ProjectInspector: TProjectInspector
       Anchors = [akTop, akRight]
       Caption = 'Hauptformular'
       OnClick = SetMainFormButtonClick
-      TabOrder = 4
+      TabOrder = 3
       Visible = False
     end
   end
@@ -894,5 +888,11 @@ object ProjectInspector: TProjectInspector
       3F723F3F3F723F3F3F723F3F3F723F3F3F723F3F3F7243434379373737711919
       1912FFFFFF00FFFFFF00FFFFFF00
     }
+  end
+  object OpenAALFileDialog: TOpenDialog
+    Filter = 'AAL Quellcode|*.aal1;*.afm;*.apr'
+    Options = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
+    left = 319
+    top = 28
   end
 end

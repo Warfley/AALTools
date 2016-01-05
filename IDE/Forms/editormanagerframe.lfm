@@ -15,6 +15,7 @@ object EditorManager: TEditorManager
     Width = 916
     Align = alClient
     TabOrder = 0
+    OnChange = EditorControlChange
     OnMouseUp = EditorControlMouseUp
   end
 end

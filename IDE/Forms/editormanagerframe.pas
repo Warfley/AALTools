@@ -5,7 +5,8 @@ unit EditorManagerFrame;
 interface
 
 uses
-  Classes, SysUtils, Types, FileUtil, Forms, Controls, ComCtrls, Editor, FormEditor;
+  Classes, SysUtils, Types, FileUtil, Forms, Controls, ComCtrls, Editor, FormEditor,
+  Dialogs;
 
 type
   TCloseEditorEvent = procedure(Sender: TObject; Editor: integer;
@@ -16,12 +17,14 @@ type
 
   TEditorManager = class(TFrame)
     EditorControl: TPageControl;
+    procedure EditorControlChange(Sender: TObject);
     procedure EditorControlMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
   private
     { Fields }
     FOnEditorClose: TCloseEditorEvent;
     FOnEditorCreated: TEditorNotifyEvent;
+    FOnEditorChanged: TNotifyEvent;
     { Functions & Procedures }
     function FindTextEditor(FileName: string): TEditorFrame;
     function FindFormEditor(FileName: string): TFormEditFrame;
@@ -33,9 +36,18 @@ type
     procedure SetIndex(i: integer);
     procedure CreateEditor(FName: string; Line, Pos: integer);
     procedure EditorChanged(Sender: TObject);
+    function GetFileName(i: integer): string;
+    procedure SetFileName(i: integer; s: string);
+    function GetCount: integer;
+    function GetEditorCaret(i: integer): TPoint;
+    procedure SetEditorCaret(i: integer; p: TPoint);
   public
     function OpenEditor(FileName: string; Line, Pos: integer): TFrame;
     procedure CloseEditor(i: integer);
+    procedure EditorSave(i: integer; p: string = ''); overload;
+    procedure EditorSave(Editor: TFrame; p: string = ''); overload;
+    procedure EditorLoad(i: integer; p: string = ''); overload;
+    procedure EditorLoad(Editor: TFrame; p: string = ''); overload;
     { Properties }
     property TextEditor[FileName: string]: TEditorFrame read FindTextEditor;
     property FormEditor[FileName: string]: TFormEditFrame read FindFormEditor;
@@ -43,11 +55,15 @@ type
     property Editors[i: integer]: TFrame read GetEditor;
     property CurrentEditor: TFrame read GetCurrentEditor write SetCurrentEditor;
     property EditorIndex: integer read GetIndex write SetIndex;
+    property EditorFiles[i: integer]: string read GetFileName write SetFileName;
+    property Count: integer read GetCount;
+    property EditorCaret[i: integer]: TPoint read GetEditorCaret write SetEditorCaret;
 
     { Events }
     property OnEditorClose: TCloseEditorEvent read FOnEditorClose write FOnEditorClose;
     property OnEditorCreated: TEditorNotifyEvent
       read FOnEditorCreated write FOnEditorCreated;
+    property OnEditorChanged: TNotifyEvent read FOnEditorChanged write FOnEditorChanged;
   end;
 
 implementation
@@ -61,6 +77,12 @@ procedure TEditorManager.EditorControlMouseUp(Sender: TObject;
 begin
   if Button = mbMiddle then
     CloseEditor(EditorControl.TabIndexAtClientPos(Point(X, Y)));
+end;
+
+procedure TEditorManager.EditorControlChange(Sender: TObject);
+begin
+  if Assigned(FOnEditorChanged) then
+    FOnEditorChanged(Self);
 end;
 
 function TEditorManager.FindTextEditor(FileName: string): TEditorFrame;
@@ -140,6 +162,40 @@ begin
     (Sender as TFrame).Parent.Caption := '*' + (Sender as TFrame).Parent.Caption;
 end;
 
+function TEditorManager.GetFileName(i: integer): string;
+begin
+  if Editors[i] is TEditorFrame then
+    Result := (Editors[i] as TEditorFrame).FileName
+  else if Editors[i] is TFormEditFrame then
+    Result := (Editors[i] as TFormEditFrame).FileName;
+end;
+
+procedure TEditorManager.SetFileName(i: integer; s: string);
+begin
+  if Editors[i] is TEditorFrame then
+    (Editors[i] as TEditorFrame).FileName := s
+  else if Editors[i] is TFormEditFrame then
+    (Editors[i] as TFormEditFrame).FileName := s;
+end;
+
+function TEditorManager.GetCount: integer;
+begin
+  Result := EditorControl.PageCount;
+end;
+
+function TEditorManager.GetEditorCaret(i: integer): TPoint;
+begin
+  FillChar(Result, SizeOf(Result), #00);
+  if Editors[i] is TEditorFrame then
+    Result := (Editors[i] as TEditorFrame).CodeEditor.LogicalCaretXY;
+end;
+
+procedure TEditorManager.SetEditorCaret(i: integer; p: TPoint);
+begin
+  if Editors[i] is TEditorFrame then
+    (Editors[i] as TEditorFrame).CodeEditor.LogicalCaretXY := p;
+end;
+
 procedure TEditorManager.CreateEditor(FName: string; Line, Pos: integer);
 var
   tmp: TTabSheet;
@@ -177,6 +233,8 @@ begin
       if (Line > 0) and (Pos > 0) then
         CodeJump(Point(Pos, Line));
     end;
+  if Assigned(FOnEditorCreated) then
+    OnEditorCreated(Self, EditorIndex);
 end;
 
 function TEditorManager.OpenEditor(FileName: string; Line, Pos: integer): TFrame;
@@ -206,6 +264,44 @@ begin
     Exit;
   EditorControl.Pages[i].Components[0].Free;
   EditorControl.Pages[i].Free;
+end;
+
+procedure TEditorManager.EditorSave(i: integer; p: string = '');
+begin
+  EditorSave(Editors[i], p);
+end;
+
+procedure TEditorManager.EditorSave(Editor: TFrame; p: string = '');
+begin
+  if Editor is TEditorFrame then
+  begin
+    (Editor as TEditorFrame).Save(p);
+    Editor.Parent.Caption := ExtractFileName((Editor as TEditorFrame).FileName);
+  end
+  else if Editor is TFormEditFrame then
+  begin
+    (Editor as TFormEditFrame).Save(p);
+    Editor.Parent.Caption := ExtractFileName((Editor as TFormEditFrame).FileName);
+  end;
+end;
+
+procedure TEditorManager.EditorLoad(i: integer; p: string = '');
+begin
+  EditorLoad(Editors[i], p);
+end;
+
+procedure TEditorManager.EditorLoad(Editor: TFrame; p: string = '');
+begin
+  if Editor is TEditorFrame then
+  begin
+    (Editor as TEditorFrame).Load(p);
+    Editor.Parent.Caption := ExtractFileName((Editor as TEditorFrame).FileName);
+  end
+  else if Editor is TFormEditFrame then
+  begin
+    (Editor as TFormEditFrame).Load(p);
+    Editor.Parent.Caption := ExtractFileName((Editor as TFormEditFrame).FileName);
+  end;
 end;
 
 end.

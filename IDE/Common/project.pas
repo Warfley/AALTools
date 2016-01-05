@@ -32,6 +32,7 @@ type
     procedure FilesChange(Sender: TObject);
   public
     function GetAbsPath(Rel: string): string;
+    function GetRelPath(Rel: string): string;
     function GetMainFileRel: string;
     function AddFile(F: string): integer;
     procedure DeleteFile(f: string);
@@ -43,10 +44,11 @@ type
     procedure ReadFromFile(f: string);
     procedure WriteToFile(f: string);
     property MainFile: string read GetMainFile write SetMainFile;
-    property FilePath[i: integer]: string read GetAbsoluteFileName;
+    property FilePath[i: integer]: string read GetAbsoluteFileName
+      write SetAbsoluteFileName;
     property Files: TStringList read FFiles;
     property ProjectDir: string read FProjectDir write SetProjectDir;
-    property Changed: boolean read FChanged;
+    property Changed: boolean read FChanged write FChanged;
     property Name: string read FName write FName;
     property GUIBased: boolean read FGUIBased write FGUIBased;
     property MainForm: string read FMainForm write SetMainForm;
@@ -142,11 +144,18 @@ begin
   Result := Rel;
 end;
 
+function TAALProject.GetRelPath(Rel: string): string;
+begin
+  if FilenameIsAbsolute(Rel) then
+    Rel := CreateRelativePath(Rel, FProjectDir, True);
+  Result := Rel;
+end;
+
 function TAALProject.AddFile(F: string): integer;
 begin
   if FilenameIsAbsolute(F) then
     F := CreateRelativePath(F, FProjectDir, True);
-  FFiles.Add(F);
+  Result := FFiles.Add(F);
 end;
 
 function TAALProject.GetMainFileRel: string;
@@ -170,6 +179,8 @@ procedure TAALProject.DeleteFile(f: string);
 var
   i: integer;
 begin
+  if FilenameIsAbsolute(f) then
+    f := CreateRelativePath(f, FProjectDir, True);
   if f <> FMainFile then
     for i := 0 to FFiles.Count - 1 do
       if FFiles[i] = f then
@@ -245,6 +256,8 @@ begin
     ProjFile.Free;
   end;
   FChanged := False;
+  if Assigned(FOnChange) then
+    FOnChange(self);
 end;
 
 procedure TAALProject.Save;
@@ -332,6 +345,8 @@ begin
   SetProjectDir(ExtractFilePath(f));
   FName := ExtractFileName(ExtractFileNameWithoutExt(f));
   Save;
+  if Assigned(FOnChange) then
+    FOnChange(self);
 end;
 
 end.

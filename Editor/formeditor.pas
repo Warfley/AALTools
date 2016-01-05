@@ -27,12 +27,14 @@ implementation
 {$R *.lfm}
 procedure TFormEditFrame.Save(p: string = '');
 begin
-
+  if p<>'' then
+  FFileName:=p;
 end;
 
 procedure TFormEditFrame.Load(p: string = '');
 begin
 
+  FFileName:=p;
 end;
 
 end.

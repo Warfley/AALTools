@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Buttons,
-  ExtCtrls, StdCtrls, ComCtrls, EditBtn, png, Project, strutils, AALTypes;
+  ExtCtrls, StdCtrls, ComCtrls, EditBtn, Project, strutils, AALTypes;
 
 type
 
@@ -277,6 +277,7 @@ begin
     PathDelim + 'AAL' + PathDelim + 'AALProjekt1';
   lst := TStringList.Create;
   try
+    NewProjectView.Clear;
     while ImageList1.Count > 1 do
       ImageList1.Delete(1);
     GetSubDirs(ExtractFilePath(ParamStr(0)) + 'Presets', lst);

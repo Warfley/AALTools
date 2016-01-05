@@ -1,11 +1,11 @@
 object MainForm: TMainForm
-  Left = 397
-  Height = 438
-  Top = 149
-  Width = 954
+  Left = 286
+  Height = 888
+  Top = 250
+  Width = 1235
   Caption = 'AAL IDE'
-  ClientHeight = 408
-  ClientWidth = 954
+  ClientHeight = 858
+  ClientWidth = 1235
   Menu = MainFormMenu
   OnClose = FormClose
   OnCreate = FormCreate
@@ -13,26 +13,26 @@ object MainForm: TMainForm
   LCLVersion = '1.7'
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 408
-    Width = 607
+    Height = 858
+    Width = 888
     Align = alClient
-    ClientHeight = 408
-    ClientWidth = 607
+    ClientHeight = 858
+    ClientWidth = 888
     inherited EditorControl: TPageControl
-      Height = 408
-      Width = 607
+      Height = 858
+      Width = 888
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 408
+    Height = 858
     Align = alLeft
-    ClientHeight = 408
+    ClientHeight = 858
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 172
+      Height = 622
     end
     inherited FileInfoPanel: TPanel
-      Top = 229
+      Top = 679
     end
   end
   object MainFormMenu: TMainMenu
@@ -50,6 +50,7 @@ object MainForm: TMainForm
         object NewFileItem: TMenuItem
           Caption = 'AAL Datei'
           ShortCut = 16462
+          OnClick = NewFileItemClick
         end
         object NewFormItem: TMenuItem
           Caption = 'AAL Form'
@@ -66,10 +67,12 @@ object MainForm: TMainForm
       object SaveAsItem: TMenuItem
         Caption = 'Speichern Unter'
         ShortCut = 24659
+        OnClick = SaveAsItemClick
       end
       object SaveAllItem: TMenuItem
         Caption = 'Alle Speichern'
         ShortCut = 49235
+        OnClick = SaveAllItemClick
       end
       object MenuSplitItem5: TMenuItem
         Caption = '-'
@@ -77,10 +80,12 @@ object MainForm: TMainForm
       object CloseFileItem: TMenuItem
         Caption = 'Schließen'
         ShortCut = 16471
+        OnClick = CloseFileItemClick
       end
       object CloseAllItem: TMenuItem
         Caption = 'Alle schließen'
         ShortCut = 24663
+        OnClick = CloseAllItemClick
       end
       object MenuSplitItem2: TMenuItem
         Caption = '-'
@@ -115,5 +120,15 @@ object MainForm: TMainForm
         ShortCut = 16452
       end
     end
+  end
+  object SaveAALFileDialog: TSaveDialog
+    Options = [ofExtensionDifferent, ofEnableSizing, ofViewDetail]
+    left = 512
+  end
+  object OpenAALFileDialog: TOpenDialog
+    Filter = 'AAL Quellcode|*.aal1;*.afm;*.apr'
+    Options = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
+    left = 380
+    top = 28
   end
 end

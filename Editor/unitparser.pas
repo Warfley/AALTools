@@ -202,58 +202,58 @@ begin
           Delete(str, 1, pos('"', str));
           if pos('"', str) = 0 then
           begin
-            inc(i);
+            Inc(i);
             Continue;
           end;
           Delete(str, Pos('"', str), length(str));
           if not StringsContain(FMyRequiredFiles, str) then
             FMyRequiredFiles.Add(str);
         end;
-        end
-        else
-        if isEnd(ln, 'func') then
+      end
+      else
+      if isEnd(ln, 'func') then
+      begin
+        len := 0;
+        s := 5;
+        for x := 5 to Length(ln) do
+          if ln[x] in [#0..#32] then
+            Inc(s)
+          else
+            Break;
+        for x := s to Length(ln) do
         begin
-          len := 0;
-          s := 5;
-          for x := 5 to Length(ln) do
-            if ln[x] in [#0..#32] then
-              Inc(s)
-            else
-              Break;
-          for x := s to Length(ln) do
-          begin
-            Inc(len);
-            if ln[x] = ')' then
-              Break;
-          end;
-          str := Copy(ln, s, len);
-          FMyFunc.Add(FuncInfo(str, i, sl.Text));
-          sl.Clear;
-          if Assigned(FOnFuncFound) then
-            Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
-          ParseRange(i, 'endfunc', rtFunc);
-        end
-        else if isEnd(ln, 'if') then
-        begin
-          sl.Clear;
-          ParseRange(i, 'endif', rtIf);
-        end
-        else if isEnd(ln, 'while') then
-        begin
-          sl.Clear;
-          ParseRange(i, 'wend', rtWhile);
-        end
-        else if isEnd(ln, 'for') then
-        begin
-          sl.Clear;
-          ParseRange(i, 'next', rtFor);
-        end
-        else
-        begin
-          if ln <> '' then
-            sl.Clear;
-          ParseLine(ln, FMyVars, i);
+          Inc(len);
+          if ln[x] = ')' then
+            Break;
         end;
+        str := Copy(ln, s, len);
+        FMyFunc.Add(FuncInfo(str, i, sl.Text));
+        sl.Clear;
+        if Assigned(FOnFuncFound) then
+          Application.QueueAsyncCall(TDataEvent(FOnFuncFound), PtrInt(self));
+        ParseRange(i, 'endfunc', rtFunc);
+      end
+      else if isEnd(ln, 'if') then
+      begin
+        sl.Clear;
+        ParseRange(i, 'endif', rtIf);
+      end
+      else if isEnd(ln, 'while') then
+      begin
+        sl.Clear;
+        ParseRange(i, 'wend', rtWhile);
+      end
+      else if isEnd(ln, 'for') then
+      begin
+        sl.Clear;
+        ParseRange(i, 'next', rtFor);
+      end
+      else
+      begin
+        if ln <> '' then
+          sl.Clear;
+        ParseLine(ln, FMyVars, i);
+      end;
       Inc(i);
     end;
   finally
@@ -275,11 +275,14 @@ var
 begin
   FFunc.Assign(FMyFunc);
   FVars.Assign(FMYVars);
-  for i := 0 to FRanges.Count - 1 do
-    FRanges[i].Free;
-  FRanges.Clear;
-  for i := 0 to FMyRanges.Count - 1 do
-    FRanges.Add(FMyRanges[i]);
+  if Assigned(FRanges) then
+  begin
+    for i := 0 to FRanges.Count - 1 do
+      FRanges[i].Free;
+    FRanges.Clear;
+    for i := 0 to FMyRanges.Count - 1 do
+      FRanges.Add(FMyRanges[i]);
+  end;
   FRequiredFiles.Clear;
   FRequiredFiles.AddStrings(FMyRequiredFiles);
   FWait := False;

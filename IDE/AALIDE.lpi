@@ -109,7 +109,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="14">
+    <Units Count="15">
       <Unit0>
         <Filename Value="AALIDE.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -180,6 +180,7 @@
       <Unit11>
         <Filename Value="..\Editor\unitparser.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UnitParser"/>
       </Unit11>
       <Unit12>
         <Filename Value="..\Highlighter\aalhighlighter.pas"/>
@@ -193,6 +194,11 @@
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="EditorManagerFrame"/>
       </Unit13>
+      <Unit14>
+        <Filename Value="Common\aalfileinfo.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AALFileInfo"/>
+      </Unit14>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

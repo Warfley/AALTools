@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Menus, Project, IDEStartupScreen, ProjectInspector, EditorManagerFrame,
-  AALTypes;
+  AALTypes, FormEditor, Editor, AALFileInfo;
 
 type
 
@@ -54,7 +54,9 @@ type
   private
     FCurrentProject: TAALProject;
     FLastOpend: TStringList;
+    FFileData: TAALFileManager;
     { private declarations }
+    procedure EditorParserFinished(Sender: TObject);
     procedure ShowStartupScreen(Data: IntPtr);
     procedure OpenFile(Filename: string; Pos: TPoint);
     function EnterFunction(FileName, FuncName: string; Params: TStringList;
@@ -81,7 +83,7 @@ implementation
 
 procedure TMainForm.OpenFile(Filename: string; Pos: TPoint);
 begin
-  EditorManager1.OpenEditor(Filename, Pos.y, Pos.x);
+  EditorManager1.OpenEditor(Filename, Pos);
 end;
 
 procedure TMainForm.ShowStartupScreen(Data: IntPtr);
@@ -118,7 +120,7 @@ begin
     for i := 0 to FCurrentProject.OpendFiles.Count - 1 do
       EditorManager1.OpenEditor(FCurrentProject.GetAbsPath(
         FCurrentProject.OpendFiles[i].Name),
-        FCurrentProject.OpendFiles[i].Line, FCurrentProject.OpendFiles[i].Pos);
+        Point(FCurrentProject.OpendFiles[i].Pos, FCurrentProject.OpendFiles[i].Line));
     EditorManager1.EditorIndex := FCurrentProject.FocusedFile;
     ProjectInspector1.OpenEditor := @OpenFile;
     ProjectInspector1.CloseEditor := @KillEditor;
@@ -251,11 +253,27 @@ begin
     end;
 end;
 
+procedure TMainForm.EditorParserFinished(Sender: TObject);
+begin
+  if Sender is TFormEditFrame then
+  begin
+    //TODO
+  end
+  else if Sender is TEditorFrame then
+  begin
+    //TODO
+  end;
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
   FCurrentProject := TAALProject.Create;
+  EditorManager1.EnterFunc := @EnterFunction;
+  FFileData := TAALFileManager.Create;
+  EditorManager1.OnParserFinished := @EditorParserFinished;
+  EditorManager1.IDEOpenFile := @OpenFile;
   FLastOpend := TStringList.Create;
   FLastOpend.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'LastOpend.txt');
   i := 0;
@@ -271,6 +289,7 @@ end;
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   FLastOpend.Free;
+  FFileData.Free;
   FCurrentProject.Free;
 end;
 
@@ -287,7 +306,7 @@ begin
     Inc(i);
   s := IncludeTrailingPathDelimiter(FCurrentProject.ProjectDir) +
     'AALUnit' + IntToStr(i) + '.aal1';
-  EditorManager1.OpenEditor(s, 0, 0).Parent.Caption := '*' + ExtractFileName(s);
+  EditorManager1.OpenEditor(s, Point(0, 0)).Parent.Caption := '*' + ExtractFileName(s);
   FCurrentProject.AddFile(s);
 end;
 

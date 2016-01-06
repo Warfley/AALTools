@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Types, FileUtil, Forms, Controls, ComCtrls, Editor, FormEditor,
-  Dialogs;
+  Dialogs, AALTypes;
 
 type
   TCloseEditorEvent = procedure(Sender: TObject; Editor: integer;
@@ -25,6 +25,9 @@ type
     FOnEditorClose: TCloseEditorEvent;
     FOnEditorCreated: TEditorNotifyEvent;
     FOnEditorChanged: TNotifyEvent;
+    FOpenEditor: TOpenEditorEvent;
+    FEnterFunc: TOpenFunctionEvent;
+    FOnParserFinished: TNotifyEvent;
     { Functions & Procedures }
     function FindTextEditor(FileName: string): TEditorFrame;
     function FindFormEditor(FileName: string): TFormEditFrame;
@@ -42,7 +45,7 @@ type
     function GetEditorCaret(i: integer): TPoint;
     procedure SetEditorCaret(i: integer; p: TPoint);
   public
-    function OpenEditor(FileName: string; Line, Pos: integer): TFrame;
+    function OpenEditor(FileName: string; Pos: TPoint): TFrame;
     procedure CloseEditor(i: integer);
     procedure EditorSave(i: integer; p: string = ''); overload;
     procedure EditorSave(Editor: TFrame; p: string = ''); overload;
@@ -64,6 +67,9 @@ type
     property OnEditorCreated: TEditorNotifyEvent
       read FOnEditorCreated write FOnEditorCreated;
     property OnEditorChanged: TNotifyEvent read FOnEditorChanged write FOnEditorChanged;
+    property IDEOpenFile: TOpenEditorEvent read FOpenEditor write FOpenEditor;
+    property EnterFunc: TOpenFunctionEvent read FEnterFunc write FEnterFunc;
+    property OnParserFinished: TNotifyEvent read FOnParserFinished write FOnParserFinished;
   end;
 
 implementation
@@ -213,6 +219,9 @@ begin
       Parent := tmp;
       Visible := True;
       OnChange := @EditorChanged;
+      OnVarChanged:=FOnParserFinished;
+      OpenEditor:=FOpenEditor;
+      EnterFunc:=FEnterFunc;
       if FileExists(FName) then
         Load(FName)
       else
@@ -225,7 +234,9 @@ begin
       Parent := tmp;
       Visible := True;
       CodeEditor.SetFocus;
+      OpenEditor:=FOpenEditor;
       OnChange := @EditorChanged;
+      OnParserFinished:=FOnParserFinished;
       if FileExists(FName) then
         Load(FName)
       else
@@ -237,18 +248,18 @@ begin
     OnEditorCreated(Self, EditorIndex);
 end;
 
-function TEditorManager.OpenEditor(FileName: string; Line, Pos: integer): TFrame;
+function TEditorManager.OpenEditor(FileName: string; Pos: TPoint): TFrame;
 var
   Index: integer;
 begin
   Index := FindEditor(FileName);
   if Index = -1 then
-    CreateEditor(FileName, Line, Pos)
+    CreateEditor(FileName, Pos.y, Pos.x)
   else
   begin
     EditorControl.PageIndex := Index;
-    if (GetCurrentEditor is TEditorFrame) and (Line > 0) and (Pos > 0) then
-      (GetCurrentEditor as TEditorFrame).CodeJump(Point(Pos, Line));
+    if (GetCurrentEditor is TEditorFrame) and (Pos.Y > 0) and (Pos.X > 0) then
+      (GetCurrentEditor as TEditorFrame).CodeJump(Pos);
   end;
   Result := GetCurrentEditor;
 end;

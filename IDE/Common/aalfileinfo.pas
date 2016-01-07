@@ -52,7 +52,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    property Files[i: integer]: TAALFile read GetFile;
+    property Files[i: integer]: TAALFile read GetFile; default;
     property FileOpend[s: string]: boolean read CheckFileName write SetFileOpend;
     property FileIndex[Name: string]: integer read GetFileIndex;
     property Count: integer read GetCount;
@@ -87,9 +87,23 @@ begin
 end;
 
 procedure TAALFile.Parsed(Sender: TObject);
+var tmpFunc: TFuncList;
+  tmpVar: TVarList;
 begin
-  SetFuncs(FFuncs);
-  SetVars(FVars);
+  tmpFunc:=TFuncList.Create;
+  try
+    tmpFunc.Assign(FFuncs);
+    SetFuncs(tmpFunc);
+  finally
+    tmpFunc.Free;
+  end;
+  tmpVar:=TVarList.Create;
+  try
+    tmpVar.Assign(FVars);
+    SetVars(tmpVar);
+  finally
+    tmpVar.Free;
+  end;
 end;
 
 constructor TAALFile.Create;
@@ -157,9 +171,9 @@ end;
 
 procedure TAALFileManager.SetFileOpend(Name: string; Open: boolean);
 begin
-  if b and not CheckFileName(Name) then
+  if Open and not CheckFileName(Name) then
     LoadFile(Name)
-  else if b and CheckFileName(Name) then
+  else if Open and CheckFileName(Name) then
     UnloadFile(GetFileIndex(Name));
 end;
 

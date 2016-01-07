@@ -52,6 +52,7 @@ type
     procedure SaveFileItemClick(Sender: TObject);
     procedure KillEditor(s: string);
   private
+    FFormIsClosing: Boolean;
     FCurrentProject: TAALProject;
     FLastOpend: TStringList;
     FFileData: TAALFileManager;
@@ -83,6 +84,8 @@ implementation
 
 procedure TMainForm.OpenFile(Filename: string; Pos: TPoint);
 begin
+  if not FilenameIsAbsolute(Filename) then
+    FileName:=FCurrentProject.GetAbsPath(Filename);
   EditorManager1.OpenEditor(Filename, Pos);
 end;
 
@@ -136,8 +139,8 @@ procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 var
   mr: TModalResult;
 begin
+  FFormIsClosing:=True;
   EditorManager1.OnEditorChanged := nil;
-  EditorManager1.OnEditorClose := nil;
   EditorManager1.OnEditorCreated := nil;
   CloseAllItemClick(Sender);
   if EditorManager1.Count > 0 then
@@ -154,9 +157,9 @@ begin
   end;
   if CloseAction = caNone then
   begin
-    EditorManager1.OnEditorClose := @EditorClosing;
     EditorManager1.OnEditorChanged := @EditorChanged;
     EditorManager1.OnEditorCreated := @EditorCreated;
+    FFormIsClosing:=False;
   end;
   FLastOpend.SaveToFile(ExtractFilePath(ParamStr(0)) + 'LastOpend.txt');
 end;
@@ -213,7 +216,7 @@ begin
       mrCancel: Proceed := False;
     end;
   end;
-  if Proceed then
+  if Proceed and not FFormIsClosing then
     Application.QueueAsyncCall(@UpdateProject, 0);
 end;
 
@@ -254,6 +257,9 @@ begin
 end;
 
 procedure TMainForm.EditorParserFinished(Sender: TObject);
+var
+  i, n, idx, f: integer;
+  req: string;
 begin
   if Sender is TFormEditFrame then
   begin
@@ -261,7 +267,29 @@ begin
   end
   else if Sender is TEditorFrame then
   begin
-    //TODO
+    idx := FFileData.FileIndex[(Sender as TEditorFrame).FileName];
+    if idx = -1 then
+      idx := FFileData.CreateFile((Sender as TEditorFrame).FileName);
+    FFileData[idx].Functions := (Sender as TEditorFrame).FunctionList;
+    FFileData[idx].RequiredFiles := (Sender as TEditorFrame).RequiredFiles;
+    FFileData[idx].Variables := (Sender as TEditorFrame).VariableList;
+    for i := 0 to FFileData[idx].RequiredFiles.Count - 1 do
+    begin
+      req := FFileData[idx].RequiredFiles[i];
+      if not FilenameIsAbsolute(req) then
+        req := CreateAbsolutePath(FFileData[idx].RequiredFiles[i],
+          ExtractFilePath((Sender as TEditorFrame).FileName) + PathDelim);
+      f := FFileData.FileIndex[req];
+      if f >= 0 then
+      begin
+        for n := 0 to FFileData[f].Variables.Count - 1 do
+          (Sender as TEditorFrame).VariableList.Add(FFileData[f].Variables[n]);
+        for n := 0 to FFileData[f].Functions.Count - 1 do
+          (Sender as TEditorFrame).FunctionList.Add(FFileData[f].Functions[n]);
+      end
+      else
+        FFileData.LoadFile(req);
+    end;
   end;
 end;
 
@@ -269,6 +297,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
+    FFormIsClosing:=False;
   FCurrentProject := TAALProject.Create;
   EditorManager1.EnterFunc := @EnterFunction;
   FFileData := TAALFileManager.Create;
@@ -349,6 +378,7 @@ begin
   begin
     if FileExists(oldFile) then
       DeleteFile(oldFile);
+    FFileData.UnloadFile(FFileData.FileIndex[EditorManager1.EditorFiles[EditorManager1.EditorIndex]]);
     EditorManager1.EditorSave(EditorManager1.EditorIndex, SaveAALFileDialog.FileName);
     for i := 0 to FCurrentProject.Files.Count - 1 do
       if FCurrentProject.FilePath[i] = oldFile then
@@ -390,6 +420,7 @@ begin
       FLastOpend.Insert(0, FCurrentProject.ProjectDir + FCurrentProject.Name +
         '.aalproj');
     end;
+    FFileData.LoadFile(SaveAALFileDialog.FileName);
   end;
 end;
 

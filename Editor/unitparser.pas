@@ -282,7 +282,10 @@ begin
     FRanges.Clear;
     for i := 0 to FMyRanges.Count - 1 do
       FRanges.Add(FMyRanges[i]);
-  end;
+  end
+  else
+    for i:=0 to FMyRanges.Count-1 do
+      FMyRanges[i].Free;
   FRequiredFiles.Clear;
   FRequiredFiles.AddStrings(FMyRequiredFiles);
   FWait := False;

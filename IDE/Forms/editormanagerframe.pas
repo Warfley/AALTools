@@ -258,8 +258,12 @@ begin
   else
   begin
     EditorControl.PageIndex := Index;
-    if (GetCurrentEditor is TEditorFrame) and (Pos.Y > 0) and (Pos.X > 0) then
+    if (GetCurrentEditor is TEditorFrame) then
+    begin
+    if (Pos.Y > 0) and (Pos.X > 0) then
       (GetCurrentEditor as TEditorFrame).CodeJump(Pos);
+    (GetCurrentEditor as TEditorFrame).CodeEditor.SetFocus;
+    end;
   end;
   Result := GetCurrentEditor;
 end;

@@ -96,6 +96,7 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnParserFinished: TNotifyEvent read FOnParserFinished
       write FOnParserFinished;
+    property RequiredFiles: TStringList read FRequiredFiles;
     property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
     { public declarations }
   end;
@@ -249,8 +250,9 @@ begin
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if (FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) and
-        (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
+      if ((FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) or
+        (FVars[i].FileName <> '')) and (Pos(LowerCase(Completion.CurrentString),
+        LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
@@ -349,8 +351,9 @@ begin
   else if Completion.CurrentString[1] = '$' then
   begin
     for i := 0 to FVars.Count - 1 do
-      if (FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) and
-        (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
+      if ((FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) or
+        (FVars[i].FileName <> '')) and (Pos(LowerCase(Completion.CurrentString),
+        LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
@@ -802,7 +805,7 @@ begin
     end
     else if GetCurrVar(sel, v) then
     begin
-      if (FileName = '') then
+      if (v.FileName = '') then
       begin
         if pos('[', v.Name) > 0 then
           CodeJump(Point(Pos(Copy(v.Name, 1, Pos('[', v.Name) - 1),
@@ -811,7 +814,7 @@ begin
           CodeJump(Point(v.Pos, v.Line + 1));
       end
       else if Assigned(FOpenEditor) then
-        FOpenEditor(v.FileName, Point(v.Pos+1, v.Line + 1));
+        FOpenEditor(v.FileName, Point(v.Pos + 1, v.Line + 1));
     end
     else
     begin

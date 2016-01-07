@@ -266,6 +266,7 @@ begin
       (Sender as TControl).Cursor := crDefault;
   end
   else
+  begin
     case (Sender as TControl).Cursor of
       crSizeNWSE:
       begin
@@ -293,6 +294,10 @@ begin
         end;
       end;
     end;
+
+    if Assigned(FOnChange) then
+      FOnChange(Self);
+  end;
 end;
 
 procedure TFormEditFrame.FormPanelMouseUp(Sender: TObject; Button: TMouseButton;
@@ -319,6 +324,8 @@ begin
         FormPanel.Invalidate;
       end;
       ToolSelect.ItemIndex := -1;
+      if Assigned(FOnChange) then
+        FOnChange(Self);
     end
     else
       for i := 0 to FormControlView.Items.Count - 1 do
@@ -370,8 +377,8 @@ begin
     case ARow of
       0:
       begin
-       FFormName := Value;
-       FormControlView.Selected.Text:=Value;
+        FFormName := Value;
+        FormControlView.Selected.Text := Value;
       end;
       1: FormCaptionLabel.Caption := Value;
       2:
@@ -416,8 +423,8 @@ begin
     case ARow of
       0:
       begin
-      c.Name := Value;
-       FormControlView.Selected.Text:=Value;
+        c.Name := Value;
+        FormControlView.Selected.Text := Value;
       end;
       1: if c is TEdit then
           (c as TEdit).Text := Value
@@ -467,6 +474,8 @@ begin
       end;
     end;
   end;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TFormEditFrame.PropertyPanelResize(Sender: TObject);
@@ -546,8 +555,10 @@ end;
 procedure TFormEditFrame.FormControlViewEdited(Sender: TObject;
   Node: TTreeNode; var S: string);
 begin
-  TControl(Node.Data).Name:=s;
+  TControl(Node.Data).Name := s;
   FormControlViewChange(Sender, Node);
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TFormEditFrame.DeleteItem(n: TTreeNode);
@@ -563,6 +574,8 @@ begin
       FormControlView.Items.Delete(n);
       Break;
     end;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure TFormEditFrame.FormControlViewKeyUp(Sender: TObject;

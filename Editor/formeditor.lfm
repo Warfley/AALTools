@@ -124,7 +124,7 @@ object FormEditFrame: TFormEditFrame
           )
           ColWidths = (
             129
-            130
+            104
           )
         end
       end

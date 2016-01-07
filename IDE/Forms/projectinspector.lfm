@@ -7,8 +7,8 @@ object ProjectInspector: TProjectInspector
   ClientWidth = 347
   OnResize = FrameResize
   TabOrder = 0
-  DesignLeft = 730
-  DesignTop = 178
+  DesignLeft = 561
+  DesignTop = 188
   object ProjectFileTreeView: TTreeView
     Left = 0
     Height = 239

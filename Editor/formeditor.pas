@@ -644,311 +644,77 @@ procedure TFormEditFrame.Load(p: string = '');
       end;
   end;
 
-  function ReadTok(s: string): string;
+  function ReadFunc(s: string; Params: TStringList): string;
+
+    function ReadTok(s: string; out NewPos: integer): string;
+    var
+      len, depth: integer;
+    begin
+      len := 0;
+      if s[1] = '"' then
+      begin
+        while (len + 2 < length(s)) and (s[2 + len] <> '"') do
+          Inc(len);
+        Result := Copy(s, 2, len);
+        NewPos := len + 1;
+        while not (s[NewPos] in [',', ')']) do
+          Inc(NewPos);
+      end
+      else
+      begin
+        depth := 0;
+        len := 0;
+        while (len < length(s) - 1) and not ((depth = 0) and (s[1 + len] in [',', ')'])) do
+        begin
+          if (s[1 + len] = '(') then
+            Inc(depth)
+          else if (s[1 + len] = ')') then
+            Dec(depth);
+          Inc(len);
+        end;
+        Result := Copy(s, 1, len);
+        NewPos := len + 1;
+        while not (s[NewPos] in [',', ')']) do
+          Inc(NewPos);
+      end;
+    end;
+
   var
     i: integer;
   begin
-    i := 0;
-    while (i <= Length(s)) and (s[i + 1] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+    Result := '';
+    if (Pos('(', s) = 0) or (Pos(')', s) = 0) or (Params=nil) then
+      exit;
+    s := Trim(s);
+    i := 1;
+    while (i <= length(s)) and (s[i] <> '(') do
       Inc(i);
-    Result := Copy(s, 1, i);
+    Result := Copy(s, 1, i - 1);
+    Delete(s, 1, Pos('(', s));
+
+    while not ((ReadTok(s, i) = ')') or (ReadTok(s, i) = '')) do
+    begin
+      Params.Add(ReadTok(s, i));
+      while s[i] in [' ', #9, ','] do
+        Inc(i);
+      Delete(s, 1, i - 1);
+    end;
   end;
 
 var
-  sl: TStringList;
-  s, varName, tmp: string;
-  i, len: integer;
-  frm: boolean;
+  Lines: TStringList;
+  VarName, FuncName: String;
+  FuncParams: TStringList;
+  FormFound: boolean;
   c: TControl;
 begin
-  // TODO Rework this mess
-  frm := False;
-  if p = '' then
-    p := FFileName;
-  if not FileExists(p) then
-    Exit;
-  DeleteItem(FormControlView.Items[0]);
-  sl := TStringList.Create;
+  Lines:=TStringList.Create;
+  FuncParams:= TStringList.Create;
   try
-    sl.LoadFromFile(p);
-    for i := 0 to sl.Count - 1 do
-    begin
-      s := Trim(sl[i]);
-      if Length(s) = 0 then
-        Continue
-      else if isEnd(s, 'setonevent') then
-      begin
-        //TODO
-        Continue;
-      end
-      else if s[1] <> '$' then
-        Continue;
-      if pos('=', s) = 0 then
-        Continue;
-      len := 0;
-      while (s[2 + len] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
-        Inc(len);
-      if len = 0 then
-        Continue;
-      varName := Copy(s, 2, len);
-      Delete(s, 1, Pos('=', s));
-      s := Trim(s);
-      if isEnd(s, 'CreateWindow') and not frm then
-      begin
-        FFormName := varName;
-        if Pos('"', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('"', s));
-        len := 0;
-        while (s[1 + len] <> '"') and (len < Length(s)) do
-          Inc(len);
-        FormCaptionLabel.Caption := Copy(s, 1, len);
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        FFormLeft := StrToInt(tmp);
 
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        FFormTop := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        FormPanel.Width := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        FormPanel.Height := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        FormPanel.Tag := StrToInt(tmp);
-        frm := True;
-      end
-      else
-      if isEnd(s, 'CreateButton') then
-      begin
-        if Pos('$', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('$', s));
-        if not (ReadTok(s) = FFormName) then
-          Continue;
-        c := CreateButton(FormPanel);
-        if Pos('"', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('"', s));
-        len := 0;
-        while (s[1 + len] <> '"') and (len < Length(s)) do
-          Inc(len);
-        c.Caption := Copy(s, 1, len);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Left := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Top := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Width := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Height := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := c.Tag + StrToInt(tmp) * 255;
-      end
-      else
-      if isEnd(s, 'CreateLabel') then
-      begin
-        if Pos('$', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('$', s));
-        if not (ReadTok(s) = FFormName) then
-          Continue;
-        c := CreateLabel(FormPanel);
-        if Pos('"', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('"', s));
-        len := 0;
-        while (s[1 + len] <> '"') and (len < Length(s)) do
-          Inc(len);
-        c.Caption := Copy(s, 1, len);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Left := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Top := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Width := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Height := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := c.Tag + StrToInt(tmp) * 255;
-      end
-      else
-      if isEnd(s, 'CreateCheckbox') then
-      begin
-        if Pos('$', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('$', s));
-        if not (ReadTok(s) = FFormName) then
-          Continue;
-        c := CreateCheckbox(FormPanel);
-        if Pos('"', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('"', s));
-        len := 0;
-        while (s[1 + len] <> '"') and (len < Length(s)) do
-          Inc(len);
-        c.Caption := Copy(s, 1, len);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Left := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Top := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Width := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Height := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := c.Tag + StrToInt(tmp) * 255;
-      end
-      else
-      if isEnd(s, 'CreateInputbox') then
-      begin
-        if Pos('$', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('$', s));
-        if not (ReadTok(s) = FFormName) then
-          Continue;
-        c := CreateEdit(FormPanel);
-        if Pos('"', s) = 0 then
-          Continue;
-        Delete(s, 1, Pos('"', s));
-        len := 0;
-        while (s[1 + len] <> '"') and (len < Length(s)) do
-          Inc(len);
-        (c as TEdit).Text := Copy(s, 1, len);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Left := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Top := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Width := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Height := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := StrToInt(tmp);
-
-        Delete(s, 1, pos(',', s));
-        tmp := ReadTok(Trim(s));
-        if not IsNumeric(tmp) then
-          Continue;
-        c.Tag := c.Tag + StrToInt(tmp) * 255;
-      end;
-    end;
   finally
-    sl.Free;
+    FuncParams.Free;
+    Lines.Free;
   end;
   FFileName := p;
 end;

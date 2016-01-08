@@ -591,35 +591,36 @@ var
   sl: TStringList;
   i: integer;
 begin
+  // TODO: Save Style Information
   if p = '' then
     p := FFileName;
   sl := TStringList.Create;
   try
     sl.Add(Format('$%s = CreateWindow("%s", %d, %d, %d, %d, %d)',
       [FFormName, FormCaptionLabel.Caption, FFormLeft, FFormTop,
-      FormPanel.Width, FormPanel.Height, FormPanel.Tag]));
+      FormPanel.Width, FormPanel.Height, 0]));
     for i := 0 to FEditorControls.Count - 1 do
     begin
       if FEditorControls[i] is TButton then
         with FEditorControls[i] as TButton do
           sl.Add(Format('$%s = CreateButton($%s, "%s", %d, %d, %d, %d, %d, %d)',
             [Name, FFormName, Caption, Left, Top, Width, Height,
-            Tag mod 255, (Tag div 255) mod 255]))
+            0, 0]))
       else if FEditorControls[i] is TEdit then
         with FEditorControls[i] as TEdit do
           sl.Add(Format('$%s = CreateInputbox($%s, "%s", %d, %d, %d, %d, %d, %d)',
             [Name, FFormName, Caption, Left, Top, Width, Height,
-            Tag mod 255, (Tag div 255) mod 255]))
+            0, 0]))
       else if FEditorControls[i] is TCheckBox then
         with FEditorControls[i] as TCheckBox do
           sl.Add(Format('$%s = CreateCheckbox($%s, "%s", %d, %d, %d, %d, %d, %d)',
             [Name, FFormName, Caption, Left, Top, Width, Height,
-            Tag mod 255, (Tag div 255) mod 255]))
+            0, 0]))
       else if FEditorControls[i] is TLabel then
         with FEditorControls[i] as TLabel do
           sl.Add(Format('$%s = CreateLabel($%s, "%s", %d, %d, %d, %d, %d, %d)',
             [Name, FFormName, Caption, Left, Top, Width, Height,
-            Tag mod 255, (Tag div 255) mod 255]));
+            0, 0]));
     end;
     if p <> '' then
       sl.SaveToFile(p);
@@ -664,7 +665,8 @@ procedure TFormEditFrame.Load(p: string = '');
       begin
         depth := 0;
         len := 0;
-        while (len < length(s) - 1) and not ((depth = 0) and (s[1 + len] in [',', ')'])) do
+        while (len < length(s) - 1) and not ((depth = 0) and
+            (s[1 + len] in [',', ')'])) do
         begin
           if (s[1 + len] = '(') then
             Inc(depth)
@@ -683,8 +685,9 @@ procedure TFormEditFrame.Load(p: string = '');
     i: integer;
   begin
     Result := '';
-    if (Pos('(', s) = 0) or (Pos(')', s) = 0) or (Params=nil) then
+    if (Pos('(', s) = 0) or (Pos(')', s) = 0) or (Params = nil) then
       exit;
+    Params.Clear;
     s := Trim(s);
     i := 1;
     while (i <= length(s)) and (s[i] <> '(') do
@@ -701,21 +704,167 @@ procedure TFormEditFrame.Load(p: string = '');
     end;
   end;
 
+  function ReadVar(s: string): string;
+  var
+    i: integer;
+  begin
+    i := 2;
+    Result := '';
+    if (Length(s) = 0) or (s[1] <> '$') then
+      exit;
+    while (i <= Length(s)) and (s[i] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+      Inc(i);
+    if s[i] = '[' then
+      exit;
+    Result := Copy(s, 2, i - 2);
+  end;
+
 var
   Lines: TStringList;
-  VarName, FuncName: String;
+  VarName, FuncName: string;
   FuncParams: TStringList;
+  i, curr: integer;
   FormFound: boolean;
   c: TControl;
 begin
-  Lines:=TStringList.Create;
-  FuncParams:= TStringList.Create;
+  curr := 1;
+  DeleteItem(FormControlView.Items[0]);
+  FormFound := False;
+  if p = '' then
+    p := FFileName;
+  if not FileExists(p) then
+    exit;
+  Lines := TStringList.Create;
+  FuncParams := TStringList.Create;
   try
-
+    Lines.LoadFromFile(p);
+    for i := 0 to Lines.Count - 1 do
+    begin
+      Lines[i] := Trim(Lines[i]);
+      if isEnd(Lines[i], 'SetOnEvent') then
+      begin
+        // TODO
+      end
+      else
+      begin
+        VarName := ReadVar(Lines[i]);
+        if VarName = '' then
+          Continue;
+        FuncName := Lines[i];
+        Delete(FuncName, 1, Pos('=', FuncName));
+        FuncName := LowerCase(ReadFunc(FuncName, FuncParams));
+        if (FuncName = '') or (FuncParams.Count = 0) then
+          Continue;
+        if FuncName = 'createwindow' then
+        begin
+          // Syntax Check
+          if FormFound or (FuncParams.Count <> 6) or not
+            (IsNumeric(FuncParams[1]) and IsNumeric(FuncParams[2]) and
+            IsNumeric(FuncParams[3]) and IsNumeric(FuncParams[4]) and
+            IsNumeric(FuncParams[5])) then
+            Continue;
+          // Read Data
+          FFormName := VarName;
+          FormControlView.Items[0].Text := FFormName;
+          FormCaptionLabel.Caption := FuncParams[0];
+          FFormLeft := StrToInt(FuncParams[1]);
+          FFormTop := StrToInt(FuncParams[2]);
+          FormPanel.Width := StrToInt(FuncParams[3]);
+          FormPanel.Height := StrToInt(FuncParams[4]);
+          //TODO Load Style Information
+          FormFound := True;
+        end
+        else if FuncName = 'createbutton' then
+        begin
+          // Syntax Check
+          if (FuncParams.Count <> 8) or not
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+            Continue;
+          // Read Data
+          c := CreateButton(FormPanel);
+          c.Name := VarName;
+          FormControlView.Items[curr].Text := VarName;
+          c.Caption := FuncParams[1];
+          c.Left := StrToInt(FuncParams[2]);
+          c.Top := StrToInt(FuncParams[3]);
+          c.Width := StrToInt(FuncParams[4]);
+          c.Height := StrToInt(FuncParams[5]);
+          // TODO: Loading Style Information
+          Inc(curr);
+        end
+        else if FuncName = 'createcheckbox' then
+        begin
+          // Syntax Check
+          if (FuncParams.Count <> 8) or not
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+            Continue;
+          // Read Data
+          c := CreateCheckBox(FormPanel);
+          c.Name := VarName;
+          FormControlView.Items[curr].Text := VarName;
+          c.Caption := FuncParams[1];
+          c.Left := StrToInt(FuncParams[2]);
+          c.Top := StrToInt(FuncParams[3]);
+          c.Width := StrToInt(FuncParams[4]);
+          c.Height := StrToInt(FuncParams[5]);
+          // TODO: Loading Style Information
+          Inc(curr);
+        end
+        else if FuncName = 'createlabel' then
+        begin
+          // Syntax Check
+          if (FuncParams.Count <> 8) or not
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+            Continue;
+          // Read Data
+          c := CreateLabel(FormPanel);
+          c.Name := VarName;
+          FormControlView.Items[curr].Text := VarName;
+          c.Caption := FuncParams[1];
+          c.Left := StrToInt(FuncParams[2]);
+          c.Top := StrToInt(FuncParams[3]);
+          c.Width := StrToInt(FuncParams[4]);
+          c.Height := StrToInt(FuncParams[5]);
+          // TODO: Loading Style Information
+          Inc(curr);
+        end
+        else if FuncName = 'createinputbox' then
+        begin
+          // Syntax Check
+          if (FuncParams.Count <> 8) or not
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+            Continue;
+          // Read Data
+          c := CreateEdit(FormPanel);
+          c.Name := VarName;
+          FormControlView.Items[curr].Text := VarName;
+          (c as TEdit).Text := FuncParams[1];
+          c.Left := StrToInt(FuncParams[2]);
+          c.Top := StrToInt(FuncParams[3]);
+          c.Width := StrToInt(FuncParams[4]);
+          c.Height := StrToInt(FuncParams[5]);
+          // TODO: Loading Style Information
+          Inc(curr);
+        end;
+      end;
+    end;
   finally
     FuncParams.Free;
     Lines.Free;
   end;
+  Self.Parent.Caption:=ExtractFileName(p);
   FFileName := p;
 end;
 

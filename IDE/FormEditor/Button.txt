@@ -1,9 +1,0 @@
-P:Name:s
-P:Text:s
-P:X:d
-P:Y:d
-P:Width:d
-P:Height:d
-P:Style:d
-P:StyleEx:d
-E:onClick

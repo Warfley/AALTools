@@ -1,18 +1,18 @@
 object FormEditFrame: TFormEditFrame
   Left = 0
-  Height = 637
+  Height = 636
   Top = 0
   Width = 895
-  ClientHeight = 637
+  ClientHeight = 636
   ClientWidth = 895
   Color = clDefault
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 209
-  DesignTop = 57
+  DesignLeft = 586
+  DesignTop = 398
   object EditorScrollBox: TScrollBox
     Left = 0
-    Height = 637
+    Height = 636
     Top = 0
     Width = 624
     HorzScrollBar.Increment = 40
@@ -24,7 +24,7 @@ object FormEditFrame: TFormEditFrame
     VertScrollBar.Smooth = True
     VertScrollBar.Tracking = True
     Align = alClient
-    ClientHeight = 633
+    ClientHeight = 632
     ClientWidth = 620
     TabOrder = 0
     object FormPanel: TPanel
@@ -44,28 +44,28 @@ object FormEditFrame: TFormEditFrame
     end
     object FormCaptionLabel: TLabel
       Left = 16
-      Height = 15
+      Height = 25
       Top = 8
-      Width = 34
+      Width = 52
       Caption = 'Form1'
       ParentColor = False
     end
   end
   object PropertyPanel: TPanel
     Left = 624
-    Height = 637
+    Height = 636
     Top = 0
     Width = 271
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 637
+    ClientHeight = 636
     ClientWidth = 271
     TabOrder = 1
     OnResize = PropertyPanelResize
     object PropertyPages: TPageControl
       Left = 0
       Height = 256
-      Top = 381
+      Top = 380
       Width = 271
       ActivePage = ControlProps
       Align = alBottom
@@ -73,35 +73,31 @@ object FormEditFrame: TFormEditFrame
       TabOrder = 0
       object ControlProps: TTabSheet
         Caption = 'Eigenschaften'
-        ClientHeight = 228
+        ClientHeight = 218
         ClientWidth = 263
         object PropEditor: TValueListEditor
           Left = 0
-          Height = 228
+          Height = 218
           Top = 0
           Width = 263
           Align = alClient
           FixedCols = 0
           Flat = True
-          RowCount = 8
-          ScrollBars = ssAutoVertical
+          RowCount = 2
           TabOrder = 0
-          OnSetEditText = PropEditorSetEditText
-          DisplayOptions = [doAutoColResize, doKeyColFixed]
+          TitleStyle = tsNative
+          OnEditingDone = PropEditorEditingDone
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAlwaysShowEditor, goThumbTracking, goDontScrollPartCell]
           Strings.Strings = (
-            'Name='
-            'Text='
-            'X='
-            'Y='
-            'Width='
-            'Height='
-            'Style='
-            'StyleEx='
+            ''
+          )
+          TitleCaptions.Strings = (
+            'Eigenschafft'
+            'Wert'
           )
           ColWidths = (
-            129
-            133
+            64
+            198
           )
         end
       end
@@ -116,26 +112,34 @@ object FormEditFrame: TFormEditFrame
           Width = 263
           Align = alClient
           FixedCols = 0
-          RowCount = 1
+          Flat = True
+          RowCount = 2
           TabOrder = 0
-          DisplayOptions = [doAutoColResize, doKeyColFixed]
+          TitleStyle = tsNative
+          OnButtonClick = EventEditorButtonClick
+          OnEditingDone = EventEditorEditingDone
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAlwaysShowEditor, goThumbTracking, goDontScrollPartCell]
           Strings.Strings = (
-            'onClick='
+            ''
+          )
+          TitleCaptions.Strings = (
+            'Event'
+            'Funktion'
           )
           ColWidths = (
-            129
-            113
+            64
+            198
           )
         end
       end
     end
     object FormControlView: TTreeView
       Left = 0
-      Height = 358
-      Top = 23
+      Height = 347
+      Top = 33
       Width = 271
       Align = alClient
-      DefaultItemHeight = 18
+      DefaultItemHeight = 28
       Images = ImageList1
       TabOrder = 1
       OnChange = FormControlViewChange
@@ -144,7 +148,7 @@ object FormEditFrame: TFormEditFrame
     end
     object TreeFilterEdit1: TTreeFilterEdit
       Left = 0
-      Height = 23
+      Height = 33
       Top = 0
       Width = 271
       ButtonWidth = 23
@@ -158,7 +162,7 @@ object FormEditFrame: TFormEditFrame
   object ToolBoxPanel: TPanel
     Left = 4
     Height = 184
-    Top = 602
+    Top = 601
     Width = 200
     Anchors = [akLeft, akBottom]
     BevelOuter = bvNone

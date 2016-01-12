@@ -184,8 +184,21 @@ end;
 
 function TMainForm.EnterFunction(FileName, FuncName: string;
   Params: TStringList; CreateIfMissing: boolean): string;
+var i: Integer;
+  e: TEditorFrame;
 begin
-  //TODO
+  if FFileData.FileIndex[FileName] = -1 then
+  begin
+    FFileData.LoadFile(FileName);
+    exit;
+  end;
+  with FFileData[FFileData.FileIndex[FileName]] do
+    for i:=0 to Functions.Count-1 do
+      if pos(LowerCase(FuncName), LowerCase(Functions[i].Name)) =1 then
+      begin
+        EditorManager1.OpenEditor(FileName, Point(1, Functions[i].Line+2));
+        Exit;
+      end;
 end;
 
 procedure TMainForm.AddInclude(FileName, IncludeFile: string);
@@ -268,6 +281,10 @@ begin
     if idx = -1 then
       idx := FFileData.CreateFile((Sender as TFormEditFrame).FileName);
     (Sender as TFormEditFrame).AddToVarlist(FFileData[idx].Variables);
+    idx:=FFileData.FileIndex[ChangeFileExt((Sender as TFormEditFrame).FileName, 'aal1')];
+    if idx = -1 then
+      idx:=FFileData.LoadFile(ChangeFileExt((Sender as TFormEditFrame).FileName, 'aal1'));
+    (Sender as TFormEditFrame).FuncList.Clear;
   end
   else if Sender is TEditorFrame then
   begin
@@ -301,7 +318,7 @@ begin
       begin
         e.FuncList.Clear;
         for i:=0 to FunctionList.Count-1 do
-          e.FuncList.Add(FunctionList[i].Name);
+          e.FuncList.Add(Copy(FunctionList[i].Name, 1, Pos('(', FunctionList[i].Name)-1));
       end;
     end;
   end;

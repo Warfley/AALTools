@@ -448,6 +448,7 @@ end;
 
 procedure TEditorFrame.UpdateTimerTimer(Sender: TObject);
 begin
+  if Trim(CodeEditor.Lines.Text)='' then Exit;
   if Parser.Finished or Parser.Suspended then
   begin
     Parser.Free;

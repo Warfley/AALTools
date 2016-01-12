@@ -572,10 +572,10 @@ begin
     (c as TAALEdit).Event[s] := v
   else if c is TAALCheckbox then
     (c as TAALCheckbox).Event[s] := v;
-  if Assigned(FEnterFunc) then
-    FEnterFunc(ChangeFileExt(FFileName, '.aal1'), v, nil, True);
   if Assigned(FOnChange) then
     FOnChange(Self);
+  if Assigned(FEnterFunc) then
+    FEnterFunc(ChangeFileExt(FFileName, '.aal1'), v, nil, True);
 end;
 
 procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;

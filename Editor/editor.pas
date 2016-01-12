@@ -123,7 +123,10 @@ begin
   p := CodeEditor.LogicalCaretXY;
   p.y := p.y + i;
   while CodeEditor.Lines.Count < p.y do
-    CodeEditor.Lines.Add('');
+    CodeEditor.TextBetweenPoints[Point(
+      Length(CodeEditor.Lines[CodeEditor.Lines.Count - 1]), CodeEditor.Lines.Count),
+      Point(Length(CodeEditor.Lines[CodeEditor.Lines.Count - 1]),
+      CodeEditor.Lines.Count)] := '#13';
   CodeEditor.LogicalCaretXY := p;
 end;
 
@@ -251,8 +254,8 @@ begin
   begin
     for i := 0 to FVars.Count - 1 do
       if ((FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) or
-        (FVars[i].FileName <> '')) and (Pos(LowerCase(Completion.CurrentString),
-        LowerCase(FVars[i].Name)) = 1) then
+        (FVars[i].FileName <> '')) and
+        (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
@@ -352,8 +355,8 @@ begin
   begin
     for i := 0 to FVars.Count - 1 do
       if ((FVars[i].Line <= CodeEditor.LogicalCaretXY.y - 1) or
-        (FVars[i].FileName <> '')) and (Pos(LowerCase(Completion.CurrentString),
-        LowerCase(FVars[i].Name)) = 1) then
+        (FVars[i].FileName <> '')) and
+        (Pos(LowerCase(Completion.CurrentString), LowerCase(FVars[i].Name)) = 1) then
         Completion.ItemList.Add(FVars[i].Name);
     for x := 0 to FDefRanges.Count - 1 do
       if (CodeEditor.LogicalCaretXY.y - 1 >= (FDefRanges[x] as TDefRange).StartLine) and
@@ -507,11 +510,11 @@ begin
       Value := Value + ' ';
   end;
   rpval := Value;
-  Value := Copy(ln, SourceStart.x, pos(Completion.CurrentString, ln) -
-    SourceStart.x) + Value + Copy(ln, pos(Completion.CurrentString, ln) +
+  Value := Copy(ln, SourceStart.x, PosEx(Completion.CurrentString, ln, SourceStart.x) -
+    SourceStart.x) + Value + Copy(ln, PosEx(Completion.CurrentString, ln, SourceStart.x) +
     Length(Completion.CurrentString), SourceEnd.x -
-    (pos(Completion.CurrentString, ln) + Length(Completion.CurrentString)) + 1);
-  Application.QueueAsyncCall(@MoveHorz, -(Length(Value) -
+    (PosEx(Completion.CurrentString, ln, SourceStart.x) + Length(Completion.CurrentString)));
+  Application.QueueAsyncCall(@MoveHorz, - (Length(Value) -
     (Pos(rpval, Value) + Length(rpval) - 1)));
 end;
 
@@ -563,7 +566,8 @@ begin
     begin
       if not GotClosed(i, 'while', 'wend') then
       begin
-        CodeEditor.Lines.Insert(i + 2, pref + 'WEnd');
+        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] :=
+          #13 + pref + 'WEnd';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end
@@ -571,7 +575,8 @@ begin
     begin
       if not GotClosed(i, 'for', 'next') then
       begin
-        CodeEditor.Lines.Insert(i + 2, pref + 'Next');
+        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] :=
+          #13 + pref + 'Next';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end
@@ -579,7 +584,7 @@ begin
     begin
       if not GotClosed(i, 'if', 'endif') then
       begin
-        CodeEditor.Lines.Insert(i + 2, pref + 'EndIf');
+        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] := #13 + 'EndIf';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end
@@ -596,7 +601,8 @@ begin
         end;
       if b then
       begin
-        CodeEditor.Lines.Insert(i + 2, pref + 'EndFunc');
+        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] :=
+          #13 + pref + 'EndFunc';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end;

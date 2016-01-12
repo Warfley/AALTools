@@ -29,8 +29,10 @@ type
     TreeFilterEdit1: TTreeFilterEdit;
     FormControlView: TTreeView;
     PropEditor: TValueListEditor;
-    procedure EventEditorButtonClick(Sender: TObject; aCol, aRow: integer);
     procedure EventEditorEditingDone(Sender: TObject);
+    procedure EventEditorGetPickList(Sender: TObject; const KeyName: string;
+      Values: TStrings);
+    procedure EventEditorPickListSelect(Sender: TObject);
     procedure FormControlViewChange(Sender: TObject; Node: TTreeNode);
     procedure FormControlViewEdited(Sender: TObject; Node: TTreeNode;
       var S: string);
@@ -64,6 +66,7 @@ type
     FOpenEditor: TOpenEditorEvent;
     FEnterFunc: TOpenFunctionEvent;
     FOnVarChanged: TNotifyEvent;
+    FFuncList: TStringList;
     { private declarations }
     procedure DeleteItem(n: TTreeNode);
     function FindControl(s: string): integer;
@@ -74,10 +77,12 @@ type
     procedure LoadControlData(c: TComponent);
   public
     constructor Create(TheOwner: TComponent); override;
+    procedure AddToVarlist(l: TVarList);
     destructor Destroy; override;
     procedure Save(p: string = '');
     procedure Load(p: string = '');
     { public declarations }
+    property FuncList: TStringList read FFuncList;
     property FileName: string read FFileName write FFileName;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
@@ -110,7 +115,7 @@ begin
     for i := 0 to FFormEvents.Count - 1 do
     begin
       EventEditor.Values[FFormEvents.Names[i]] := FFormEvents.ValueFromIndex[i];
-      EventEditor.ItemProps[FFormEvents.Names[i]].EditStyle := esEllipsis;
+      EventEditor.ItemProps[FFormEvents.Names[i]].EditStyle := esPickList;
     end;
   end
   else
@@ -284,6 +289,7 @@ var
   i, n: integer;
 begin
   inherited;
+  FFuncList := TStringList.Create;
   FEditorControls := TObjectList.Create(True);
   FormControlView.Items.Add(nil, 'Form1').Data := FormPanel;
   FormControlView.Items[0].ImageIndex := 0;
@@ -302,6 +308,7 @@ destructor TFormEditFrame.Destroy;
 begin
   DeleteItem(FormControlView.Items[0]);
   FEditorControls.Free;
+  FFuncList.Free;
   FFormEvents.Free;
   inherited;
 end;
@@ -390,6 +397,8 @@ begin
         FormPanel.Invalidate;
       end;
       ToolSelect.ItemIndex := -1;
+      if Assigned(FOnVarChanged) then
+        FOnVarChanged(Self);
       if Assigned(FOnChange) then
         FOnChange(Self);
     end
@@ -401,6 +410,15 @@ begin
       FOnChange(Self);
     Moved := False;
   end;
+end;
+
+procedure TFormEditFrame.AddToVarlist(l: TVarList);
+var
+  i: integer;
+begin
+  l.Add(VarInfo('$' + FFormName, 0, 0, FFileName));
+  for i := 0 to FEditorControls.Count - 1 do
+    l.Add(VarInfo('$' + (FEditorControls[i] as TControl).Name, 0, 0, FFileName));
 end;
 
 procedure TFormEditFrame.FormPanelPaint(Sender: TObject);
@@ -508,14 +526,41 @@ begin
 end;
 
 procedure TFormEditFrame.EventEditorEditingDone(Sender: TObject);
+function StringsContain(s: TStrings; str: String): Boolean;
+var
+  i: Integer;
+begin
+  str:=LowerCase(str);
+  Result:=False;
+  for i:=0 to s.Count-1 do
+    if LowerCase(s[i])=str then
+    begin
+      Result:=True;
+      exit;
+    end;
+end;
+
 var
   c: TControl;
   s, v: string;
+  i:Integer;
 begin
   if not Assigned(FormControlView.Selected) then
     exit;
   s := EventEditor.Rows[EventEditor.Row][0];
   v := EventEditor.Rows[EventEditor.Row][1];
+  if v = '(Neu...)' then
+  begin
+    v := FormControlView.Selected.Text + Copy(s, 3, Length(s));
+    if StringsContain(FFuncList, v) then
+    begin
+      i:=1;
+      while StringsContain(FFuncList, v+IntToStr(i)) do
+        inc(i);
+      v:=v+IntToStr(i);
+    end;
+    EventEditor.Values[s] := v;
+  end;
   c := TControl(FormControlView.Selected.Data);
   if c = FormPanel then
     FFormEvents.Values[s] := v
@@ -527,26 +572,24 @@ begin
     (c as TAALEdit).Event[s] := v
   else if c is TAALCheckbox then
     (c as TAALCheckbox).Event[s] := v;
+  if Assigned(FEnterFunc) then
+    FEnterFunc(ChangeFileExt(FFileName, '.aal1'), v, nil, True);
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
 
-procedure TFormEditFrame.EventEditorButtonClick(Sender: TObject; aCol, aRow: integer);
+procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;
+  const KeyName: string; Values: TStrings);
 var
-  s, v: string;
+  i: integer;
 begin
-  if (not Assigned(FormControlView.Selected)) or (EventEditor.Col = 0) then
-    exit;
-  s := EventEditor.Rows[aRow][0];
-  v := EventEditor.Rows[aRow][1];
-  if v = '' then
-  begin
-    v := FormControlView.Selected.Text + Copy(s, 3, Length(s));
-    EventEditor.Values[s] := v;
-  end;
+  Values.Add('(Neu...)');
+  Values.AddStrings(FFuncList);
+end;
+
+procedure TFormEditFrame.EventEditorPickListSelect(Sender: TObject);
+begin
   EventEditor.Col := 0;
-  if Assigned(FEnterFunc) then
-    FEnterFunc(ChangeFileExt(FFileName, '.aal1'), v, nil, True);
 end;
 
 procedure TFormEditFrame.FormControlViewEdited(Sender: TObject;
@@ -579,8 +622,12 @@ procedure TFormEditFrame.FormControlViewKeyUp(Sender: TObject;
   var Key: word; Shift: TShiftState);
 begin
   if (Key = 46) and Assigned(FormControlView.Selected) then
+  begin
     Application.QueueAsyncCall(TDataEvent(@DeleteItem),
       IntPtr(FormControlView.Selected));
+    if Assigned(FOnVarChanged) then
+      FOnVarChanged(Self);
+  end;
 end;
 
 procedure TFormEditFrame.Save(p: string = '');
@@ -599,8 +646,8 @@ begin
 
     for i := 0 to FFormEvents.Count - 1 do
       if FFormEvents.ValueFromIndex[i] <> '' then
-        sl.Add(Format('SetOnEvent($%s, "%s","%s")', [FFormName,
-          FFormEvents.Names[i], FFormEvents.ValueFromIndex[i]]));
+        sl.Add(Format('SetOnEvent($%s, "%s","%s")',
+          [FFormName, FFormEvents.Names[i], FFormEvents.ValueFromIndex[i]]));
     for i := 0 to FEditorControls.Count - 1 do
     begin
       c := FEditorControls[i] as TControl;
@@ -889,6 +936,8 @@ begin
     FuncParams.Free;
     Lines.Free;
   end;
+  if Assigned(FOnVarChanged) then
+    FOnVarChanged(Self);
   Self.Parent.Caption := ExtractFileName(p);
   FormControlView.Select(FormControlView.Items[0]);
   FFileName := p;

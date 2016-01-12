@@ -260,10 +260,14 @@ procedure TMainForm.EditorParserFinished(Sender: TObject);
 var
   i, n, idx, f: integer;
   req: string;
+  e: TFormEditFrame;
 begin
   if Sender is TFormEditFrame then
   begin
-    //TODO
+    idx := FFileData.FileIndex[(Sender as TFormEditFrame).FileName];
+    if idx = -1 then
+      idx := FFileData.CreateFile((Sender as TFormEditFrame).FileName);
+    (Sender as TFormEditFrame).AddToVarlist(FFileData[idx].Variables);
   end
   else if Sender is TEditorFrame then
   begin
@@ -289,6 +293,16 @@ begin
       end
       else
         FFileData.LoadFile(req);
+    end;
+    e := EditorManager1.FormEditor[ChangeFileExt((Sender as TEditorFrame).FileName, '.afm')];
+    if Assigned(e) then
+    begin
+      with Sender as TEditorFrame do
+      begin
+        e.FuncList.Clear;
+        for i:=0 to FunctionList.Count-1 do
+          e.FuncList.Add(FunctionList[i].Name);
+      end;
     end;
   end;
 end;

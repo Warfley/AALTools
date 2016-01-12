@@ -1,10 +1,10 @@
 object MainForm: TMainForm
-  Left = 286
-  Height = 888
-  Top = 250
+  Left = 68
+  Height = 641
+  Top = 39
   Width = 1235
   Caption = 'AAL IDE'
-  ClientHeight = 858
+  ClientHeight = 621
   ClientWidth = 1235
   Menu = MainFormMenu
   OnClose = FormClose
@@ -13,26 +13,36 @@ object MainForm: TMainForm
   LCLVersion = '1.7'
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 858
+    Height = 621
     Width = 888
     Align = alClient
-    ClientHeight = 858
+    ClientHeight = 621
     ClientWidth = 888
     inherited EditorControl: TPageControl
-      Height = 858
+      Height = 621
       Width = 888
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 858
+    Height = 621
     Align = alLeft
-    ClientHeight = 858
+    ClientHeight = 621
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 622
+      Height = 395
+      Top = 47
+      DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 679
+      Top = 442
+      inherited PathEdit: TLabeledEdit
+        Height = 23
+        EditLabel.Height = 15
+        EditLabel.Top = 6
+      end
+    end
+    inherited TreeFilterEdit1: TTreeFilterEdit
+      Height = 23
     end
   end
   object MainFormMenu: TMainMenu

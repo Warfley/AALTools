@@ -375,7 +375,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esEllipsis;
+    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
   end;
 end;
 
@@ -498,7 +498,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esEllipsis;
+    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
   end;
 end;
 
@@ -627,7 +627,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esEllipsis;
+    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
   end;
 end;
 
@@ -770,7 +770,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esEllipsis;
+    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
   end;
 end;
 

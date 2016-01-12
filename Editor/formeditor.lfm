@@ -8,8 +8,8 @@ object FormEditFrame: TFormEditFrame
   Color = clDefault
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 586
-  DesignTop = 398
+  DesignLeft = 261
+  DesignTop = 45
   object EditorScrollBox: TScrollBox
     Left = 0
     Height = 636
@@ -44,9 +44,9 @@ object FormEditFrame: TFormEditFrame
     end
     object FormCaptionLabel: TLabel
       Left = 16
-      Height = 25
+      Height = 15
       Top = 8
-      Width = 52
+      Width = 34
       Caption = 'Form1'
       ParentColor = False
     end
@@ -67,17 +67,17 @@ object FormEditFrame: TFormEditFrame
       Height = 256
       Top = 380
       Width = 271
-      ActivePage = ControlProps
+      ActivePage = ControlEvents
       Align = alBottom
-      TabIndex = 0
+      TabIndex = 1
       TabOrder = 0
       object ControlProps: TTabSheet
         Caption = 'Eigenschaften'
-        ClientHeight = 218
+        ClientHeight = 228
         ClientWidth = 263
         object PropEditor: TValueListEditor
           Left = 0
-          Height = 218
+          Height = 228
           Top = 0
           Width = 263
           Align = alClient
@@ -103,11 +103,11 @@ object FormEditFrame: TFormEditFrame
       end
       object ControlEvents: TTabSheet
         Caption = 'Ereignisse'
-        ClientHeight = 218
+        ClientHeight = 228
         ClientWidth = 263
         object EventEditor: TValueListEditor
           Left = 0
-          Height = 218
+          Height = 228
           Top = 0
           Width = 263
           Align = alClient
@@ -116,8 +116,8 @@ object FormEditFrame: TFormEditFrame
           RowCount = 2
           TabOrder = 0
           TitleStyle = tsNative
-          OnButtonClick = EventEditorButtonClick
           OnEditingDone = EventEditorEditingDone
+          OnPickListSelect = EventEditorPickListSelect
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAlwaysShowEditor, goThumbTracking, goDontScrollPartCell]
           Strings.Strings = (
             ''
@@ -126,6 +126,7 @@ object FormEditFrame: TFormEditFrame
             'Event'
             'Funktion'
           )
+          OnGetPickList = EventEditorGetPickList
           ColWidths = (
             64
             198
@@ -135,11 +136,11 @@ object FormEditFrame: TFormEditFrame
     end
     object FormControlView: TTreeView
       Left = 0
-      Height = 347
-      Top = 33
+      Height = 357
+      Top = 23
       Width = 271
       Align = alClient
-      DefaultItemHeight = 28
+      DefaultItemHeight = 18
       Images = ImageList1
       TabOrder = 1
       OnChange = FormControlViewChange
@@ -148,7 +149,7 @@ object FormEditFrame: TFormEditFrame
     end
     object TreeFilterEdit1: TTreeFilterEdit
       Left = 0
-      Height = 33
+      Height = 23
       Top = 0
       Width = 271
       ButtonWidth = 23

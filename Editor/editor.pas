@@ -229,6 +229,7 @@ procedure TEditorFrame.ParserHasFinished(Sender: TObject);
 var
   i: integer;
   FE, VE, IE: boolean;
+  FS, VS: Integer;
   InE: array of Boolean;
   p: TTreeNode;
 begin
@@ -272,12 +273,12 @@ begin
         SelectedIndex := 3;
         Data := Pointer(i);
       end;
+    FS:=FFunctions.Count;
+    VS:=FVars.Count;
     if Assigned(FOnParserFinished) then
       FOnParserFinished(Self);
-    for i := 0 to FFunctions.Count - 1 do
+    for i := FS to FFunctions.Count - 1 do
     begin
-      if FFunctions[i].FileName = '' then
-        Continue;
       p := CodeExplorer.Items.FindNodeWithText(CreateRelativePath(
         FFunctions[i].FileName, ExtractFilePath(FFileName), True));
       if Assigned(p) then
@@ -288,10 +289,8 @@ begin
           Data := Pointer(i);
         end;
     end;
-    for i := 0 to FVars.Count - 1 do
+    for i := VS to FVars.Count - 1 do
     begin
-      if FVars[i].FileName = '' then
-        Continue;
       p := CodeExplorer.Items.FindNodeWithText(CreateRelativePath(
         FVars[i].FileName, ExtractFilePath(FFileName), True));
       if Assigned(p) then
@@ -659,7 +658,7 @@ begin
     begin
       if not GotClosed(i, 'while', 'wend') then
       begin
-        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] :=
+        CodeEditor.TextBetweenPoints[Point(0, i + 2), Point(0, i + 2)] :=
           #13 + pref + 'WEnd';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
@@ -668,7 +667,7 @@ begin
     begin
       if not GotClosed(i, 'for', 'next') then
       begin
-        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] :=
+        CodeEditor.TextBetweenPoints[Point(0, i + 2), Point(0, i + 2)] :=
           #13 + pref + 'Next';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
@@ -677,7 +676,7 @@ begin
     begin
       if not GotClosed(i, 'if', 'endif') then
       begin
-        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] := #13 + 'EndIf';
+        CodeEditor.TextBetweenPoints[Point(0, i + 2), Point(0, i + 2)] := #13+ pref + 'EndIf';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end
@@ -694,7 +693,7 @@ begin
         end;
       if b then
       begin
-        CodeEditor.TextBetweenPoints[Point(0, i + 3), Point(0, i + 3)] :=
+        CodeEditor.TextBetweenPoints[Point(0, i + 2), Point(0, i + 2)] :=
           #13 + pref + 'EndFunc';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);

@@ -114,10 +114,9 @@ begin
   curr.StartLine := i;
   ParseLine(ln, curr.Vars, i);
   Inc(i);
-  if i < FText.Count then
-    ln := FText[i];
   while (i < FText.Count) and (not isEnd(LowerCase(ln), endTok)) and not Terminated do
   begin
+    ln := FText[i];
     if isEnd(ln, 'if') then
       ParseRange(i, 'endif', rtIf)
     else if isEnd(ln, 'while') then
@@ -127,7 +126,6 @@ begin
     else
       ParseLine(ln, curr.Vars, i);
     Inc(i);
-    ln := FText[i];
   end;
   curr.EndLine := i;
   FMyRanges.Add(curr);

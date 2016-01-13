@@ -5,7 +5,7 @@ unit FormEditComponents;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ValEdit;
+  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ValEdit, LCLIntf;
 
 type
   TAALEdit = class(TCustomEdit)
@@ -96,10 +96,13 @@ type
     FStyle: integer;
     FStyleEX: integer;
     FEvents: TStringList;
+    FLastClick: cardinal;
     function GetProp(p: string): string;
     procedure SetProp(p, val: string);
     function GetEvent(e: string): string;
     procedure SetEvent(e, val: string);
+  protected
+    procedure Click; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -122,6 +125,7 @@ type
     property Color;
     property Constraints;
     property Default;
+    property OnDblClick;
     property DragCursor;
     property DragKind;
     property DragMode;
@@ -192,6 +196,7 @@ type
     property BorderSpacing;
     property Caption;
     property Checked;
+    property OnDblClick;
     property Color nodefault;
     property Constraints;
     property DragCursor;
@@ -241,6 +246,8 @@ type
     FStyle: integer;
     FStyleEX: integer;
     FEvents: TStringList;
+    FCaption: string;
+    procedure SetCaption(s: string);
     function GetProp(p: string): string;
     procedure SetProp(p, val: string);
     function GetEvent(e: string): string;
@@ -258,13 +265,14 @@ type
     property Event[s: string]: string read GetEvent write SetEvent;
     property ControlProp[s: string]: string read GetProp write SetProp;
   published
-  published
+    property Caption: string read FCaption write SetCaption;
     property OnClick;
     property OnEnter;
     property OnExit;
     property OnKeyPress;
     property OnKeyDown;
     property OnKeyUp;
+    property OnDblClick;
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
@@ -375,7 +383,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
+    g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
 end;
 
@@ -452,6 +460,18 @@ begin
   FEvents.Values[e] := val;
 end;
 
+procedure TAALButton.Click;
+var
+  c: cardinal;
+begin
+  inherited;
+  c := GetTickCount;
+  if (c - FLastClick < 700) and Assigned(OnDblClick) then
+    OnDblClick(Self)
+  else
+    FLastClick := c;
+end;
+
 constructor TAALButton.Create(AOwner: TComponent);
 begin
   inherited;
@@ -498,7 +518,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
+    g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
 end;
 
@@ -627,7 +647,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
+    g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
 end;
 
@@ -743,6 +763,14 @@ begin
     [Name, FormName, Caption, Left, Top, Width, Height, FStyle, FStyleEX]);
 end;
 
+procedure TAALLabel.SetCaption(s: string);
+begin
+  Width := Canvas.TextWidth(s);
+  Height := Canvas.TextHeight(s);
+  FCaption := s;
+  Invalidate;
+end;
+
 procedure TAALLabel.FillProps(g: TValueListEditor);
 begin
   g.Clear;
@@ -770,7 +798,7 @@ begin
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
-    g.ItemProps[FEvents.Names[i]].EditStyle:=esPickList;
+    g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
 end;
 

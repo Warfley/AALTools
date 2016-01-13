@@ -74,12 +74,12 @@ type
     procedure SetRanges(l: TObjectList);
     procedure SetFunc(l: TFuncList);
     procedure SetVar(l: TVarList);
-    procedure MoveHorz(i: IntPtr);
-    procedure MoveVert(i: IntPtr);
     function GetAtCursor(x, y: integer): string;
     procedure ParserHasFinished(Sender: TObject);
     { private declarations }
   public
+    procedure MoveHorz(i: IntPtr);
+    procedure MoveVert(i: IntPtr);
     procedure ShowSearch;
     procedure SetFocus; override;
     procedure CodeJump(p: TPoint);

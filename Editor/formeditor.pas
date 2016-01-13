@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, TreeFilterEdit, Forms, Controls, Graphics,
   ExtCtrls, StdCtrls, ValEdit, ComCtrls, Grids, contnrs, AALTypes, Dialogs,
-  FormEditComponents;
+  FormEditComponents, LCLIntf;
 
 type
 
@@ -38,6 +38,7 @@ type
       var S: string);
     procedure FormControlViewKeyUp(Sender: TObject; var Key: word;
       Shift: TShiftState);
+    procedure FormPanelDblClick(Sender: TObject);
     procedure FormPanelMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure FormPanelMouseMove(Sender: TObject; Shift: TShiftState;
@@ -50,10 +51,12 @@ type
     procedure ToolboxHeaderPanelClick(Sender: TObject);
     procedure ToolboxHeaderPanelMouseEnter(Sender: TObject);
     procedure ToolboxHeaderPanelMouseLeave(Sender: TObject);
+    procedure PickListClick(Sender: TObject);
   private
     FFileName: string;
     FFormName: string;
     Moved: boolean;
+    FLastClickTime: cardinal;
     FFormEvents: TStringList;
     FFormStyle: integer;
     FFormLeft: integer;
@@ -167,6 +170,7 @@ begin
     Inc(i);
   Result.Name := 'Button' + IntToStr(i);
   Result.Left := FPanelMousePoint.x;
+  Result.OnDblClick := @FormPanelDblClick;
   Result.Top := FPanelMousePoint.Y;
   Result.OnMouseDown := @FormPanelMouseDown;
   Result.OnMouseUp := @FormPanelMouseUp;
@@ -199,6 +203,7 @@ begin
   Result.Name := 'CheckBox' + IntToStr(i);
   Result.Left := FPanelMousePoint.x;
   Result.Top := FPanelMousePoint.Y;
+  Result.OnDblClick := @FormPanelDblClick;
   Result.OnMouseDown := @FormPanelMouseDown;
   Result.OnMouseUp := @FormPanelMouseUp;
   Result.OnKeyUp := @FormControlViewKeyUp;
@@ -218,6 +223,21 @@ begin
   FEditorControls.Add(Result);
 end;
 
+procedure TFormEditFrame.PickListClick(Sender: TObject);
+var
+  c: cardinal;
+begin
+  c := GetTickCount;
+  if (c - FLastClickTime < 700) and
+    (EventEditor.ScreenToClient(Mouse.CursorPos).x < EventEditor.Width - 20) then
+  begin
+    if EventEditor.Rows[EventEditor.Row][1] = '' then
+      EventEditor.Rows[EventEditor.Row][1] := '(Neu...)';
+    EventEditorPickListSelect(EventEditor);
+  end;
+  FLastClickTime := c;
+end;
+
 function TFormEditFrame.CreateLabel(P: TWinControl): TAALLabel;
 var
   i: integer;
@@ -230,6 +250,7 @@ begin
   Result.Name := 'Label' + IntToStr(i);
   Result.Left := FPanelMousePoint.x;
   Result.Top := FPanelMousePoint.Y;
+  Result.OnDblClick := @FormPanelDblClick;
   Result.OnKeyUp := @FormControlViewKeyUp;
   Result.OnMouseDown := @FormPanelMouseDown;
   Result.OnMouseUp := @FormPanelMouseUp;
@@ -267,6 +288,7 @@ begin
   Result.ReadOnly := True;
   Result.OnMouseDown := @FormPanelMouseDown;
   Result.OnMouseUp := @FormPanelMouseUp;
+  Result.OnDblClick := @FormPanelDblClick;
   Result.OnMouseMove := @FormPanelMouseMove;
   Result.OnKeyUp := @FormControlViewKeyUp;
   Result.Tag := 0;
@@ -290,6 +312,8 @@ var
 begin
   inherited;
   FFuncList := TStringList.Create;
+  EventEditor.EditorByStyle(cbsPickList).OnClick := @PickListClick;
+  EventEditor.EditorByStyle(cbsPickList).OnEnter := @PickListClick;
   FEditorControls := TObjectList.Create(True);
   FormControlView.Items.Add(nil, 'Form1').Data := FormPanel;
   FormControlView.Items[0].ImageIndex := 0;
@@ -526,41 +550,15 @@ begin
 end;
 
 procedure TFormEditFrame.EventEditorEditingDone(Sender: TObject);
-function StringsContain(s: TStrings; str: String): Boolean;
-var
-  i: Integer;
-begin
-  str:=LowerCase(str);
-  Result:=False;
-  for i:=0 to s.Count-1 do
-    if LowerCase(s[i])=str then
-    begin
-      Result:=True;
-      exit;
-    end;
-end;
-
 var
   c: TControl;
   s, v: string;
-  i:Integer;
+  i: integer;
 begin
   if not Assigned(FormControlView.Selected) then
     exit;
   s := EventEditor.Rows[EventEditor.Row][0];
-  v := EventEditor.Rows[EventEditor.Row][1];
-  if v = '(Neu...)' then
-  begin
-    v := FormControlView.Selected.Text + Copy(s, 3, Length(s));
-    if StringsContain(FFuncList, v) then
-    begin
-      i:=1;
-      while StringsContain(FFuncList, v+IntToStr(i)) do
-        inc(i);
-      v:=v+IntToStr(i);
-    end;
-    EventEditor.Values[s] := v;
-  end;
+  v := EventEditor.Values[s];
   c := TControl(FormControlView.Selected.Data);
   if c = FormPanel then
     FFormEvents.Values[s] := v
@@ -574,8 +572,7 @@ begin
     (c as TAALCheckbox).Event[s] := v;
   if Assigned(FOnChange) then
     FOnChange(Self);
-  if Assigned(FEnterFunc) then
-    FEnterFunc(ChangeFileExt(FFileName, '.aal1'), v, nil, True);
+  LoadControlData(c);
 end;
 
 procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;
@@ -583,13 +580,39 @@ procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;
 var
   i: integer;
 begin
+  Values.Add('(Kein)');
   Values.Add('(Neu...)');
   Values.AddStrings(FFuncList);
 end;
 
 procedure TFormEditFrame.EventEditorPickListSelect(Sender: TObject);
+var
+  s, v: string;
+  i: integer;
 begin
-  EventEditor.Col := 0;
+  s := EventEditor.Rows[EventEditor.Row][0];
+  v := EventEditor.Rows[EventEditor.Row][1];
+  if v='(Kein)' then
+  begin
+    EventEditor.Values[s] := '';
+    Exit;
+  end;
+  if v = '' then
+    Exit;
+  if v = '(Neu...)' then
+  begin
+    v := FormControlView.Selected.Text + Copy(s, 3, Length(s));
+    if StringsContain(FFuncList, v) then
+    begin
+      i := 1;
+      while StringsContain(FFuncList, v + IntToStr(i)) do
+        Inc(i);
+      v := v + IntToStr(i);
+    end;
+    EventEditor.Values[s] := v;
+  end;
+  if Assigned(FEnterFunc) then
+    FEnterFunc(ChangeFileExt(FFileName, '.aal1'), v, '', True);
 end;
 
 procedure TFormEditFrame.FormControlViewEdited(Sender: TObject;
@@ -628,6 +651,17 @@ begin
     if Assigned(FOnVarChanged) then
       FOnVarChanged(Self);
   end;
+end;
+
+procedure TFormEditFrame.FormPanelDblClick(Sender: TObject);
+var
+  s: string;
+begin
+  EventEditor.Row := 0;
+  s := EventEditor.Rows[0][0];
+  if EventEditor.Values[s] = '' then
+    EventEditor.Values[s] := '(Neu...)';
+  EventEditorPickListSelect(EventEditor);
 end;
 
 procedure TFormEditFrame.Save(p: string = '');

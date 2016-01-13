@@ -1,3 +1,9 @@
+{
+  TODO: Implement TODO marked code
+  Label autosize
+  Formeditor DBL Click
+  Formeditor Cell DBL click
+}
 unit IDEMainForm;
 
 {$mode objfpc}{$H+}
@@ -12,6 +18,18 @@ uses
 type
 
   { TMainForm }
+  PEnterFuncInfo = ^TEnterFuncInfo;
+
+  TEnterfuncInfo = record
+    FileName: string;
+    Pos: TPoint;
+  end;
+
+  PCreateFuncInfo = ^TCreateFuncInfo;
+
+  TCreateFuncInfo = record
+    FileName, Func: string;
+  end;
 
   TMainForm = class(TForm)
     EditorManager1: TEditorManager;
@@ -52,7 +70,7 @@ type
     procedure SaveFileItemClick(Sender: TObject);
     procedure KillEditor(s: string);
   private
-    FFormIsClosing: Boolean;
+    FFormIsClosing: boolean;
     FCurrentProject: TAALProject;
     FLastOpend: TStringList;
     FFileData: TAALFileManager;
@@ -60,7 +78,7 @@ type
     procedure EditorParserFinished(Sender: TObject);
     procedure ShowStartupScreen(Data: IntPtr);
     procedure OpenFile(Filename: string; Pos: TPoint);
-    function EnterFunction(FileName, FuncName: string; Params: TStringList;
+    function EnterFunction(FileName, FuncName: string; Params: string;
       CreateIfMissing: boolean): string;
     procedure AddInclude(FileName, IncludeFile: string);
     function CheckInclude(FileName, IncludeFile: string): boolean;
@@ -68,6 +86,8 @@ type
     procedure EditorCreated(Sender: TObject; Editor: integer);
     procedure EditorChanged(Sender: TObject);
     procedure UpdateProject(Data: IntPtr);
+    procedure EnterFunc(Data: IntPtr);
+    procedure CreateFunc(Data: IntPtr);
   public
     property CurrentProject: TAALProject read FCurrentProject;
     { public declarations }
@@ -85,7 +105,7 @@ implementation
 procedure TMainForm.OpenFile(Filename: string; Pos: TPoint);
 begin
   if not FilenameIsAbsolute(Filename) then
-    FileName:=FCurrentProject.GetAbsPath(Filename);
+    FileName := FCurrentProject.GetAbsPath(Filename);
   EditorManager1.OpenEditor(Filename, Pos);
 end;
 
@@ -139,7 +159,7 @@ procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 var
   mr: TModalResult;
 begin
-  FFormIsClosing:=True;
+  FFormIsClosing := True;
   EditorManager1.OnEditorChanged := nil;
   EditorManager1.OnEditorCreated := nil;
   CloseAllItemClick(Sender);
@@ -159,7 +179,7 @@ begin
   begin
     EditorManager1.OnEditorChanged := @EditorChanged;
     EditorManager1.OnEditorCreated := @EditorCreated;
-    FFormIsClosing:=False;
+    FFormIsClosing := False;
   end;
   FLastOpend.SaveToFile(ExtractFilePath(ParamStr(0)) + 'LastOpend.txt');
 end;
@@ -182,10 +202,38 @@ begin
   end;
 end;
 
-function TMainForm.EnterFunction(FileName, FuncName: string;
-  Params: TStringList; CreateIfMissing: boolean): string;
-var i: Integer;
+procedure TMainForm.EnterFunc(Data: IntPtr);
+begin
+  EditorManager1.OpenEditor(PEnterFuncInfo(Data)^.FileName,
+    PEnterFuncInfo(Data)^.Pos);
+  Dispose(PEnterFuncInfo(Data));
+end;
+
+
+procedure TMainForm.CreateFunc(Data: IntPtr);
+var
   e: TEditorFrame;
+begin
+  with PCreateFuncInfo(Data)^ do
+  begin
+    e := EditorManager1.OpenEditor(FileName, Point(0, 0)) as TEditorFrame;
+    e.CodeEditor.TextBetweenPoints[Point(
+      Length(e.CodeEditor.Lines[e.CodeEditor.Lines.Count - 1])+1, e.CodeEditor.Lines.Count),
+      Point(Length(e.CodeEditor.Lines[e.CodeEditor.Lines.Count - 1])+1,
+      e.CodeEditor.Lines.Count)] := #13#13+'Func '+Func+#13#13+'EndFunc';
+    e.CodeEditor.LogicalCaretXY:=Point(2, e.CodeEditor.Lines.Count-1);
+    Application.QueueAsyncCall(@e.MoveHorz, 2);
+  end;
+  Dispose(PCreateFuncInfo(Data));
+end;
+
+function TMainForm.EnterFunction(FileName, FuncName: string; Params: string;
+  CreateIfMissing: boolean): string;
+var
+  i: integer;
+  e: TEditorFrame;
+  d: PEnterFuncInfo;
+  c: PCreateFuncInfo;
 begin
   if FFileData.FileIndex[FileName] = -1 then
   begin
@@ -193,12 +241,22 @@ begin
     exit;
   end;
   with FFileData[FFileData.FileIndex[FileName]] do
-    for i:=0 to Functions.Count-1 do
-      if pos(LowerCase(FuncName), LowerCase(Functions[i].Name)) =1 then
+    for i := 0 to Functions.Count - 1 do
+      if pos(LowerCase(FuncName), LowerCase(Functions[i].Name)) = 1 then
       begin
-        EditorManager1.OpenEditor(FileName, Point(1, Functions[i].Line+2));
+        new(d);
+        d^.FileName := FileName;
+        d^.Pos := Point(1, Functions[i].Line + 2);
+        Application.QueueAsyncCall(@EnterFunc, PtrInt(d));
         Exit;
       end;
+  if CreateIfMissing then
+  begin
+    new(c);
+    c^.FileName:=FileName;
+    c^.Func:=FuncName+'('+Params+')';
+    Application.QueueAsyncCall(@CreateFunc, IntPtr(c));
+  end;
 end;
 
 procedure TMainForm.AddInclude(FileName, IncludeFile: string);
@@ -281,9 +339,10 @@ begin
     if idx = -1 then
       idx := FFileData.CreateFile((Sender as TFormEditFrame).FileName);
     (Sender as TFormEditFrame).AddToVarlist(FFileData[idx].Variables);
-    idx:=FFileData.FileIndex[ChangeFileExt((Sender as TFormEditFrame).FileName, 'aal1')];
+    idx := FFileData.FileIndex[ChangeFileExt((Sender as TFormEditFrame).FileName, 'aal1')];
     if idx = -1 then
-      idx:=FFileData.LoadFile(ChangeFileExt((Sender as TFormEditFrame).FileName, 'aal1'));
+      idx := FFileData.LoadFile(ChangeFileExt(
+        (Sender as TFormEditFrame).FileName, 'aal1'));
     (Sender as TFormEditFrame).FuncList.Clear;
   end
   else if Sender is TEditorFrame then
@@ -311,14 +370,16 @@ begin
       else
         FFileData.LoadFile(req);
     end;
-    e := EditorManager1.FormEditor[ChangeFileExt((Sender as TEditorFrame).FileName, '.afm')];
+    e := EditorManager1.FormEditor[ChangeFileExt(
+      (Sender as TEditorFrame).FileName, '.afm')];
     if Assigned(e) then
     begin
       with Sender as TEditorFrame do
       begin
         e.FuncList.Clear;
-        for i:=0 to FunctionList.Count-1 do
-          e.FuncList.Add(Copy(FunctionList[i].Name, 1, Pos('(', FunctionList[i].Name)-1));
+        for i := 0 to FunctionList.Count - 1 do
+          e.FuncList.Add(Copy(FunctionList[i].Name, 1,
+            Pos('(', FunctionList[i].Name) - 1));
       end;
     end;
   end;
@@ -328,7 +389,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
-    FFormIsClosing:=False;
+  FFormIsClosing := False;
   FCurrentProject := TAALProject.Create;
   EditorManager1.EnterFunc := @EnterFunction;
   FFileData := TAALFileManager.Create;
@@ -409,7 +470,8 @@ begin
   begin
     if FileExists(oldFile) then
       DeleteFile(oldFile);
-    FFileData.UnloadFile(FFileData.FileIndex[EditorManager1.EditorFiles[EditorManager1.EditorIndex]]);
+    FFileData.UnloadFile(FFileData.FileIndex[EditorManager1.EditorFiles[
+      EditorManager1.EditorIndex]]);
     EditorManager1.EditorSave(EditorManager1.EditorIndex, SaveAALFileDialog.FileName);
     for i := 0 to FCurrentProject.Files.Count - 1 do
       if FCurrentProject.FilePath[i] = oldFile then

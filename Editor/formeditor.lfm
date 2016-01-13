@@ -8,8 +8,8 @@ object FormEditFrame: TFormEditFrame
   Color = clDefault
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 261
-  DesignTop = 45
+  DesignLeft = 483
+  DesignTop = 209
   object EditorScrollBox: TScrollBox
     Left = 0
     Height = 636
@@ -37,6 +37,7 @@ object FormEditFrame: TFormEditFrame
       Color = clBtnFace
       ParentColor = False
       TabOrder = 0
+      OnDblClick = FormPanelDblClick
       OnMouseDown = FormPanelMouseDown
       OnMouseMove = FormPanelMouseMove
       OnMouseUp = FormPanelMouseUp
@@ -44,9 +45,9 @@ object FormEditFrame: TFormEditFrame
     end
     object FormCaptionLabel: TLabel
       Left = 16
-      Height = 15
+      Height = 25
       Top = 8
-      Width = 34
+      Width = 52
       Caption = 'Form1'
       ParentColor = False
     end
@@ -67,17 +68,17 @@ object FormEditFrame: TFormEditFrame
       Height = 256
       Top = 380
       Width = 271
-      ActivePage = ControlEvents
+      ActivePage = ControlProps
       Align = alBottom
-      TabIndex = 1
+      TabIndex = 0
       TabOrder = 0
       object ControlProps: TTabSheet
         Caption = 'Eigenschaften'
-        ClientHeight = 228
+        ClientHeight = 218
         ClientWidth = 263
         object PropEditor: TValueListEditor
           Left = 0
-          Height = 228
+          Height = 218
           Top = 0
           Width = 263
           Align = alClient
@@ -103,11 +104,11 @@ object FormEditFrame: TFormEditFrame
       end
       object ControlEvents: TTabSheet
         Caption = 'Ereignisse'
-        ClientHeight = 228
+        ClientHeight = 218
         ClientWidth = 263
         object EventEditor: TValueListEditor
           Left = 0
-          Height = 228
+          Height = 218
           Top = 0
           Width = 263
           Align = alClient
@@ -136,11 +137,11 @@ object FormEditFrame: TFormEditFrame
     end
     object FormControlView: TTreeView
       Left = 0
-      Height = 357
-      Top = 23
+      Height = 347
+      Top = 33
       Width = 271
       Align = alClient
-      DefaultItemHeight = 18
+      DefaultItemHeight = 28
       Images = ImageList1
       TabOrder = 1
       OnChange = FormControlViewChange
@@ -149,7 +150,7 @@ object FormEditFrame: TFormEditFrame
     end
     object TreeFilterEdit1: TTreeFilterEdit
       Left = 0
-      Height = 23
+      Height = 33
       Top = 0
       Width = 271
       ButtonWidth = 23

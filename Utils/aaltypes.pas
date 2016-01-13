@@ -17,7 +17,7 @@ type
   TCheckIncludeEvent = function(FileName, IncludeFile: String): Boolean of object;
   TAddIncludeEvent = procedure(FileName, IncludeFile: String) of object;
 
-  TOpenFunctionEvent = function(FileName, FuncName: string; Params: TStringList;
+  TOpenFunctionEvent = function(FileName, FuncName: string; Params: String;
     CreateNew: Boolean): string of object;
 
   THashInfo = record
@@ -56,8 +56,22 @@ function FuncInfo(Name: string; Line: integer; Inf: string = '';
 function SelectedItem(Line, Pos: integer): TSelectedItem;
 function VarInfo(Name: string; Line, Position: integer; FName: string = ''): TVarInfo;
 function isEnd(s, endTok: string): boolean;
+function StringsContain(s: TStrings; str: String): Boolean;
 
 implementation
+function StringsContain(s: TStrings; str: String): Boolean;
+var
+  i: Integer;
+begin
+  str:=LowerCase(str);
+  Result:=False;
+  for i:=0 to s.Count-1 do
+    if LowerCase(s[i])=str then
+    begin
+      Result:=True;
+      exit;
+    end;
+end;
 
 
 function isEnd(s, endTok: string): boolean;

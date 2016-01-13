@@ -1,9 +1,3 @@
-{
-  TODO: Implement TODO marked code
-  Label autosize
-  Formeditor DBL Click
-  Formeditor Cell DBL click
-}
 unit IDEMainForm;
 
 {$mode objfpc}{$H+}
@@ -343,7 +337,6 @@ begin
     if idx = -1 then
       idx := FFileData.LoadFile(ChangeFileExt(
         (Sender as TFormEditFrame).FileName, 'aal1'));
-    (Sender as TFormEditFrame).FuncList.Clear;
   end
   else if Sender is TEditorFrame then
   begin

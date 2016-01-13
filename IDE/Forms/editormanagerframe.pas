@@ -69,7 +69,8 @@ type
     property OnEditorChanged: TNotifyEvent read FOnEditorChanged write FOnEditorChanged;
     property IDEOpenFile: TOpenEditorEvent read FOpenEditor write FOpenEditor;
     property EnterFunc: TOpenFunctionEvent read FEnterFunc write FEnterFunc;
-    property OnParserFinished: TNotifyEvent read FOnParserFinished write FOnParserFinished;
+    property OnParserFinished: TNotifyEvent read FOnParserFinished
+      write FOnParserFinished;
   end;
 
 implementation
@@ -219,9 +220,9 @@ begin
       Parent := tmp;
       Visible := True;
       OnChange := @EditorChanged;
-      OnVarChanged:=FOnParserFinished;
-      OpenEditor:=FOpenEditor;
-      EnterFunc:=FEnterFunc;
+      OnVarChanged := FOnParserFinished;
+      OpenEditor := FOpenEditor;
+      EnterFunc := FEnterFunc;
       if FileExists(FName) then
         Load(FName)
       else
@@ -234,9 +235,9 @@ begin
       Parent := tmp;
       Visible := True;
       CodeEditor.SetFocus;
-      OpenEditor:=FOpenEditor;
+      OpenEditor := FOpenEditor;
       OnChange := @EditorChanged;
-      OnParserFinished:=FOnParserFinished;
+      OnParserFinished := FOnParserFinished;
       if FileExists(FName) then
         Load(FName)
       else
@@ -260,9 +261,9 @@ begin
     EditorControl.PageIndex := Index;
     if (GetCurrentEditor is TEditorFrame) then
     begin
-    if (Pos.Y > 0) and (Pos.X > 0) then
-      (GetCurrentEditor as TEditorFrame).CodeJump(Pos);
-    (GetCurrentEditor as TEditorFrame).CodeEditor.SetFocus;
+      if (Pos.Y > 0) and (Pos.X > 0) then
+        (GetCurrentEditor as TEditorFrame).CodeJump(Pos);
+      (GetCurrentEditor as TEditorFrame).CodeEditor.SetFocus;
     end;
   end;
   Result := GetCurrentEditor;

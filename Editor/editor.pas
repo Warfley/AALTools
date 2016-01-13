@@ -7,14 +7,18 @@ interface
 uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
-  Dialogs, Graphics, StdCtrls, Buttons, strutils, CodeFormatter, ToolTip,
-  ListRecords, SynEditTypes, Math;
+  Dialogs, Graphics, StdCtrls, Buttons, ComCtrls, strutils, CodeFormatter,
+  ToolTip, ListRecords, SynEditTypes, Math;
 
 type
 
   { TEditorFrame }
 
   TEditorFrame = class(TFrame)
+    CodeExplorerPanel: TPanel;
+    CodeExplorerHead: TPanel;
+    CodeExplorerImages: TImageList;
+    Label2: TLabel;
     SearchButton: TButton;
     ReplaceButton: TButton;
     ReplaceAllButton: TButton;
@@ -27,8 +31,11 @@ type
     SelectHighlightTimer: TTimer;
     CheckSelTimer: TTimer;
     CloseSearchButton: TSpeedButton;
+    CloseCodeExplorerButton: TSpeedButton;
     ToolTipTimer: TTimer;
+    CodeExplorer: TTreeView;
     procedure CheckSelTimerTimer(Sender: TObject);
+    procedure CloseCodeExplorerButtonClick(Sender: TObject);
     procedure CloseSearchButtonClick(Sender: TObject);
     procedure CodeEditorChange(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -36,6 +43,7 @@ type
       X, Y: integer);
     procedure CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
+    procedure CodeExplorerDblClick(Sender: TObject);
     procedure CompletionCodeCompletion(var Value: string; SourceValue: string;
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
     procedure CompletionExecute(Sender: TObject);
@@ -218,9 +226,91 @@ begin
 end;
 
 procedure TEditorFrame.ParserHasFinished(Sender: TObject);
+var
+  i: integer;
+  FE, VE, IE: boolean;
+  InE: array of Boolean;
+  p: TTreeNode;
 begin
-  if Assigned(FOnParserFinished) then
-    FOnParserFinished(Self);
+  CodeExplorer.BeginUpdate;
+  try
+    FE := CodeExplorer.Items.FindNodeWithText('Funktionen').Expanded;
+    IE := CodeExplorer.Items.FindNodeWithText('Includes').Expanded;
+    VE := CodeExplorer.Items.FindNodeWithText('Variablen').Expanded;
+    SetLength(InE, FRequiredFiles.Count);
+    FillChar(InE[0], SizeOf(Boolean)* FRequiredFiles.Count, $00);
+    for i:=0 to FRequiredFiles.Count-1 do
+      if Assigned(CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i])) then
+        InE[i]:=CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i]).Expanded;
+    i := 0;
+    while CodeExplorer.Items.Count > 3 do
+      if CodeExplorer.Items[i].ImageIndex <> 0 then
+        CodeExplorer.Items.Delete(CodeExplorer.Items[i])
+      else
+        Inc(i);
+    for i := 0 to FRequiredFiles.Count - 1 do
+      with CodeExplorer.Items.AddChild(CodeExplorer.Items.FindNodeWithText('Includes'),
+          FRequiredFiles[i]) do
+      begin
+        ImageIndex := 1;
+        SelectedIndex := 1;
+        Data := Pointer(i);
+      end;
+    for i := 0 to FFunctions.Count - 1 do
+      with CodeExplorer.Items.AddChild(CodeExplorer.Items.FindNodeWithText('Funktionen'),
+          FFunctions[i].Name) do
+      begin
+        ImageIndex := 2;
+        SelectedIndex := 2;
+        Data := Pointer(i);
+      end;
+    for i := 0 to FVars.Count - 1 do
+      with CodeExplorer.Items.AddChild(CodeExplorer.Items.FindNodeWithText('Variablen'),
+          FVars[i].Name) do
+      begin
+        ImageIndex := 3;
+        SelectedIndex := 3;
+        Data := Pointer(i);
+      end;
+    if Assigned(FOnParserFinished) then
+      FOnParserFinished(Self);
+    for i := 0 to FFunctions.Count - 1 do
+    begin
+      if FFunctions[i].FileName = '' then
+        Continue;
+      p := CodeExplorer.Items.FindNodeWithText(CreateRelativePath(
+        FFunctions[i].FileName, ExtractFilePath(FFileName), True));
+      if Assigned(p) then
+        with CodeExplorer.Items.AddChild(p, FFunctions[i].Name) do
+        begin
+          ImageIndex := 2;
+          SelectedIndex := 2;
+          Data := Pointer(i);
+        end;
+    end;
+    for i := 0 to FVars.Count - 1 do
+    begin
+      if FVars[i].FileName = '' then
+        Continue;
+      p := CodeExplorer.Items.FindNodeWithText(CreateRelativePath(
+        FVars[i].FileName, ExtractFilePath(FFileName), True));
+      if Assigned(p) then
+        with CodeExplorer.Items.AddChild(p, FVars[i].Name) do
+        begin
+          ImageIndex := 3;
+          SelectedIndex := 3;
+          Data := Pointer(i);
+        end;
+    end;
+    CodeExplorer.Items.FindNodeWithText('Funktionen').Expanded := FE;
+    CodeExplorer.Items.FindNodeWithText('Includes').Expanded := IE;
+    CodeExplorer.Items.FindNodeWithText('Variablen').Expanded := VE;
+    for i:=0 to FRequiredFiles.Count-1 do
+      if Assigned(CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i])) then
+        CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i]).Expanded:=InE[i];
+  finally
+    CodeExplorer.EndUpdate;
+  end;
 end;
 
 procedure TEditorFrame.CompletionExecute(Sender: TObject);
@@ -448,7 +538,8 @@ end;
 
 procedure TEditorFrame.UpdateTimerTimer(Sender: TObject);
 begin
-  if Trim(CodeEditor.Lines.Text)='' then Exit;
+  if Trim(CodeEditor.Lines.Text) = '' then
+    Exit;
   if Parser.Finished or Parser.Suspended then
   begin
     Parser.Free;
@@ -512,10 +603,11 @@ begin
   end;
   rpval := Value;
   Value := Copy(ln, SourceStart.x, PosEx(Completion.CurrentString, ln, SourceStart.x) -
-    SourceStart.x) + Value + Copy(ln, PosEx(Completion.CurrentString, ln, SourceStart.x) +
-    Length(Completion.CurrentString), SourceEnd.x -
-    (PosEx(Completion.CurrentString, ln, SourceStart.x) + Length(Completion.CurrentString)));
-  Application.QueueAsyncCall(@MoveHorz, - (Length(Value) -
+    SourceStart.x) + Value + Copy(ln, PosEx(Completion.CurrentString,
+    ln, SourceStart.x) + Length(Completion.CurrentString), SourceEnd.x -
+    (PosEx(Completion.CurrentString, ln, SourceStart.x) +
+    Length(Completion.CurrentString)));
+  Application.QueueAsyncCall(@MoveHorz, -(Length(Value) -
     (Pos(rpval, Value) + Length(rpval) - 1)));
 end;
 
@@ -753,6 +845,7 @@ procedure TEditorFrame.CodeJump(p: TPoint);
 begin
   CodeEditor.LogicalCaretXY := p;
   CodeEditor.TopLine := p.y;
+  CodeEditor.SetFocus;
 end;
 
 procedure TEditorFrame.CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
@@ -840,6 +933,33 @@ begin
     end;
   end;
 
+end;
+
+procedure TEditorFrame.CodeExplorerDblClick(Sender: TObject);
+begin
+  if not Assigned(CodeExplorer.Selected) then
+    Exit;
+  case CodeExplorer.Selected.ImageIndex of
+    1: if Assigned(FOpenEditor) then
+        OpenEditor(CreateAbsolutePath(FRequiredFiles[IntPtr(CodeExplorer.Selected.Data)],
+          ExtractFilePath(FFileName)), Point(0, 0));
+    2:
+      if CodeExplorer.Selected.Parent.ImageIndex = 0 then
+        CodeJump(Point(1, FFunctions[IntPtr(CodeExplorer.Selected.Data)].Line + 1))
+      else if Assigned(FOpenEditor) then
+        OpenEditor(CreateAbsolutePath(
+          FRequiredFiles[IntPtr(CodeExplorer.Selected.Parent.Data)], ExtractFilePath(FFileName)),
+          Point(1, FFunctions[IntPtr(CodeExplorer.Selected.Data)].Line + 1));
+    3:
+      if CodeExplorer.Selected.Parent.ImageIndex = 0 then
+        CodeJump(Point(FVars[IntPtr(CodeExplorer.Selected.Data)].Pos,
+          FVars[IntPtr(CodeExplorer.Selected.Data)].Line + 1))
+      else if Assigned(FOpenEditor) then
+        OpenEditor(CreateAbsolutePath(
+          FRequiredFiles[IntPtr(CodeExplorer.Selected.Parent.Data)], ExtractFilePath(FFileName)),
+          Point(FVars[IntPtr(CodeExplorer.Selected.Data)].Pos,
+          FVars[IntPtr(CodeExplorer.Selected.Data)].Line + 1));
+  end;
 end;
 
 procedure TEditorFrame.CodeEditorChange(Sender: TObject);
@@ -1020,6 +1140,11 @@ begin
     currFunc := '';
     FToolTip.Hide;
   end;
+end;
+
+procedure TEditorFrame.CloseCodeExplorerButtonClick(Sender: TObject);
+begin
+  CodeExplorerPanel.Hide;
 end;
 
 procedure TEditorFrame.CloseSearchButtonClick(Sender: TObject);

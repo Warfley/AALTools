@@ -126,8 +126,8 @@ begin
       ParseRange(i, 'next', rtFor)
     else
       ParseLine(ln, curr.Vars, i);
-    ln := FText[i];
     Inc(i);
+    ln := FText[i];
   end;
   curr.EndLine := i;
   FMyRanges.Add(curr);
@@ -265,8 +265,6 @@ begin
   Application.QueueAsyncCall(@UpdateTheShit, 0);
   while FWait do
     Sleep(20);
-  if Assigned(FOnFinished) then
-    Application.QueueAsyncCall(TDataEvent(FOnFinished), PtrInt(self));
 end;
 
 procedure TUnitParser.UpdateTheShit(Data: IntPtr);
@@ -289,6 +287,8 @@ begin
   FRequiredFiles.Clear;
   FRequiredFiles.AddStrings(FMyRequiredFiles);
   FWait := False;
+  if Assigned(FOnFinished) then
+    Application.QueueAsyncCall(TDataEvent(FOnFinished), PtrInt(self));
 end;
 
 end.

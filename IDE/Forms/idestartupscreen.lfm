@@ -13,6 +13,7 @@ object StartupScreen: TStartupScreen
   OnPaint = LastOpendPanelPaint
   OnShow = FormShow
   Position = poScreenCenter
+  ShowInTaskBar = stAlways
   LCLVersion = '1.7'
   object NewButton: TSpeedButton
     Left = 392

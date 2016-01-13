@@ -440,9 +440,11 @@ procedure TFormEditFrame.AddToVarlist(l: TVarList);
 var
   i: integer;
 begin
-  l.Add(VarInfo('$' + FFormName, 0, 0, FFileName));
-  for i := 0 to FEditorControls.Count - 1 do
-    l.Add(VarInfo('$' + (FEditorControls[i] as TControl).Name, 0, 0, FFileName));
+  l.Clear;
+  for i := 0 to FormControlView.Items.Count - 1 do
+  begin
+    l.Add(VarInfo('$' + FormControlView.Items[i].Text, 0, i, FFileName));
+  end;
 end;
 
 procedure TFormEditFrame.FormPanelPaint(Sender: TObject);

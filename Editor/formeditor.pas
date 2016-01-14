@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, TreeFilterEdit, Forms, Controls, Graphics,
   ExtCtrls, StdCtrls, ValEdit, ComCtrls, Grids, contnrs, AALTypes, Dialogs,
-  FormEditComponents, LCLIntf;
+  FormEditComponents, LCLIntf, Math;
 
 type
 
@@ -18,6 +18,8 @@ type
     FormPanel: TPanel;
     ImageList1: TImageList;
     EventEditor: TValueListEditor;
+    PositionPickerPanel: TPanel;
+    PositionPicker: TPaintBox;
     ToolSelect: TListView;
     ToolboxHeaderPanel: TPanel;
     ToolBoxPanel: TPanel;
@@ -46,6 +48,11 @@ type
     procedure FormPanelMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure FormPanelPaint(Sender: TObject);
+    procedure PositionPickerMouseEnter(Sender: TObject);
+    procedure PositionPickerMouseLeave(Sender: TObject);
+    procedure PositionPickerMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: integer);
+    procedure PositionPickerPaint(Sender: TObject);
     procedure PropEditorEditingDone(Sender: TObject);
     procedure PropertyPanelResize(Sender: TObject);
     procedure ToolboxHeaderPanelClick(Sender: TObject);
@@ -228,8 +235,8 @@ var
   c: cardinal;
 begin
   c := GetTickCount;
-  if (c - FLastClickTime < 700) and
-    (EventEditor.ScreenToClient(Mouse.CursorPos).x < EventEditor.Width - 20) then
+  if (c - FLastClickTime < 700) and (EventEditor.ScreenToClient(Mouse.CursorPos).x <
+    EventEditor.Width - 20) then
   begin
     if EventEditor.Rows[EventEditor.Row][1] = '' then
       EventEditor.Rows[EventEditor.Row][1] := '(Neu...)';
@@ -433,6 +440,7 @@ begin
     if Moved and Assigned(FOnChange) then
       FOnChange(Self);
     Moved := False;
+    PositionPickerPanel.Show;
   end;
 end;
 
@@ -462,6 +470,68 @@ begin
   end;
 end;
 
+procedure TFormEditFrame.PositionPickerMouseEnter(Sender: TObject);
+begin
+  PositionPickerPanel.Left := PositionPickerPanel.Left - 80;
+  PositionPickerPanel.Width := PositionPickerPanel.Width + 80;
+  PositionPickerPanel.Top := PositionPickerPanel.Top - 45;
+  PositionPickerPanel.Height := PositionPickerPanel.Height + 45;
+end;
+
+procedure TFormEditFrame.PositionPickerMouseLeave(Sender: TObject);
+begin
+  PositionPickerPanel.Left := PositionPickerPanel.Left + 80;
+  PositionPickerPanel.Width := PositionPickerPanel.Width - 80;
+  PositionPickerPanel.Top := PositionPickerPanel.Top + 45;
+  PositionPickerPanel.Height := PositionPickerPanel.Height - 45;
+end;
+
+procedure TFormEditFrame.PositionPickerMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: integer);
+var
+  fh, fw: double;
+  w, h: integer;
+begin
+  if ssLeft in Shift then
+  begin
+    fw := Screen.Width / PositionPicker.Width;
+    fh := Screen.Height / PositionPicker.Height;
+    FFormLeft := Min(max(0, trunc(X * fw) - FormPanel.Width div 2),
+      Screen.Width - FormPanel.Width);
+    FFormTop := Min(max(0, trunc(Y * fH) - FormPanel.Height div 2),
+      Screen.Height - FormPanel.Height);
+    FormControlView.Select(FormControlView.Items[0]);
+    PositionPicker.Invalidate;
+    if Assigned(FOnChange) then
+      FOnChange(Self);
+  end;
+end;
+
+procedure TFormEditFrame.PositionPickerPaint(Sender: TObject);
+var
+  fh, fw: double;
+  px, py: integer;
+  px2, py2: integer;
+begin
+  with PositionPicker.Canvas do
+  begin
+    Brush.Style := bsSolid;
+    Brush.Color := clBtnFace;
+    Pen.Style := psClear;
+    Rectangle(0, 0, PositionPicker.Width, PositionPicker.Height);
+    fw := PositionPicker.Width / Screen.Width;
+    fh := PositionPicker.Height / Screen.Height;
+    px := trunc(FFormLeft * fw);
+    py := trunc(FFormTop * fh);
+    px2 := px + trunc(FormPanel.Width * fw);
+    py2 := py + trunc(FormPanel.Height * fh);
+    Brush.Color := clWindow;
+    pen.Style := psSolid;
+    pen.Color := clBlack;
+    Rectangle(px, py, px2, py2);
+  end;
+end;
+
 procedure TFormEditFrame.PropEditorEditingDone(Sender: TObject);
 var
   o: TObject;
@@ -488,6 +558,7 @@ begin
       FormPanel.Height := StrToInt(v)
     else if s = 'style' then
       FFormStyle := StrToInt(v);
+    PositionPicker.Invalidate;
   end
   else if o is TAALButton then
     (o as TAALButton).ControlProp[s] := v
@@ -534,6 +605,8 @@ begin
     FMousePoint := Point(X, Y);
     FPanelMousePoint := FormPanel.ScreenToClient(
       (Sender as TControl).ClientToScreen(Point(X, Y)));
+    if FormPanel.Cursor = crSizeNWSE then
+      PositionPickerPanel.Hide;
   end;
 end;
 
@@ -594,7 +667,7 @@ var
 begin
   s := EventEditor.Rows[EventEditor.Row][0];
   v := EventEditor.Rows[EventEditor.Row][1];
-  if v='(Kein)' then
+  if v = '(Kein)' then
   begin
     EventEditor.Values[s] := '';
     Exit;
@@ -976,6 +1049,7 @@ begin
     FOnVarChanged(Self);
   Self.Parent.Caption := ExtractFileName(p);
   FormControlView.Select(FormControlView.Items[0]);
+  PositionPicker.Invalidate;
   FFileName := p;
 end;
 

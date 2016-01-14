@@ -1,20 +1,20 @@
 object FormEditFrame: TFormEditFrame
   Left = 0
-  Height = 636
+  Height = 641
   Top = 0
-  Width = 895
-  ClientHeight = 636
-  ClientWidth = 895
+  Width = 896
+  ClientHeight = 641
+  ClientWidth = 896
   Color = clDefault
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 483
-  DesignTop = 209
+  DesignLeft = 776
+  DesignTop = 258
   object EditorScrollBox: TScrollBox
     Left = 0
-    Height = 636
+    Height = 641
     Top = 0
-    Width = 624
+    Width = 625
     HorzScrollBar.Increment = 40
     HorzScrollBar.Page = 402
     HorzScrollBar.Smooth = True
@@ -24,8 +24,8 @@ object FormEditFrame: TFormEditFrame
     VertScrollBar.Smooth = True
     VertScrollBar.Tracking = True
     Align = alClient
-    ClientHeight = 632
-    ClientWidth = 620
+    ClientHeight = 637
+    ClientWidth = 621
     TabOrder = 0
     object FormPanel: TPanel
       Left = 16
@@ -53,20 +53,20 @@ object FormEditFrame: TFormEditFrame
     end
   end
   object PropertyPanel: TPanel
-    Left = 624
-    Height = 636
+    Left = 625
+    Height = 641
     Top = 0
     Width = 271
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 636
+    ClientHeight = 641
     ClientWidth = 271
     TabOrder = 1
     OnResize = PropertyPanelResize
     object PropertyPages: TPageControl
       Left = 0
       Height = 256
-      Top = 380
+      Top = 385
       Width = 271
       ActivePage = ControlProps
       Align = alBottom
@@ -137,7 +137,7 @@ object FormEditFrame: TFormEditFrame
     end
     object FormControlView: TTreeView
       Left = 0
-      Height = 347
+      Height = 352
       Top = 33
       Width = 271
       Align = alClient
@@ -164,7 +164,7 @@ object FormEditFrame: TFormEditFrame
   object ToolBoxPanel: TPanel
     Left = 4
     Height = 184
-    Top = 601
+    Top = 606
     Width = 200
     Anchors = [akLeft, akBottom]
     BevelOuter = bvNone
@@ -205,6 +205,32 @@ object FormEditFrame: TFormEditFrame
       OnClick = ToolboxHeaderPanelClick
       OnMouseEnter = ToolboxHeaderPanelMouseEnter
       OnMouseLeave = ToolboxHeaderPanelMouseLeave
+    end
+  end
+  object PositionPickerPanel: TPanel
+    Left = 536
+    Height = 45
+    Top = 589
+    Width = 80
+    Anchors = [akRight, akBottom]
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+    ClientHeight = 41
+    ClientWidth = 76
+    TabOrder = 3
+    object PositionPicker: TPaintBox
+      Left = 0
+      Height = 41
+      Top = 0
+      Width = 76
+      Align = alClient
+      Anchors = [akRight, akBottom]
+      Color = clBtnFace
+      ParentColor = False
+      OnMouseEnter = PositionPickerMouseEnter
+      OnMouseLeave = PositionPickerMouseLeave
+      OnMouseMove = PositionPickerMouseMove
+      OnPaint = PositionPickerPaint
     end
   end
   object ImageList1: TImageList

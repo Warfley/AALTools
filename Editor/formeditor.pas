@@ -513,6 +513,8 @@ var
   px, py: integer;
   px2, py2: integer;
 begin
+  if not Assigned(FormPanel) then
+    exit;
   with PositionPicker.Canvas do
   begin
     Brush.Style := bsSolid;
@@ -693,7 +695,10 @@ end;
 procedure TFormEditFrame.FormControlViewEdited(Sender: TObject;
   Node: TTreeNode; var S: string);
 begin
-  TControl(Node.Data).Name := s;
+  if TControl(Node.Data) = FormPanel then
+    FFormName:=s
+  else
+    TControl(Node.Data).Name := s;
   FormControlViewChange(Sender, Node);
   if Assigned(FOnChange) then
     FOnChange(Self);

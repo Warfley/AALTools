@@ -9,7 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, lazcontrols, IDEMainForm, Project, IDEStartupScreen, ProjectInspector,
   AALTypes, Editor, FormEditor, EditorManagerFrame, AALFileInfo, 
-FormEditComponents
+FormEditComponents, AALCompiler
   { you can add units after this };
 
 {$R *.res}

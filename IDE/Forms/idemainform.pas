@@ -160,7 +160,8 @@ begin
   EditorManager1.OnEditorCreated := nil;
   CloseAllItemClick(Sender);
   if EditorManager1.Count > 0 then
-    CloseAction := caNone;
+    CloseAction := caNone
+  else
   if FCurrentProject.Changed then
   begin
     mr := MessageDlg('Projekt sichern',
@@ -513,7 +514,8 @@ begin
         if ExtractBetween(e.CodeEditor.Lines[i], '"', '"') =
           ChangeFileExt(FCurrentProject.MainForm, '.aal1') then
           e.CodeEditor.TextBetweenPoints[Point(1, i + 1),
-            Point(Length(e.CodeEditor.Lines[i]) + 1, i + 1)] := Format('#include("%s")', [FileName]);
+            Point(Length(e.CodeEditor.Lines[i]) + 1, i + 1)] :=
+            Format('#include("%s")', [FileName]);
   end
   else if FileExists(FCurrentProject.MainFile) then
   begin
@@ -569,28 +571,30 @@ begin
 end;
 
 procedure TMainForm.NewFormItemClick(Sender: TObject);
-var fName:  String;
+var
+  fName: string;
   sl: TStringList;
-  i: Integer;
+  i: integer;
 begin
-  i:=1;
-  while FileExists(FCurrentProject.GetAbsPath('Form'+IntToStr(i)+'.afm')) do
-    inc(i);
-  fName:=FCurrentProject.GetAbsPath('Form'+IntToStr(i));
-  sl:=TStringList.Create;
+  i := 1;
+  while FileExists(FCurrentProject.GetAbsPath('Form' + IntToStr(i) + '.afm')) do
+    Inc(i);
+  fName := FCurrentProject.GetAbsPath('Form' + IntToStr(i));
+  sl := TStringList.Create;
   try
-    sl.Text:='#include("'+'Form'+IntToStr(i)+'.afm")';
-    sl.SaveToFile(fName+'.aal1');
+    sl.Text := '#include("' + 'Form' + IntToStr(i) + '.afm")';
+    sl.SaveToFile(fName + '.aal1');
     sl.Clear;
-    sl.Text:=Format('$%s = CreateWindow("%s"), %d, %d, %d, %d, %d', ['Form'+IntToStr(i), 'Form'+IntToStr(i), 150, 150, 300, 200, 0]);
-    sl.SaveToFile(fName+'.afm');
+    sl.Text := Format('$%s = CreateWindow("%s"), %d, %d, %d, %d, %d',
+      ['Form' + IntToStr(i), 'Form' + IntToStr(i), 150, 150, 300, 200, 0]);
+    sl.SaveToFile(fName + '.afm');
   finally
     sl.Free;
   end;
-  FCurrentProject.AddFile(fName+'.aal1');
-  FCurrentProject.AddFile(fName+'.afm');
-  EditorManager1.OpenEditor(fName+'.aal1', Point(0, 0));
-  EditorManager1.OpenEditor(fName+'.afm', Point(0, 0));
+  FCurrentProject.AddFile(fName + '.aal1');
+  FCurrentProject.AddFile(fName + '.afm');
+  EditorManager1.OpenEditor(fName + '.aal1', Point(0, 0));
+  EditorManager1.OpenEditor(fName + '.afm', Point(0, 0));
 end;
 
 procedure TMainForm.NewProjectItemClick(Sender: TObject);

@@ -31,6 +31,7 @@ type
     procedure ProjectFileTreeViewDblClick(Sender: TObject);
     procedure SetMainFormButtonClick(Sender: TObject);
   private
+    FMainForm: TChangeMainFormEvent;
     FProject: TAALProject;
     FOpenEditor: TOpenEditorEvent;
     FCloseEditor: TCloseEditorEvent;
@@ -38,6 +39,7 @@ type
     procedure ProjChanged(Sender: TObject);
     { private declarations }
   public
+    property ChangeMainForm: TChangeMainFormEvent read FMainForm write FMainForm;
     property Project: TAALProject read FProject write SetProject;
     property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
     property CloseEditor: TCloseEditorEvent read FCloseEditor write FCloseEditor;
@@ -166,6 +168,8 @@ begin
   if Assigned(ProjectFileTreeView.Selected) and
     (ExtractFileExt(ProjectFileTreeView.Selected.Text) = '.afm') then
   begin
+    if Assigned(FMainForm) then
+      FMainForm(FProject.FilePath[IntPtr(ProjectFileTreeView.Selected.Data)]);
     FProject.MainForm := FProject.Files[IntPtr(ProjectFileTreeView.Selected.Data)];
     SetMainFormButton.Enabled := False;
   end;

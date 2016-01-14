@@ -87,17 +87,18 @@ begin
 end;
 
 procedure TAALFile.Parsed(Sender: TObject);
-var tmpFunc: TFuncList;
+var
+  tmpFunc: TFuncList;
   tmpVar: TVarList;
 begin
-  tmpFunc:=TFuncList.Create;
+  tmpFunc := TFuncList.Create;
   try
     tmpFunc.Assign(FFuncs);
     SetFuncs(tmpFunc);
   finally
     tmpFunc.Free;
   end;
-  tmpVar:=TVarList.Create;
+  tmpVar := TVarList.Create;
   try
     tmpVar.Assign(FVars);
     SetVars(tmpVar);
@@ -210,8 +211,11 @@ end;
 
 procedure TAALFileManager.UnloadFile(i: integer);
 begin
-  FFiles[i].Free;
-  FFiles.Delete(i);
+  if (i >= 0) and (i < FFiles.Count) then
+  begin
+    FFiles[i].Free;
+    FFiles.Delete(i);
+  end;
 end;
 
 procedure TAALFileManager.Clear;

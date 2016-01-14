@@ -1,20 +1,93 @@
 object EditorFrame: TEditorFrame
   Left = 0
-  Height = 582
+  Height = 604
   Top = 0
-  Width = 859
-  ClientHeight = 582
-  ClientWidth = 859
+  Width = 880
+  ClientHeight = 604
+  ClientWidth = 880
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
   DesignLeft = 501
   DesignTop = 147
+  object SearchBar: TPanel
+    Left = 0
+    Height = 34
+    Top = 570
+    Width = 880
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 34
+    ClientWidth = 880
+    TabOrder = 0
+    Visible = False
+    object Label1: TLabel
+      Left = 0
+      Height = 25
+      Top = 4
+      Width = 51
+      Caption = 'Suche:'
+      ParentColor = False
+    end
+    object SearchEdit: TEdit
+      Left = 56
+      Height = 33
+      Top = 0
+      Width = 152
+      OnKeyUp = SearchEditKeyUp
+      TabOrder = 0
+    end
+    object SearchButton: TButton
+      Left = 208
+      Height = 33
+      Top = 0
+      Width = 67
+      Caption = 'Suchen'
+      OnClick = SearchButtonClick
+      TabOrder = 1
+    end
+    object ReplaceEdit: TEdit
+      Left = 288
+      Height = 33
+      Top = 0
+      Width = 152
+      OnKeyUp = ReplaceEditKeyUp
+      TabOrder = 2
+    end
+    object ReplaceButton: TButton
+      Left = 440
+      Height = 33
+      Top = 0
+      Width = 83
+      Caption = 'Ersetzen'
+      OnClick = ReplaceButtonClick
+      TabOrder = 3
+    end
+    object ReplaceAllButton: TButton
+      Left = 528
+      Height = 33
+      Top = 0
+      Width = 120
+      Caption = 'Alle Ersetzen'
+      OnClick = ReplaceAllButtonClick
+      TabOrder = 4
+    end
+    object CloseSearchButton: TSpeedButton
+      Left = 845
+      Height = 34
+      Top = 0
+      Width = 35
+      Anchors = [akTop, akRight]
+      Caption = 'x'
+      Flat = True
+      OnClick = CloseSearchButtonClick
+    end
+  end
   inline CodeEditor: TSynEdit
     Left = 0
-    Height = 548
+    Height = 570
     Top = 0
-    Width = 624
+    Width = 645
     Align = alClient
     Font.Height = -22
     Font.Name = 'Courier New'
@@ -22,7 +95,7 @@ object EditorFrame: TEditorFrame
     Font.Quality = fqProof
     ParentColor = False
     ParentFont = False
-    TabOrder = 0
+    TabOrder = 1
     OnKeyUp = CodeEditorKeyUp
     OnMouseMove = CodeEditorMouseMove
     OnMouseUp = CodeEditorMouseUp
@@ -509,87 +582,14 @@ object EditorFrame: TEditorFrame
       end
     end
   end
-  object SearchBar: TPanel
-    Left = 0
-    Height = 34
-    Top = 548
-    Width = 859
-    Align = alBottom
-    BevelOuter = bvNone
-    ClientHeight = 34
-    ClientWidth = 859
-    TabOrder = 1
-    Visible = False
-    object Label1: TLabel
-      Left = 0
-      Height = 25
-      Top = 4
-      Width = 51
-      Caption = 'Suche:'
-      ParentColor = False
-    end
-    object SearchEdit: TEdit
-      Left = 56
-      Height = 33
-      Top = 0
-      Width = 152
-      OnKeyUp = SearchEditKeyUp
-      TabOrder = 0
-    end
-    object SearchButton: TButton
-      Left = 208
-      Height = 33
-      Top = 0
-      Width = 67
-      Caption = 'Suchen'
-      OnClick = SearchButtonClick
-      TabOrder = 1
-    end
-    object ReplaceEdit: TEdit
-      Left = 288
-      Height = 33
-      Top = 0
-      Width = 152
-      OnKeyUp = ReplaceEditKeyUp
-      TabOrder = 2
-    end
-    object ReplaceButton: TButton
-      Left = 440
-      Height = 33
-      Top = 0
-      Width = 83
-      Caption = 'Ersetzen'
-      OnClick = ReplaceButtonClick
-      TabOrder = 3
-    end
-    object ReplaceAllButton: TButton
-      Left = 528
-      Height = 33
-      Top = 0
-      Width = 120
-      Caption = 'Alle Ersetzen'
-      OnClick = ReplaceAllButtonClick
-      TabOrder = 4
-    end
-    object CloseSearchButton: TSpeedButton
-      Left = 824
-      Height = 34
-      Top = 0
-      Width = 35
-      Anchors = [akTop, akRight]
-      Caption = 'x'
-      Flat = True
-      OnClick = CloseSearchButtonClick
-    end
-  end
   object CodeExplorerPanel: TPanel
-    Left = 624
-    Height = 548
+    Left = 645
+    Height = 570
     Top = 0
     Width = 235
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 548
+    ClientHeight = 570
     ClientWidth = 235
     TabOrder = 2
     object CodeExplorerHead: TPanel
@@ -608,10 +608,11 @@ object EditorFrame: TEditorFrame
       ParentColor = False
       TabOrder = 0
       object CloseCodeExplorerButton: TSpeedButton
-        Left = 200
+        Left = 205
         Height = 28
         Top = 0
         Width = 28
+        Anchors = [akTop, akRight]
         Caption = 'x'
         Flat = True
         OnClick = CloseCodeExplorerButtonClick
@@ -619,7 +620,7 @@ object EditorFrame: TEditorFrame
     end
     object CodeExplorer: TTreeView
       Left = 0
-      Height = 514
+      Height = 536
       Top = 34
       Width = 235
       Align = alClient

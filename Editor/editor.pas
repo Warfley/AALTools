@@ -229,8 +229,8 @@ procedure TEditorFrame.ParserHasFinished(Sender: TObject);
 var
   i: integer;
   FE, VE, IE: boolean;
-  FS, VS: Integer;
-  InE: array of Boolean;
+  FS, VS: integer;
+  InE: array of boolean;
   p: TTreeNode;
 begin
   CodeExplorer.BeginUpdate;
@@ -239,10 +239,10 @@ begin
     IE := CodeExplorer.Items.FindNodeWithText('Includes').Expanded;
     VE := CodeExplorer.Items.FindNodeWithText('Variablen').Expanded;
     SetLength(InE, FRequiredFiles.Count);
-    FillChar(InE[0], SizeOf(Boolean)* FRequiredFiles.Count, $00);
-    for i:=0 to FRequiredFiles.Count-1 do
+    FillChar(InE[0], SizeOf(boolean) * FRequiredFiles.Count, $00);
+    for i := 0 to FRequiredFiles.Count - 1 do
       if Assigned(CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i])) then
-        InE[i]:=CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i]).Expanded;
+        InE[i] := CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i]).Expanded;
     i := 0;
     while CodeExplorer.Items.Count > 3 do
       if CodeExplorer.Items[i].ImageIndex <> 0 then
@@ -273,8 +273,8 @@ begin
         SelectedIndex := 3;
         Data := Pointer(i);
       end;
-    FS:=FFunctions.Count;
-    VS:=FVars.Count;
+    FS := FFunctions.Count;
+    VS := FVars.Count;
     if Assigned(FOnParserFinished) then
       FOnParserFinished(Self);
     for i := FS to FFunctions.Count - 1 do
@@ -304,9 +304,9 @@ begin
     CodeExplorer.Items.FindNodeWithText('Funktionen').Expanded := FE;
     CodeExplorer.Items.FindNodeWithText('Includes').Expanded := IE;
     CodeExplorer.Items.FindNodeWithText('Variablen').Expanded := VE;
-    for i:=0 to FRequiredFiles.Count-1 do
+    for i := 0 to FRequiredFiles.Count - 1 do
       if Assigned(CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i])) then
-        CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i]).Expanded:=InE[i];
+        CodeExplorer.Items.FindNodeWithText(FRequiredFiles[i]).Expanded := InE[i];
   finally
     CodeExplorer.EndUpdate;
   end;
@@ -600,14 +600,15 @@ begin
       Length(Completion.CurrentString)] in [#0..#32]))) then
       Value := Value + ' ';
   end;
-  rpval := Value;
-  Value := Copy(ln, SourceStart.x, PosEx(Completion.CurrentString, ln, SourceStart.x) -
-    SourceStart.x) + Value + Copy(ln, PosEx(Completion.CurrentString,
-    ln, SourceStart.x) + Length(Completion.CurrentString), SourceEnd.x -
-    (PosEx(Completion.CurrentString, ln, SourceStart.x) +
-    Length(Completion.CurrentString)));
+  if (Length(Value) > 0) and not (Value[1] in ['_', 'A'..'Z', 'a'..'z', '0'..'9']) then
+    Value := Copy(Value, 2, Length(Value) - 1);
+  (*rpval := Value;
+  Value := Copy(ln, SourceStart.x, PosEx(Completion.CurrentString, ln, SourceStart.x))+
+    Value+
+    Copy(ln, PosEx(Completion.CurrentString, ln, SourceStart.x)+Length(Completion.CurrentString)+1,
+    SourceEnd.x-PosEx(Completion.CurrentString, ln, SourceStart.x)+Length(Completion.CurrentString));
   Application.QueueAsyncCall(@MoveHorz, -(Length(Value) -
-    (Pos(rpval, Value) + Length(rpval) - 1)));
+    (Pos(rpval, Value) + Length(rpval) - 1)));*)
 end;
 
 procedure TEditorFrame.CodeEditorKeyUp(Sender: TObject; var Key: word;
@@ -676,7 +677,8 @@ begin
     begin
       if not GotClosed(i, 'if', 'endif') then
       begin
-        CodeEditor.TextBetweenPoints[Point(0, i + 2), Point(0, i + 2)] := #13+ pref + 'EndIf';
+        CodeEditor.TextBetweenPoints[Point(0, i + 2), Point(0, i + 2)] :=
+          #13 + pref + 'EndIf';
       end;
       Application.QueueAsyncCall(@MoveHorz, 2);
     end
@@ -947,7 +949,8 @@ begin
         CodeJump(Point(1, FFunctions[IntPtr(CodeExplorer.Selected.Data)].Line + 1))
       else if Assigned(FOpenEditor) then
         OpenEditor(CreateAbsolutePath(
-          FRequiredFiles[IntPtr(CodeExplorer.Selected.Parent.Data)], ExtractFilePath(FFileName)),
+          FRequiredFiles[IntPtr(CodeExplorer.Selected.Parent.Data)],
+          ExtractFilePath(FFileName)),
           Point(1, FFunctions[IntPtr(CodeExplorer.Selected.Data)].Line + 1));
     3:
       if CodeExplorer.Selected.Parent.ImageIndex = 0 then
@@ -955,7 +958,8 @@ begin
           FVars[IntPtr(CodeExplorer.Selected.Data)].Line + 1))
       else if Assigned(FOpenEditor) then
         OpenEditor(CreateAbsolutePath(
-          FRequiredFiles[IntPtr(CodeExplorer.Selected.Parent.Data)], ExtractFilePath(FFileName)),
+          FRequiredFiles[IntPtr(CodeExplorer.Selected.Parent.Data)],
+          ExtractFilePath(FFileName)),
           Point(FVars[IntPtr(CodeExplorer.Selected.Data)].Pos,
           FVars[IntPtr(CodeExplorer.Selected.Data)].Line + 1));
   end;

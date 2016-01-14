@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Menus, Project, IDEStartupScreen, ProjectInspector, EditorManagerFrame,
-  AALTypes, FormEditor, Editor, AALFileInfo;
+  AALTypes, FormEditor, Editor, AALFileInfo, strutils;
 
 type
 
@@ -58,6 +58,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure NewFileItemClick(Sender: TObject);
+    procedure NewFormItemClick(Sender: TObject);
     procedure NewProjectItemClick(Sender: TObject);
     procedure SaveAllItemClick(Sender: TObject);
     procedure SaveAsItemClick(Sender: TObject);
@@ -82,6 +83,7 @@ type
     procedure UpdateProject(Data: IntPtr);
     procedure EnterFunc(Data: IntPtr);
     procedure CreateFunc(Data: IntPtr);
+    procedure ChangeMainForm(FileName: string);
   public
     property CurrentProject: TAALProject read FCurrentProject;
     { public declarations }
@@ -212,10 +214,11 @@ begin
   begin
     e := EditorManager1.OpenEditor(FileName, Point(0, 0)) as TEditorFrame;
     e.CodeEditor.TextBetweenPoints[Point(
-      Length(e.CodeEditor.Lines[e.CodeEditor.Lines.Count - 1])+1, e.CodeEditor.Lines.Count),
-      Point(Length(e.CodeEditor.Lines[e.CodeEditor.Lines.Count - 1])+1,
-      e.CodeEditor.Lines.Count)] := #13#13+'Func '+Func+#13#13+'EndFunc';
-    e.CodeEditor.LogicalCaretXY:=Point(2, e.CodeEditor.Lines.Count-1);
+      Length(e.CodeEditor.Lines[e.CodeEditor.Lines.Count - 1]) + 1,
+      e.CodeEditor.Lines.Count),
+      Point(Length(e.CodeEditor.Lines[e.CodeEditor.Lines.Count - 1]) +
+      1, e.CodeEditor.Lines.Count)] := #13#13 + 'Func ' + Func + #13#13 + 'EndFunc';
+    e.CodeEditor.LogicalCaretXY := Point(2, e.CodeEditor.Lines.Count - 1);
     Application.QueueAsyncCall(@e.MoveHorz, 2);
   end;
   Dispose(PCreateFuncInfo(Data));
@@ -247,20 +250,117 @@ begin
   if CreateIfMissing then
   begin
     new(c);
-    c^.FileName:=FileName;
-    c^.Func:=FuncName+'('+Params+')';
+    c^.FileName := FileName;
+    c^.Func := FuncName + '(' + Params + ')';
     Application.QueueAsyncCall(@CreateFunc, IntPtr(c));
   end;
 end;
 
 procedure TMainForm.AddInclude(FileName, IncludeFile: string);
+var
+  e: TEditorFrame;
+  sl: TStringList;
 begin
-  //TODO
+  if FilenameIsAbsolute(IncludeFile) then
+    IncludeFile := CreateRelativePath(IncludeFile, ExtractFilePath(FileName), True);
+  e := EditorManager1.TextEditor[FileName];
+  if Assigned(e) then
+    e.CodeEditor.TextBetweenPoints[Point(1, 1), Point(1, 1)] :=
+      Format('#include("%s")'#13, [IncludeFile])
+  else if FileExists(FileName) then
+  begin
+    sl := TStringList.Create;
+    try
+      sl.LoadFromFile(FileName);
+      sl.Insert(0, Format('#include("%s")', [IncludeFile]));
+      sl.SaveToFile(FileName);
+    finally
+      sl.Free;
+    end;
+  end;
 end;
 
 function TMainForm.CheckInclude(FileName, IncludeFile: string): boolean;
+
+  function ExtractBetween(const Value, A, B: string): string;
+  var
+    aPos, bPos: integer;
+  begin
+    Result := '';
+    aPos := Pos(A, Value);
+    if aPos > 0 then
+    begin
+      aPos := aPos + Length(A);
+      bPos := PosEx(B, Value, aPos);
+      if bPos > 0 then
+      begin
+        Result := Copy(Value, aPos, bPos - aPos);
+      end;
+    end;
+  end;
+
+var
+  i: integer;
+  e: TEditorFrame;
+  sl: TStringList;
+  fname: string;
 begin
-  //TODO
+  e := EditorManager1.TextEditor[FileName];
+  Result := False;
+  ;
+  if Assigned(e) then
+  begin
+    i := 0;
+    while i < e.CodeEditor.Lines.Count do
+    begin
+      if isEnd(e.CodeEditor.Lines[i], '#include') then
+      begin
+        fname := ExtractBetween(e.CodeEditor.Lines[i], '"', '"');
+        Result := IncludeFile = fname;
+        if not FilenameIsAbsolute(fname) then
+          fname := CreateAbsolutePath(fname, ExtractFilePath(FileName));
+        Result := Result or (IncludeFile = fname);
+        if not (FileExists(fname) or (EditorManager1.Editor[fname] >= 0)) then
+        begin
+          if i = e.CodeEditor.Lines.Count - 1 then
+            e.CodeEditor.TextBetweenPoints[Point(1, i + 1),
+              Point(Length(e.CodeEditor.Lines[i]) + 1, i + 1)] := ''
+          else
+            e.CodeEditor.TextBetweenPoints[Point(1, i + 1), Point(1, i + 2)] := '';
+          Continue;
+        end;
+      end;
+      Inc(i);
+    end;
+  end
+  else if FileExists(FileName) then
+  begin
+    sl := TStringList.Create;
+    try
+      sl.LoadFromFile(FileName);
+      i := 0;
+      while i < sl.Count - 1 do
+      begin
+        if isEnd(sl[i], '#include') then
+        begin
+          fname := ExtractBetween(sl[i], '"', '"');
+          Result := IncludeFile = fname;
+          if not FilenameIsAbsolute(fname) then
+            fname := CreateAbsolutePath(fname, ExtractFilePath(FileName));
+          Result := Result or (IncludeFile = fname);
+          if not (FileExists(fname) or (EditorManager1.Editor[fname] >= 0)) then
+          begin
+            sl.Delete(i);
+            Continue;
+          end;
+        end;
+        Inc(i);
+      end;
+      sl.SaveToFile(FileName);
+    finally
+      sl.Free;
+    end;
+  end;
 end;
 
 procedure TMainForm.EditorClosing(Sender: TObject; Editor: integer;
@@ -333,7 +433,8 @@ begin
     if idx = -1 then
       idx := FFileData.CreateFile((Sender as TFormEditFrame).FileName);
     (Sender as TFormEditFrame).AddToVarlist(FFileData[idx].Variables);
-    idx := FFileData.FileIndex[ChangeFileExt((Sender as TFormEditFrame).FileName, 'aal1')];
+    idx := FFileData.FileIndex[ChangeFileExt(
+      (Sender as TFormEditFrame).FileName, 'aal1')];
     if idx = -1 then
       idx := FFileData.LoadFile(ChangeFileExt(
         (Sender as TFormEditFrame).FileName, 'aal1'));
@@ -378,6 +479,48 @@ begin
   end;
 end;
 
+procedure TMainForm.ChangeMainForm(FileName: string);
+
+  function ExtractBetween(const Value, A, B: string): string;
+  var
+    aPos, bPos: integer;
+  begin
+    Result := '';
+    aPos := Pos(A, Value);
+    if aPos > 0 then
+    begin
+      aPos := aPos + Length(A);
+      bPos := PosEx(B, Value, aPos);
+      if bPos > 0 then
+      begin
+        Result := Copy(Value, aPos, bPos - aPos);
+      end;
+    end;
+  end;
+
+var
+  sl: TStringList;
+  e: TEditorFrame;
+  i: integer;
+begin
+  if FilenameIsAbsolute(FileName) then
+    FileName := FCurrentProject.GetRelPath(FileName);
+  e := EditorManager1.TextEditor[FCurrentProject.MainFile];
+  if Assigned(e) then
+  begin
+    for i := 0 to e.CodeEditor.Lines.Count - 1 do
+      if isEnd(e.CodeEditor.Lines[i], '#include') then
+        if ExtractBetween(e.CodeEditor.Lines[i], '"', '"') =
+          ChangeFileExt(FCurrentProject.MainForm, '.aal1') then
+          e.CodeEditor.TextBetweenPoints[Point(1, i + 1),
+            Point(Length(e.CodeEditor.Lines[i]) + 1, i + 1)] := Format('#include("%s")', [FileName]);
+  end
+  else if FileExists(FCurrentProject.MainFile) then
+  begin
+
+  end;
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 var
   i: integer;
@@ -388,6 +531,7 @@ begin
   FFileData := TAALFileManager.Create;
   EditorManager1.OnParserFinished := @EditorParserFinished;
   EditorManager1.IDEOpenFile := @OpenFile;
+  ProjectInspector1.ChangeMainForm := @ChangeMainForm;
   FLastOpend := TStringList.Create;
   FLastOpend.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'LastOpend.txt');
   i := 0;
@@ -424,6 +568,31 @@ begin
   FCurrentProject.AddFile(s);
 end;
 
+procedure TMainForm.NewFormItemClick(Sender: TObject);
+var fName:  String;
+  sl: TStringList;
+  i: Integer;
+begin
+  i:=1;
+  while FileExists(FCurrentProject.GetAbsPath('Form'+IntToStr(i)+'.afm')) do
+    inc(i);
+  fName:=FCurrentProject.GetAbsPath('Form'+IntToStr(i));
+  sl:=TStringList.Create;
+  try
+    sl.Text:='#include("'+'Form'+IntToStr(i)+'.afm")';
+    sl.SaveToFile(fName+'.aal1');
+    sl.Clear;
+    sl.Text:=Format('$%s = CreateWindow("%s"), %d, %d, %d, %d, %d', ['Form'+IntToStr(i), 'Form'+IntToStr(i), 150, 150, 300, 200, 0]);
+    sl.SaveToFile(fName+'.afm');
+  finally
+    sl.Free;
+  end;
+  FCurrentProject.AddFile(fName+'.aal1');
+  FCurrentProject.AddFile(fName+'.afm');
+  EditorManager1.OpenEditor(fName+'.aal1', Point(0, 0));
+  EditorManager1.OpenEditor(fName+'.afm', Point(0, 0));
+end;
+
 procedure TMainForm.NewProjectItemClick(Sender: TObject);
 var
   c: TCloseAction;
@@ -447,7 +616,7 @@ end;
 
 procedure TMainForm.SaveAsItemClick(Sender: TObject);
 var
-  ext, oldFile: string;
+  ext, oldFile, newfile: string;
   i: integer;
 begin
   oldFile := EditorManager1.EditorFiles[EditorManager1.EditorIndex];
@@ -461,6 +630,7 @@ begin
   SaveAALFileDialog.FileName := ExtractFileName(oldFile);
   if SaveAALFileDialog.Execute then
   begin
+    newfile := SaveAALFileDialog.FileName;
     if FileExists(oldFile) then
       DeleteFile(oldFile);
     FFileData.UnloadFile(FFileData.FileIndex[EditorManager1.EditorFiles[
@@ -479,16 +649,67 @@ begin
       oldFile := ChangeFileExt(oldFile, '.afm');
       if FileExists(oldFile) then
       begin
-        DeleteFile(oldFile);
-        // Delete old Include
-        CheckInclude(SaveAALFileDialog.FileName, oldFile);
+        // Add New Include
+        AddInclude(SaveAALFileDialog.FileName,
+          ChangeFileExt(SaveAALFileDialog.FileName, '.afm'));
         // Change Filename for new Form
         SaveAALFileDialog.FileName := ChangeFileExt(SaveAALFileDialog.FileName, '.afm');
-        // Add New Include
-        AddInclude(SaveAALFileDialog.FileName, SaveAALFileDialog.FileName);
         // Save form file with new name
-        EditorManager1.EditorSave(EditorManager1.Editor[oldFile],
-          SaveAALFileDialog.FileName);
+        if EditorManager1.Editor[oldFile] >= 0 then
+          EditorManager1.EditorSave(EditorManager1.Editor[oldFile],
+            SaveAALFileDialog.FileName)
+        else
+        begin
+          CopyFile(oldFile, SaveAALFileDialog.FileName);
+        end;
+        DeleteFile(oldFile);
+        // Delete old Include
+        CheckInclude(newfile, oldFile);
+        if FCurrentProject.GetRelPath(oldFile) = FCurrentProject.MainForm then
+        begin
+          CheckInclude(FCurrentProject.MainFile, '');
+          AddInclude(FCurrentProject.MainFile, newfile);
+          FCurrentProject.MainForm :=
+            FCurrentProject.GetRelPath(SaveAALFileDialog.FileName);
+        end;
+        // Change file in Project
+        for i := 0 to FCurrentProject.Files.Count - 1 do
+          if FCurrentProject.FilePath[i] = oldFile then
+          begin
+            FCurrentProject.FilePath[i] := SaveAALFileDialog.FileName;
+            Break;
+          end;
+      end;
+    end
+    else if ext = '.afm' then
+    begin
+      oldFile := ChangeFileExt(oldFile, '.aal1');
+      if FileExists(oldFile) then
+      begin
+        // Add New Include
+        AddInclude(SaveAALFileDialog.FileName,
+          ChangeFileExt(SaveAALFileDialog.FileName, '.aal1'));
+        // Change Filename for new Form
+        SaveAALFileDialog.FileName := ChangeFileExt(SaveAALFileDialog.FileName, '.aal1');
+        // Save form file with new name
+        if EditorManager1.Editor[oldFile] >= 0 then
+          EditorManager1.EditorSave(EditorManager1.Editor[oldFile],
+            SaveAALFileDialog.FileName)
+        else
+        begin
+          CopyFile(oldFile, SaveAALFileDialog.FileName);
+        end;
+        DeleteFile(oldFile);
+        // Delete old Include
+        CheckInclude(newfile, oldFile);
+        if FCurrentProject.GetRelPath(ChangeFileExt(oldFile, '.afm')) =
+          FCurrentProject.MainForm then
+        begin
+          CheckInclude(FCurrentProject.MainFile, '');
+          AddInclude(FCurrentProject.MainFile, SaveAALFileDialog.FileName);
+          FCurrentProject.MainForm :=
+            FCurrentProject.GetRelPath(SaveAALFileDialog.FileName);
+        end;
         // Change file in Project
         for i := 0 to FCurrentProject.Files.Count - 1 do
           if FCurrentProject.FilePath[i] = oldFile then

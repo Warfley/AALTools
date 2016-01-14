@@ -16,6 +16,7 @@ type
   TCloseEditorEvent = procedure(Filename: String) of object;
   TCheckIncludeEvent = function(FileName, IncludeFile: String): Boolean of object;
   TAddIncludeEvent = procedure(FileName, IncludeFile: String) of object;
+  TChangeMainFormEvent = procedure(FileName: String) of Object;
 
   TOpenFunctionEvent = function(FileName, FuncName: string; Params: String;
     CreateNew: Boolean): string of object;

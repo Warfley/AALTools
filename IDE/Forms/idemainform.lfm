@@ -35,6 +35,9 @@ object MainForm: TMainForm
     end
     inherited FileInfoPanel: TPanel
       Top = 412
+      inherited AddButton: TButton
+        OnClick = nil
+      end
     end
   end
   object MainFormMenu: TMainMenu
@@ -56,6 +59,7 @@ object MainForm: TMainForm
         end
         object NewFormItem: TMenuItem
           Caption = 'AAL Form'
+          OnClick = NewFormItemClick
         end
       end
       object MenuSplitItem1: TMenuItem

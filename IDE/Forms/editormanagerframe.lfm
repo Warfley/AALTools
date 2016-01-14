@@ -6,8 +6,8 @@ object EditorManager: TEditorManager
   ClientHeight = 655
   ClientWidth = 916
   TabOrder = 0
-  DesignLeft = 505
-  DesignTop = 244
+  DesignLeft = 381
+  DesignTop = 232
   object EditorControl: TPageControl
     Left = 0
     Height = 655

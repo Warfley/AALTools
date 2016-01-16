@@ -1,19 +1,18 @@
 object EditorFrame: TEditorFrame
   Left = 0
-  Height = 604
+  Height = 563
   Top = 0
   Width = 880
-  ClientHeight = 604
+  ClientHeight = 563
   ClientWidth = 880
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
-  DesignLeft = 501
-  DesignTop = 147
+  DesignLeft = 477
   object SearchBar: TPanel
     Left = 0
     Height = 34
-    Top = 570
+    Top = 529
     Width = 880
     Align = alBottom
     BevelOuter = bvNone
@@ -23,15 +22,15 @@ object EditorFrame: TEditorFrame
     Visible = False
     object Label1: TLabel
       Left = 0
-      Height = 25
+      Height = 15
       Top = 4
-      Width = 51
+      Width = 35
       Caption = 'Suche:'
       ParentColor = False
     end
     object SearchEdit: TEdit
       Left = 56
-      Height = 33
+      Height = 23
       Top = 0
       Width = 152
       OnKeyUp = SearchEditKeyUp
@@ -48,7 +47,7 @@ object EditorFrame: TEditorFrame
     end
     object ReplaceEdit: TEdit
       Left = 288
-      Height = 33
+      Height = 23
       Top = 0
       Width = 152
       OnKeyUp = ReplaceEditKeyUp
@@ -85,7 +84,7 @@ object EditorFrame: TEditorFrame
   end
   inline CodeEditor: TSynEdit
     Left = 0
-    Height = 570
+    Height = 529
     Top = 0
     Width = 645
     Align = alClient
@@ -584,12 +583,12 @@ object EditorFrame: TEditorFrame
   end
   object CodeExplorerPanel: TPanel
     Left = 645
-    Height = 570
+    Height = 529
     Top = 0
     Width = 235
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 570
+    ClientHeight = 529
     ClientWidth = 235
     TabOrder = 2
     object CodeExplorerHead: TPanel
@@ -620,11 +619,11 @@ object EditorFrame: TEditorFrame
     end
     object CodeExplorer: TTreeView
       Left = 0
-      Height = 536
+      Height = 495
       Top = 34
       Width = 235
       Align = alClient
-      DefaultItemHeight = 28
+      DefaultItemHeight = 24
       Images = CodeExplorerImages
       ReadOnly = True
       TabOrder = 1
@@ -639,9 +638,9 @@ object EditorFrame: TEditorFrame
     end
     object Label2: TLabel
       Left = 121
-      Height = 25
+      Height = 15
       Top = 206
-      Width = 51
+      Width = 34
       Caption = 'Label2'
       ParentColor = False
     end
@@ -657,7 +656,7 @@ object EditorFrame: TEditorFrame
     ShowSizeDrag = True
     AutoUseSingleIdent = True
     ShortCut = 16416
-    EndOfTokenChr = '()[].'
+    EndOfTokenChr = '().'
     OnCodeCompletion = CompletionCodeCompletion
     ExecCommandID = ecSynCompletionExecute
     Editor = CodeEditor

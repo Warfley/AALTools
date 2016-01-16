@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Menus, Project, IDEStartupScreen, ProjectInspector, EditorManagerFrame,
-  AALTypes, FormEditor, Editor, AALFileInfo, strutils;
+  AALTypes, FormEditor, Editor, AALFileInfo, strutils, CompilerOptions,
+  AALCompiler;
 
 type
 
@@ -65,6 +66,8 @@ type
     procedure SaveFileItemClick(Sender: TObject);
     procedure KillEditor(s: string);
   private
+    FFirstLoad: Boolean;
+    FCompiler: TAALCompiler;
     FFormIsClosing: boolean;
     FCurrentProject: TAALProject;
     FLastOpend: TStringList;
@@ -84,6 +87,7 @@ type
     procedure EnterFunc(Data: IntPtr);
     procedure CreateFunc(Data: IntPtr);
     procedure ChangeMainForm(FileName: string);
+    procedure ShowCompilerOptions;
   public
     property CurrentProject: TAALProject read FCurrentProject;
     { public declarations }
@@ -97,6 +101,11 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+    procedure TMainForm.ShowCompilerOptions;
+    begin
+      //TODO
+    end;
 
 procedure TMainForm.OpenFile(Filename: string; Pos: TPoint);
 begin
@@ -124,7 +133,11 @@ var
 begin
   Self.Hide;
   StartupScreen.LastOpend := FLastOpend;
-  StartupScreen.ShowModal;
+  if FFirstLoad and (Paramcount>0) and FileExists(ParamStr(1)) and (LowerCase(ExtractFileExt(ParamStr(1)))='.aalproj') then
+    StartupScreen.SelectedPath:=ParamStr(1)
+  else
+    StartupScreen.ShowModal;
+  FFirstLoad:=False;
   if FileExists(StartupScreen.SelectedPath) then
   begin
     StringsDelete(FLastOpend, StartupScreen.SelectedPath);
@@ -527,6 +540,8 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
+  FFirstLoad:=True;
+  FCompiler:=TAALCompiler.Create;
   FFormIsClosing := False;
   FCurrentProject := TAALProject.Create;
   EditorManager1.EnterFunc := @EnterFunction;
@@ -551,6 +566,7 @@ begin
   FLastOpend.Free;
   FFileData.Free;
   FCurrentProject.Free;
+  FCompiler.Free;
 end;
 
 procedure TMainForm.NewFileItemClick(Sender: TObject);

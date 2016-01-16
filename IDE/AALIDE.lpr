@@ -9,7 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, lazcontrols, IDEMainForm, Project, IDEStartupScreen, ProjectInspector,
   AALTypes, Editor, FormEditor, EditorManagerFrame, AALFileInfo, 
-FormEditComponents, AALCompiler
+FormEditComponents, AALCompiler, CompilerOptions
   { you can add units after this };
 
 {$R *.res}
@@ -19,6 +19,7 @@ begin
   Application.Initialize;
   Application.CreateForm(TMainForm, MainForm);
   Application.CreateForm(TStartupScreen, StartupScreen);
+  Application.CreateForm(TCompilerOptionsForm, CompilerOptionsForm);
   Application.Run;
 end.
 

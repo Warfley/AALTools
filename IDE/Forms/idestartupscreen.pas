@@ -47,7 +47,7 @@ type
     { private declarations }
   public
     property LastOpend: TStringList read FLastOpend write SetLastOpend;
-    property SelectedPath: string read FPath;
+    property SelectedPath: string read FPath write FPath;
     { public declarations }
   end;
 

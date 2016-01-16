@@ -406,9 +406,9 @@ begin
     (Completion.CurrentString[1] = '$') then
     Completion.Deactivate
   else
-  if (key in [17, 18]) then
+  {if (key in [17, 18]) then
     Completion.Deactivate
-  else if key = 9 then
+  else }if key = 9 then
     key := 13;
 
 end;

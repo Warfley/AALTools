@@ -109,7 +109,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="17">
+    <Units Count="18">
       <Unit0>
         <Filename Value="AALIDE.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -209,6 +209,13 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="AALCompiler"/>
       </Unit16>
+      <Unit17>
+        <Filename Value="Forms\compileroptions.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="CompilerOptionsForm"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="CompilerOptions"/>
+      </Unit17>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

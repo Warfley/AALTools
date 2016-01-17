@@ -65,8 +65,8 @@ type
     SaveAsBtn: TSpeedButton;
     SaveBtn: TSpeedButton;
     NewProjBtn: TSpeedButton;
-    CompileBtn: TSpeedButton;
     RunBtn: TSpeedButton;
+    StopBtn: TSpeedButton;
     ToolBar1: TToolBar;
     UndoMenuItem: TMenuItem;
     QuitMenuItem: TMenuItem;

@@ -185,6 +185,7 @@
       <Unit12>
         <Filename Value="..\Highlighter\aalhighlighter.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="AALHighlighter"/>
       </Unit12>
       <Unit13>
         <Filename Value="Forms\editormanagerframe.pas"/>
@@ -213,6 +214,7 @@
         <Filename Value="Forms\compileroptions.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="CompilerOptionsForm"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="CompilerOptions"/>
       </Unit17>

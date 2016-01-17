@@ -39,6 +39,8 @@ type
     procedure CloseSearchButtonClick(Sender: TObject);
     procedure CodeEditorChange(Sender: TObject);
     procedure CodeEditorKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure CodeEditorMouseLink(Sender: TObject; X, Y: integer;
+      var AllowMouseLink: boolean);
     procedure CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: integer);
     procedure CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
@@ -83,6 +85,7 @@ type
     procedure SetFunc(l: TFuncList);
     procedure SetVar(l: TVarList);
     function GetAtCursor(x, y: integer): string;
+    function GetAtPoint(p: TPoint): string;
     procedure ParserHasFinished(Sender: TObject);
     { private declarations }
   public
@@ -716,56 +719,8 @@ begin
   end;
 end;
 
-
-function TEditorFrame.GetAtCursor(x, y: integer): string;
-var
-  p: TPoint;
-  s: integer;
-  i: integer;
-  len: integer;
-  slen: integer;
-  ln: string;
-begin
-  Result := '';
-  p := CodeEditor.PixelsToLogicalPos(Point(x, y));
-  ln := CodeEditor.Lines[p.y - 1];
-  if ln = '' then
-    Exit;
-  slen := Length(ln);
-  i := p.x - 1;
-  len := 0;
-
-  if i < 1 then
-    i := 1;
-  if (i < slen) and (ln[i + 1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$']) and
-    ((i > 0) or (ln[i] in [#0..#32])) then
-    Inc(i);
-
-  while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
-    Dec(i);
-
-  if (i > 0) and (ln[i] = '$') then
-  begin
-    Inc(len);
-    s := i;
-    Inc(i);
-  end
-  else
-  begin
-    Inc(i);
-    s := i;
-  end;
-
-  while (i <= slen) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
-  begin
-    Inc(i);
-    Inc(len);
-  end;
-  Result := Copy(ln, s, len);
-end;
-
-procedure TEditorFrame.CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: integer);
+procedure TEditorFrame.CodeEditorMouseLink(Sender: TObject; X, Y: integer;
+  var AllowMouseLink: boolean);
 
   function GetCurrFunc(sel: string; out f: TFuncInfo): boolean;
   var
@@ -801,45 +756,94 @@ procedure TEditorFrame.CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
   end;
 
 var
-  l, pos, i, n: integer;
+  l, i, n: integer;
   sel: string;
   f: TFuncInfo;
   v: TVarInfo;
 begin
-  if ssCtrl in Shift then
+  if (CodeEditor.Lines.Count < CodeEditor.LinesInWindow) and
+    (y > CodeEditor.Lines.Count * CodeEditor.LineHeight) then
   begin
-    if (CodeEditor.Lines.Count < CodeEditor.LinesInWindow) and
-      (y > CodeEditor.Lines.Count * CodeEditor.LineHeight) then
-    begin
-      Highlight.JumpItem := SelectedItem(-1, 0);
-      CodeEditor.Invalidate;
-      Exit;
-    end;
-    l := CodeEditor.PixelsToLogicalPos(Point(x, y)).y - 1;
-    pos := CodeEditor.PixelsToLogicalPos(Point(x, y)).x - 1;
-    sel := GetAtCursor(x, y);
-    if GetCurrFunc(sel, f) or GetCurrVar(sel, v) then
-    begin
-      Highlight.JumpItem := SelectedItem(l, pos);
-      CodeEditor.Invalidate;
-      Exit;
-    end
-    else
-      for n := 0 to FDefRanges.Count - 1 do
-        for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
-          if (l >= (FDefRanges[n] as TDefRange).StartLine) and
-            (l <= (FDefRanges[n] as TDefRange).EndLine) and
-            ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
-          begin
-            if (FDefRanges[n] as TDefRange).Vars[i].Line > l then
-              Continue;
-            Highlight.JumpItem := SelectedItem(l, pos);
-            CodeEditor.Invalidate;
-            Exit;
-          end;
-    Highlight.JumpItem := SelectedItem(-1, 0);
-    CodeEditor.Invalidate;
+    AllowMouseLink := False;
+    Exit;
   end;
+  l := y - 1;
+  sel := GetAtPoint(Point(X, Y));
+  if GetCurrFunc(sel, f) or GetCurrVar(sel, v) then
+  begin
+    AllowMouseLink := True;
+    Exit;
+  end
+  else
+    for n := 0 to FDefRanges.Count - 1 do
+      for i := 0 to (FDefRanges[n] as TDefRange).Vars.Count - 1 do
+        if (l >= (FDefRanges[n] as TDefRange).StartLine) and
+          (l <= (FDefRanges[n] as TDefRange).EndLine) and
+          ((FDefRanges[n] as TDefRange).Vars[i].Name = sel) then
+        begin
+          if (FDefRanges[n] as TDefRange).Vars[i].Line > l then
+            Continue;
+          AllowMouseLink := True;
+          Exit;
+        end;
+  AllowMouseLink := False;
+end;
+
+function TEditorFrame.GetAtPoint(p: TPoint): string;
+var
+  s: integer;
+  i: integer;
+  len: integer;
+  slen: integer;
+  ln: string;
+begin
+  Result := '';
+  ln := CodeEditor.Lines[p.y - 1];
+  if ln = '' then
+    Exit;
+  slen := Length(ln);
+  i := p.x - 1;
+  len := 0;
+
+  if i < 1 then
+    i := 1;
+  if (i < slen) and (ln[i + 1] in ['_', '0'..'9', 'a'..'z', 'A'..'Z', '$']) and
+    ((i > 0) or (ln[i] in [#0..#32])) then
+    Inc(i);
+
+  while (i > 0) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+    Dec(i);
+
+  if (i > 0) and (ln[i] = '$') then
+  begin
+    Inc(len);
+    s := i;
+    Inc(i);
+  end
+  else
+  begin
+    Inc(i);
+    s := i;
+  end;
+
+  while (i <= slen) and (ln[i] in ['_', '0'..'9', 'a'..'z', 'A'..'Z']) do
+  begin
+    Inc(i);
+    Inc(len);
+  end;
+  Result := Copy(ln, s, len);
+
+end;
+
+function TEditorFrame.GetAtCursor(x, y: integer): string;
+begin
+
+end;
+
+procedure TEditorFrame.CodeEditorMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: integer);
+begin
+  GetAtPoint(CodeEditor.PixelsToLogicalPos(Point(X, Y)));
 end;
 
 procedure TEditorFrame.CodeJump(p: TPoint);
@@ -891,7 +895,6 @@ var
   v: TVarInfo;
   f: TFuncInfo;
 begin
-  Highlight.JumpItem := SelectedItem(-1, 0);
   CodeEditor.Invalidate;
   if (Button = mbLeft) and (ssCtrl in Shift) then
   begin
@@ -967,7 +970,6 @@ end;
 
 procedure TEditorFrame.CodeEditorChange(Sender: TObject);
 begin
-  Highlight.JumpItem := SelectedItem(-1, 0);
   UpdateTimerTimer(nil);
   if Assigned(FOnChange) then
     FOnChange(Self);

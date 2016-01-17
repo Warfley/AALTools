@@ -135,6 +135,18 @@ begin
 end;
 
 procedure TUnitParser.ParseLine(ln: string; vars: TVarList; line: integer);
+function InOtherFile(v: String): Boolean;
+var
+  i: Integer;
+begin
+  Result:=False;
+  for i:=0 to FVars.Count-1 do
+    if (lowercase(FVars[i].Name)=LowerCase(v)) and (FVars[i].FileName<>'') then
+    begin
+      Result:=True;
+      Break;
+    end;
+end;
 
 var
   i, s, len: integer;
@@ -157,7 +169,7 @@ begin
       if (i <= Length(ln)) and (ln[i] = '[') then
         str := str + '[]';
       if len > 1 then
-        if not StringsContain(FCurr, str) then
+        if not StringsContain(FCurr, str) and not InOtherFile(str) then
         begin
           if isEnd(ln, 'global') then
             FMYVars.Add(VarInfo(str, line, s))

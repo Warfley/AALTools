@@ -87,7 +87,7 @@ type
     procedure EnterFunc(Data: IntPtr);
     procedure CreateFunc(Data: IntPtr);
     procedure ChangeMainForm(FileName: string);
-    procedure ShowCompilerOptions;
+    function ShowCompilerOptions: Boolean;
   public
     property CurrentProject: TAALProject read FCurrentProject;
     { public declarations }
@@ -102,9 +102,23 @@ implementation
 
 { TMainForm }
 
-    procedure TMainForm.ShowCompilerOptions;
+    function TMainForm.ShowCompilerOptions:Boolean;
     begin
-      //TODO
+      Result:=False;
+      if CompilerOptionsForm.ShowModal = mrOK then
+      begin
+        FCompiler.CompilerDebugPath:=CompilerOptionsForm.CDebugFileEdit.FileName;
+        FCompiler.CompilerReleasePath:=CompilerOptionsForm.CReleaseFileEdit.FileName;
+        FCompiler.CompilerOutputPath:=CompilerOptionsForm.CLogEdit.Text;
+        FCompiler.PrintCompilerOutput:=CompilerOptionsForm.COutputBox.Checked;
+        FCompiler.AdvancedCompilerOutput:=CompilerOptionsForm.CAdvOutputBox.Checked;
+        FCompiler.InterpreterDebugPath:=CompilerOptionsForm.IDebugFileEdit.FileName;
+        FCompiler.InterpreterReleasePath:=CompilerOptionsForm.IReleaseFileEdit.FileName;
+        FCompiler.InterpreterOutputPath:=CompilerOptionsForm.ILogEdit.Text;
+        FCompiler.PrintInterpreaterOutput:=CompilerOptionsForm.IOutputBox.Checked;
+        FCompiler.WriteConf(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'compiler.cfg');
+        Result:=True;
+      end;
     end;
 
 procedure TMainForm.OpenFile(Filename: string; Pos: TPoint);
@@ -132,6 +146,13 @@ var
   i: integer;
 begin
   Self.Hide;
+  if FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'compiler.cfg') then
+    FCompiler.ReadConf(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'compiler.cfg')
+  else if not ShowCompilerOptions then
+  begin
+    Close;
+    Exit;
+  end;
   StartupScreen.LastOpend := FLastOpend;
   if FFirstLoad and (Paramcount>0) and FileExists(ParamStr(1)) and (LowerCase(ExtractFileExt(ParamStr(1)))='.aalproj') then
     StartupScreen.SelectedPath:=ParamStr(1)

@@ -83,6 +83,7 @@ object EditorFrame: TEditorFrame
     end
   end
   inline CodeEditor: TSynEdit
+    Cursor = crDefault
     Left = 0
     Height = 529
     Top = 0
@@ -98,6 +99,7 @@ object EditorFrame: TEditorFrame
     OnKeyUp = CodeEditorKeyUp
     OnMouseMove = CodeEditorMouseMove
     OnMouseUp = CodeEditorMouseUp
+    OnMouseLink = CodeEditorMouseLink
     Gutter.Width = 67
     Gutter.MouseActions = <>
     RightGutter.Width = 0
@@ -523,6 +525,7 @@ object EditorFrame: TEditorFrame
     MouseTextActions = <>
     MouseSelActions = <>
     Options = [eoAutoIndent, eoBracketHighlight, eoGroupUndo, eoSmartTabs, eoTabsToSpaces, eoTrimTrailingSpaces]
+    MouseOptions = [emDragDropEditing, emShowCtrlMouseLinks, emCtrlWheelZoom]
     VisibleSpecialChars = [vscSpace, vscTabAtLast]
     RightEdge = 1024
     SelectedColor.BackPriority = 50
@@ -541,6 +544,7 @@ object EditorFrame: TEditorFrame
     FoldedCodeColor.FrameColor = clGray
     MouseLinkColor.Background = clNone
     MouseLinkColor.Foreground = clBlue
+    MouseLinkColor.Style = [fsUnderline]
     LineHighlightColor.Background = clNone
     LineHighlightColor.Foreground = clNone
     TabWidth = 2

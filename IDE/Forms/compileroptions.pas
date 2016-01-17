@@ -16,11 +16,11 @@ type
     Button1: TButton;
     Button2: TButton;
     IDebugFileEdit: TFileNameEdit;
-    CLogEdit1: TEdit;
+    ILogEdit: TEdit;
     COutputBox: TCheckBox;
     CAdvOutputBox: TCheckBox;
     CompilerConfigBox: TGroupBox;
-    COutputBox1: TCheckBox;
+    IOutputBox: TCheckBox;
     CLogEdit: TEdit;
     CDebugFileEdit: TFileNameEdit;
     CReleaseFileEdit: TFileNameEdit;

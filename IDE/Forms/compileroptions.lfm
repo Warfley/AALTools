@@ -74,6 +74,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
       Height = 23
       Top = 32
       Width = 271
+      OnAcceptFileName = CDebugFileEditAcceptFileName
       DialogTitle = 'AAL Debug Compiler'
       DialogOptions = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
       Filter = 'Windows Executeable|*.exe'
@@ -89,6 +90,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
       Height = 23
       Top = 88
       Width = 271
+      OnAcceptFileName = CDebugFileEditAcceptFileName
       DialogTitle = 'AAL Release Compiler'
       DialogOptions = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
       Filter = 'Windows Executeable|*.exe'
@@ -154,6 +156,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
       Height = 23
       Top = 32
       Width = 271
+      OnAcceptFileName = CDebugFileEditAcceptFileName
       DialogTitle = 'AAL Debug Interpreter'
       DialogOptions = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
       Filter = 'Windows Executeable|*.exe'
@@ -169,6 +172,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
       Height = 23
       Top = 88
       Width = 271
+      OnAcceptFileName = CDebugFileEditAcceptFileName
       DialogTitle = 'AAL Release Interpreter'
       DialogOptions = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
       Filter = 'Windows Executeable|*.exe'

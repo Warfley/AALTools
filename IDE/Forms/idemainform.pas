@@ -6,9 +6,9 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  Menus, Project, IDEStartupScreen, ProjectInspector, EditorManagerFrame,
-  AALTypes, FormEditor, Editor, AALFileInfo, strutils, CompilerOptions,
-  AALCompiler;
+  Menus, ComCtrls, Buttons, ExtCtrls, PairSplitter, Project, IDEStartupScreen,
+  ProjectInspector, EditorManagerFrame, AALTypes, FormEditor, Editor,
+  AALFileInfo, strutils, CompilerOptions, AALCompiler;
 
 type
 
@@ -27,6 +27,11 @@ type
   end;
 
   TMainForm = class(TForm)
+    AALIDEProps: TApplicationProperties;
+    SaveAllBtn: TSpeedButton;
+    CloseAllBtn: TSpeedButton;
+    CloseEditorBtn: TSpeedButton;
+    SelectModeBox: TComboBox;
     EditorManager1: TEditorManager;
     MainFormMenu: TMainMenu;
     FileMenuItem: TMenuItem;
@@ -34,6 +39,16 @@ type
     CloseAllItem: TMenuItem;
     EditMenuItem: TMenuItem;
     FormatMenuItem: TMenuItem;
+    CompDebMenuItem: TMenuItem;
+    CompRelMenuItem: TMenuItem;
+    ConfigMenuItem: TMenuItem;
+    CompOptionMenuItem: TMenuItem;
+    ToolbarSplit1: TPairSplitter;
+    PairSplitterSide1: TPairSplitterSide;
+    PairSplitterSide2: TPairSplitterSide;
+    RenReleaseMenuItem: TMenuItem;
+    RunDebugMenuItem: TMenuItem;
+    RunMenuItem: TMenuItem;
     OpenAALFileDialog: TOpenDialog;
     ProjectInspector1: TProjectInspector;
     SaveAsItem: TMenuItem;
@@ -45,6 +60,14 @@ type
     MenuSplitItem3: TMenuItem;
     SearchMenuItem: TMenuItem;
     RedoMenuItem: TMenuItem;
+    AddUnitBtn: TSpeedButton;
+    AddFormBtn: TSpeedButton;
+    SaveAsBtn: TSpeedButton;
+    SaveBtn: TSpeedButton;
+    NewProjBtn: TSpeedButton;
+    CompileBtn: TSpeedButton;
+    RunBtn: TSpeedButton;
+    ToolBar1: TToolBar;
     UndoMenuItem: TMenuItem;
     QuitMenuItem: TMenuItem;
     MenuSplitItem2: TMenuItem;
@@ -55,6 +78,7 @@ type
     NewProjectItem: TMenuItem;
     procedure CloseAllItemClick(Sender: TObject);
     procedure CloseFileItemClick(Sender: TObject);
+    procedure CompOptionMenuItemClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -65,6 +89,7 @@ type
     procedure SaveAsItemClick(Sender: TObject);
     procedure SaveFileItemClick(Sender: TObject);
     procedure KillEditor(s: string);
+    procedure ToolBar1Paint(Sender: TObject);
   private
     FFirstLoad: boolean;
     FCompiler: TAALCompiler;
@@ -224,6 +249,11 @@ end;
 procedure TMainForm.CloseFileItemClick(Sender: TObject);
 begin
   EditorManager1.CloseEditor(EditorManager1.EditorIndex);
+end;
+
+procedure TMainForm.CompOptionMenuItemClick(Sender: TObject);
+begin
+  ShowCompilerOptions;
 end;
 
 procedure TMainForm.CloseAllItemClick(Sender: TObject);
@@ -460,6 +490,15 @@ begin
       EditorManager1.EditorControl.Pages[i].Free;
       Break;
     end;
+end;
+
+procedure TMainForm.ToolBar1Paint(Sender: TObject);
+begin
+  ToolBar1.Canvas.Pen.Style:=psSolid;
+  ToolBar1.Canvas.Pen.Color:=clHighlight;
+  ToolBar1.Canvas.Pen.Width:=2;
+  ToolBar1.Canvas.MoveTo(-1, ToolBar1.Height-1);
+  ToolBar1.Canvas.LineTo(ToolBar1.Width,ToolBar1.Height-1);
 end;
 
 procedure TMainForm.EditorParserFinished(Sender: TObject);

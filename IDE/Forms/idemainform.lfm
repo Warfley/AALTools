@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 122
+  Left = 268
   Height = 563
-  Top = 0
+  Top = 93
   Width = 1235
   ActiveControl = EditorManager1.EditorControl
   Caption = 'AAL IDE'
@@ -15,28 +15,30 @@ object MainForm: TMainForm
   WindowState = wsMaximized
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 543
+    Height = 517
+    Top = 26
     Width = 888
     Align = alClient
-    ClientHeight = 543
+    ClientHeight = 517
     ClientWidth = 888
     inherited EditorControl: TPageControl
-      Height = 543
+      Height = 517
       Width = 888
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 543
+    Height = 517
+    Top = 26
     Align = alLeft
-    ClientHeight = 543
+    ClientHeight = 517
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 317
+      Height = 291
       Top = 47
       DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 364
+      Top = 338
       inherited PathEdit: TLabeledEdit
         Height = 23
         EditLabel.Height = 15
@@ -50,9 +52,129 @@ object MainForm: TMainForm
       Height = 23
     end
   end
+  object ToolBar1: TToolBar
+    Left = 0
+    Height = 26
+    Top = 0
+    Width = 1235
+    Caption = 'ToolBar1'
+    TabOrder = 2
+    OnPaint = ToolBar1Paint
+    object ToolbarSplit1: TPairSplitter
+      Left = 1
+      Height = 24
+      Top = 2
+      Width = 1234
+      Align = alClient
+      Position = 192
+      object PairSplitterSide1: TPairSplitterSide
+        Cursor = crArrow
+        Left = 0
+        Height = 24
+        Top = 0
+        Width = 192
+        ClientWidth = 192
+        ClientHeight = 24
+        object AddUnitBtn: TSpeedButton
+          Left = 0
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object AddFormBtn: TSpeedButton
+          Left = 23
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object SaveAsBtn: TSpeedButton
+          Left = 92
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object SaveBtn: TSpeedButton
+          Left = 69
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object NewProjBtn: TSpeedButton
+          Left = 46
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object SaveAllBtn: TSpeedButton
+          Left = 115
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object CloseAllBtn: TSpeedButton
+          Left = 161
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object CloseEditorBtn: TSpeedButton
+          Left = 138
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+      end
+      object PairSplitterSide2: TPairSplitterSide
+        Cursor = crArrow
+        Left = 197
+        Height = 24
+        Top = 0
+        Width = 1037
+        ClientWidth = 1037
+        ClientHeight = 24
+        object CompileBtn: TSpeedButton
+          Left = 0
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object RunBtn: TSpeedButton
+          Left = 23
+          Height = 24
+          Top = 0
+          Width = 23
+          Align = alLeft
+        end
+        object SelectModeBox: TComboBox
+          Left = 56
+          Height = 23
+          Top = 1
+          Width = 100
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'Debug'
+            'Release'
+          )
+          Style = csDropDownList
+          TabOrder = 0
+          Text = 'Debug'
+        end
+      end
+    end
+  end
   object MainFormMenu: TMainMenu
-    left = 78
-    top = 47
+    left = 264
+    top = 56
     object FileMenuItem: TMenuItem
       Caption = 'Datei'
       object NewMenuItem: TMenuItem
@@ -136,6 +258,35 @@ object MainForm: TMainForm
         ShortCut = 16452
       end
     end
+    object RunMenuItem: TMenuItem
+      Caption = 'Start'
+      GlyphShowMode = gsmNever
+      object CompDebMenuItem: TMenuItem
+        Caption = 'Debug Kompilieren'
+        GlyphShowMode = gsmNever
+      end
+      object CompRelMenuItem: TMenuItem
+        Caption = 'Release Kompilieren'
+        GlyphShowMode = gsmNever
+      end
+      object RunDebugMenuItem: TMenuItem
+        Caption = 'Debug Ausführen'
+        GlyphShowMode = gsmNever
+        ShortCut = 116
+      end
+      object RenReleaseMenuItem: TMenuItem
+        Caption = 'Release Ausführen'
+        GlyphShowMode = gsmNever
+        ShortCut = 16466
+      end
+    end
+    object ConfigMenuItem: TMenuItem
+      Caption = 'Einstellungen'
+      object CompOptionMenuItem: TMenuItem
+        Caption = 'Compiler Optionen'
+        OnClick = CompOptionMenuItemClick
+      end
+    end
   end
   object SaveAALFileDialog: TSaveDialog
     Options = [ofExtensionDifferent, ofEnableSizing, ofViewDetail]
@@ -146,5 +297,10 @@ object MainForm: TMainForm
     Options = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
     left = 380
     top = 28
+  end
+  object AALIDEProps: TApplicationProperties
+    ShowMainForm = False
+    left = 370
+    top = 201
   end
 end

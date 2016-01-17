@@ -131,8 +131,6 @@ begin
 end;
 
 function TAALCompiler.Compile(P: TAALProject; Mode: TCompilerMode): string;
-var
-  comp: TProcess;
 begin
 
 end;

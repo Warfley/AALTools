@@ -32,6 +32,7 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
+    procedure CDebugFileEditAcceptFileName(Sender: TObject; var Value: String);
   private
     { private declarations }
   public
@@ -44,6 +45,17 @@ var
 implementation
 
 {$R *.lfm}
+
+{ TCompilerOptionsForm }
+
+procedure TCompilerOptionsForm.CDebugFileEditAcceptFileName(Sender: TObject;
+  var Value: String);
+begin
+  CDebugFileEdit.InitialDir:=ExtractFilePath(Value);
+  CReleaseFileEdit.InitialDir:=ExtractFilePath(Value);
+  IDebugFileEdit.InitialDir:=ExtractFilePath(Value);
+  IReleaseFileEdit.InitialDir:=ExtractFilePath(Value);
+end;
 
 end.
 

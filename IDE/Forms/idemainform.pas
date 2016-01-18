@@ -28,6 +28,7 @@ type
 
   TMainForm = class(TForm)
     AALIDEProps: TApplicationProperties;
+    OutputBox: TListBox;
     SaveAllBtn: TSpeedButton;
     CloseAllBtn: TSpeedButton;
     CloseEditorBtn: TSpeedButton;
@@ -78,17 +79,23 @@ type
     NewProjectItem: TMenuItem;
     procedure CloseAllItemClick(Sender: TObject);
     procedure CloseFileItemClick(Sender: TObject);
+    procedure CompDebMenuItemClick(Sender: TObject);
     procedure CompOptionMenuItemClick(Sender: TObject);
+    procedure CompRelMenuItemClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure NewFileItemClick(Sender: TObject);
     procedure NewFormItemClick(Sender: TObject);
     procedure NewProjectItemClick(Sender: TObject);
+    procedure RenReleaseMenuItemClick(Sender: TObject);
+    procedure RunBtnClick(Sender: TObject);
+    procedure RunDebugMenuItemClick(Sender: TObject);
     procedure SaveAllItemClick(Sender: TObject);
     procedure SaveAsItemClick(Sender: TObject);
     procedure SaveFileItemClick(Sender: TObject);
     procedure KillEditor(s: string);
+    procedure StopBtnClick(Sender: TObject);
     procedure ToolBar1Paint(Sender: TObject);
   private
     FFirstLoad: boolean;
@@ -113,6 +120,10 @@ type
     procedure CreateFunc(Data: IntPtr);
     procedure ChangeMainForm(FileName: string);
     function ShowCompilerOptions: boolean;
+    procedure PrintText(Sender: TObject; FileName: string; Output: string);
+    procedure FinishedComp(Sender: TObject);
+    procedure FinishedRun(Sender: TObject);
+    procedure CompileError(Sender: TObject);
   public
     property CurrentProject: TAALProject read FCurrentProject;
     { public declarations }
@@ -127,9 +138,50 @@ implementation
 
 { TMainForm }
 
+procedure TMainForm.PrintText(Sender: TObject; FileName: string; Output: string);
+begin
+  OutputBox.Items.Add(FCurrentProject.GetRelPath(FileName) + ': ' + Output);
+  OutputBox.ItemIndex := OutputBox.Items.Count - 1;
+  OutputBox.ItemIndex := -1;
+end;
+
+procedure TMainForm.FinishedComp(Sender: TObject);
+begin
+  OutputBox.Items.Add('Kompilieren abgeschlossen');
+  OutputBox.ItemIndex := OutputBox.Items.Count - 1;
+  OutputBox.ItemIndex := -1;
+end;
+
+procedure TMainForm.FinishedRun(Sender: TObject);
+begin
+  OutputBox.Items.Add('Ausführung beendet');
+  OutputBox.ItemIndex := OutputBox.Items.Count - 1;
+  OutputBox.ItemIndex := -1;
+  RunBtn.Enabled := True;
+  StopBtn.Enabled := False;
+end;
+
+    procedure TMainForm.CompileError(Sender: TObject);
+    begin
+  OutputBox.Items.Add('Compiler Fehler, ausführung beendet');
+  OutputBox.ItemIndex := OutputBox.Items.Count - 1;
+  OutputBox.ItemIndex := -1;
+  RunBtn.Enabled := True;
+  StopBtn.Enabled := False;
+    end;
+
 function TMainForm.ShowCompilerOptions: boolean;
 begin
   Result := False;
+  CompilerOptionsForm.CDebugFileEdit.FileName := FCompiler.CompilerDebugPath;
+  CompilerOptionsForm.CReleaseFileEdit.FileName := FCompiler.CompilerReleasePath;
+  CompilerOptionsForm.CLogEdit.Text := FCompiler.CompilerOutputPath;
+  CompilerOptionsForm.COutputBox.Checked := FCompiler.PrintCompilerOutput;
+  CompilerOptionsForm.CAdvOutputBox.Checked := FCompiler.AdvancedCompilerOutput;
+  CompilerOptionsForm.IDebugFileEdit.FileName := FCompiler.InterpreterDebugPath;
+  CompilerOptionsForm.IReleaseFileEdit.FileName := FCompiler.InterpreterReleasePath;
+  CompilerOptionsForm.ILogEdit.Text := FCompiler.InterpreterOutputPath;
+  CompilerOptionsForm.IOutputBox.Checked := FCompiler.PrintInterpreaterOutput;
   if CompilerOptionsForm.ShowModal = mrOk then
   begin
     FCompiler.CompilerDebugPath := CompilerOptionsForm.CDebugFileEdit.FileName;
@@ -251,9 +303,21 @@ begin
   EditorManager1.CloseEditor(EditorManager1.EditorIndex);
 end;
 
+procedure TMainForm.CompDebMenuItemClick(Sender: TObject);
+begin
+  OutputBox.Clear;
+  FCompiler.Compile(FCurrentProject, cmDebug);
+end;
+
 procedure TMainForm.CompOptionMenuItemClick(Sender: TObject);
 begin
   ShowCompilerOptions;
+end;
+
+procedure TMainForm.CompRelMenuItemClick(Sender: TObject);
+begin
+  OutputBox.Clear;
+  FCompiler.Compile(FCurrentProject, TCompilerMode.cmRelease);
 end;
 
 procedure TMainForm.CloseAllItemClick(Sender: TObject);
@@ -492,13 +556,20 @@ begin
     end;
 end;
 
+procedure TMainForm.StopBtnClick(Sender: TObject);
+begin
+  FCompiler.Stop;
+  RunBtn.Enabled := True;
+  StopBtn.Enabled := False;
+end;
+
 procedure TMainForm.ToolBar1Paint(Sender: TObject);
 begin
-  ToolBar1.Canvas.Pen.Style:=psSolid;
-  ToolBar1.Canvas.Pen.Color:=clHighlight;
-  ToolBar1.Canvas.Pen.Width:=2;
-  ToolBar1.Canvas.MoveTo(-1, ToolBar1.Height-1);
-  ToolBar1.Canvas.LineTo(ToolBar1.Width,ToolBar1.Height-1);
+  ToolBar1.Canvas.Pen.Style := psSolid;
+  ToolBar1.Canvas.Pen.Color := $00DEDEDE;
+  ToolBar1.Canvas.Pen.Width := 2;
+  ToolBar1.Canvas.MoveTo(-1, ToolBar1.Height - 1);
+  ToolBar1.Canvas.LineTo(ToolBar1.Width, ToolBar1.Height - 1);
 end;
 
 procedure TMainForm.EditorParserFinished(Sender: TObject);
@@ -608,6 +679,10 @@ var
 begin
   FFirstLoad := True;
   FCompiler := TAALCompiler.Create;
+  FCompiler.OnOutput := @PrintText;
+  FCompiler.OnFinishedCompiling := @FinishedComp;
+  FCompiler.OnFinishedRunning := @FinishedRun;
+  FCompiler.OnCompileError:=@CompileError;
   FFormIsClosing := False;
   FCurrentProject := TAALProject.Create;
   EditorManager1.EnterFunc := @EnterFunction;
@@ -689,6 +764,36 @@ begin
     exit;
   FCurrentProject.Clear;
   Application.QueueAsyncCall(@ShowStartupScreen, 0);
+end;
+
+procedure TMainForm.RenReleaseMenuItemClick(Sender: TObject);
+begin
+  OutputBox.Items.Clear;
+  OutputBox.Items.Add('Kompiliere: ' + FCurrentProject.Name + ' Modus: ' +
+    IfThen(SelectModeBox.ItemIndex = 0, 'Debug', 'Release'));
+  FCompiler.CompileAndRun(FCurrentProject, TCompilerMode.cmRelease);
+  RunBtn.Enabled := False;
+  StopBtn.Enabled := True;
+end;
+
+procedure TMainForm.RunBtnClick(Sender: TObject);
+begin
+  OutputBox.Items.Clear;
+  OutputBox.Items.Add('Kompiliere: ' + FCurrentProject.Name + ' Modus: ' +
+    IfThen(SelectModeBox.ItemIndex = 0, 'Debug', 'Release'));
+  FCompiler.CompileAndRun(FCurrentProject, TCompilerMode(SelectModeBox.ItemIndex));
+  RunBtn.Enabled := False;
+  StopBtn.Enabled := True;
+end;
+
+procedure TMainForm.RunDebugMenuItemClick(Sender: TObject);
+begin
+  OutputBox.Items.Clear;
+  OutputBox.Items.Add('Kompiliere: ' + FCurrentProject.Name + ' Modus: ' +
+    IfThen(SelectModeBox.ItemIndex = 0, 'Debug', 'Release'));
+  FCompiler.CompileAndRun(FCurrentProject, cmDebug);
+  RunBtn.Enabled := False;
+  StopBtn.Enabled := True;
 end;
 
 procedure TMainForm.SaveAllItemClick(Sender: TObject);

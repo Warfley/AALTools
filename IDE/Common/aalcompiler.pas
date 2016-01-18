@@ -5,15 +5,20 @@ unit AALCompiler;
 interface
 
 uses
-  Classes, SysUtils, Project, DOM, XMLRead, XMLWrite, process;
+  Classes, SysUtils, Project, DOM, XMLRead, XMLWrite, AsyncProcess, process, strutils,
+  Dialogs;
 
 type
   TCompilerMode = (cmDebug, cmRelease);
-  TOutputEvent = procedure(Sender: TObject; FileName: string; Output: string);
+  TOutputEvent = procedure(Sender: TObject; FileName: string; Output: string) of object;
 
   TAALCompiler = class
   private
+    FCurrentProject: TAALProject;
+    FCurrentMode: TCompilerMode;
+    FOutput: TStringList;
     FCompilerRelease: string;
+    FCProcess: TAsyncProcess;
     FCompilerDebug: string;
     FInterpreaterRelease: string;
     FInterpreaterDebug: string;
@@ -22,13 +27,27 @@ type
     FPrintCompilerOutput: boolean;
     FAdvancedCompilerOutput: boolean;
     FPrintInterpreaterOutput: boolean;
+    FIsCompiling: boolean;
+    FSTDOptions: TProcessOptions;
     FOnOutput: TOutputEvent;
+    FOnFinishedRun: TNotifyEvent;
+    FOnFinishedCompiling: TNotifyEvent;
+    FOnCompileError: TNotifyEvent;
+    function isRunning: boolean;
+    procedure ReadData(Sender: TObject);
+    procedure ProcTerm(Sender: TObject);
+    procedure DoRun(Sender: TObject);
   public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Stop;
+    procedure CompileAndRun(P: TAALProject; Mode: TCompilerMode);
     procedure ReadConf(Path: string);
     procedure WriteConf(Path: string);
-    function Compile(P: TAALProject; Mode: TCompilerMode): string;
+    procedure Compile(P: TAALProject; Mode: TCompilerMode);
     procedure Run(Path: string; Mode: TCompilerMode);
 
+    property Active: boolean read isRunning;
     property CompilerReleasePath: string read FCompilerRelease write FCompilerRelease;
     property CompilerDebugPath: string read FCompilerDebug write FCompilerDebug;
     property InterpreterReleasePath: string
@@ -45,6 +64,10 @@ type
     property PrintInterpreaterOutput: boolean
       read FPrintInterpreaterOutput write FPrintInterpreaterOutput;
     property OnOutput: TOutputEvent read FOnOutput write FOnOutput;
+    property OnFinishedRunning: TNotifyEvent read FOnFinishedRun write FOnFinishedRun;
+    property OnFinishedCompiling: TNotifyEvent
+      read FOnFinishedCompiling write FOnFinishedCompiling;
+    property OnCompileError: TNotifyEvent read FOnCompileError write FOnCompileError;
   end;
 
 implementation
@@ -58,7 +81,7 @@ begin
     ReadXMLFile(doc, Path);
     tmpNode := doc.DocumentElement.FindNode('Compiler');
     FCompilerDebug := tmpNode.FindNode('Debug').TextContent;
-    FCompilerDebug := tmpNode.FindNode('Release').TextContent;
+    FCompilerRelease := tmpNode.FindNode('Release').TextContent;
     FCompilerOutput := tmpNode.FindNode('Output').TextContent;
     FPrintCompilerOutput := tmpNode.FindNode('PrintOutput').TextContent = 'True';
     FAdvancedCompilerOutput := tmpNode.FindNode('FullOutput').TextContent = 'True';
@@ -102,8 +125,7 @@ begin
     // Write Compiler Fulloutput
     tmp := doc.CreateElement('FullOutput');
     tmpNode.AppendChild(tmp);
-    tmp.AppendChild(doc.CreateTextNode(
-      BoolToStr(FAdvancedCompilerOutput, True)));
+    tmp.AppendChild(doc.CreateTextNode(BoolToStr(FAdvancedCompilerOutput, True)));
 
     tmpNode := doc.CreateElement('Interpret');
     rootnode.AppendChild(tmpNode);
@@ -122,22 +144,158 @@ begin
     // Write Compiler Printinfo
     tmp := doc.CreateElement('PrintOutput');
     tmpNode.AppendChild(tmp);
-    tmp.AppendChild(doc.CreateTextNode(
-      BoolToStr(FPrintInterpreaterOutput, True)));
+    tmp.AppendChild(doc.CreateTextNode(BoolToStr(FPrintInterpreaterOutput, True)));
     WriteXML(doc, Path);
   finally
     doc.Free;
   end;
 end;
 
-function TAALCompiler.Compile(P: TAALProject; Mode: TCompilerMode): string;
+procedure TAALCompiler.Compile(P: TAALProject; Mode: TCompilerMode);
 begin
-
+  Stop;
+  FCurrentMode := Mode;
+  FCurrentProject := P;
+  FOutput.Clear;
+  FIsCompiling := True;
+  FCProcess.OnTerminate := @ProcTerm;
+  FCProcess.Options := FSTDOptions + [poUsePipes, poStderrToOutPut{, poNoConsole}];
+  if Mode = cmDebug then
+    FCProcess.Executable := FCompilerDebug
+  else
+    FCProcess.Executable := FCompilerRelease;
+  FCProcess.Parameters.Clear;
+  FCProcess.Parameters.Add(P.MainFile);
+  ForceDirectories(IncludeTrailingPathDelimiter(P.ProjectDir) + 'bin' + PathDelim);
+  FCProcess.Parameters.Add(IncludeTrailingPathDelimiter(P.ProjectDir) +
+    'bin' + PathDelim + 'out.bin');
+  FCProcess.Parameters.Add(IncludeTrailingPathDelimiter(P.ProjectDir));
+  FCProcess.Execute;
 end;
 
 procedure TAALCompiler.Run(Path: string; Mode: TCompilerMode);
 begin
+  Stop;
+  FCProcess.OnTerminate := @ProcTerm;
+  FCProcess.Options := FSTDOptions + [poUsePipes, poStderrToOutPut];
+  (*if FCurrentProject.GUIBased then
+    FCProcess.Options:=FCProcess.Options+[poNoConsole];   *)
+  FCurrentMode := Mode;
+  FIsCompiling := False;
+  if mode = cmDebug then
+    FCProcess.Executable := FInterpreaterDebug
+  else
+    FCProcess.Executable := FInterpreaterRelease;
+  FOutput.Clear;
+  FCProcess.Parameters.Clear;
+  FCProcess.CurrentDirectory:=ExtractFilePath(Path);
+  FCProcess.Execute;
+end;
 
+function TAALCompiler.isRunning: boolean;
+begin
+  Result := FCProcess.Running;
+end;
+
+procedure TAALCompiler.ReadData(Sender: TObject);
+var
+  sl: TStringList;
+  i: integer;
+begin
+  sl := TStringList.Create;
+  try
+    sl.LoadFromStream(FCProcess.Output);
+    FOutput.AddStrings(sl);
+    for i := 0 to sl.Count - 1 do
+      if (FIsCompiling and FPrintCompilerOutput) or (not FIsCompiling and FPrintInterpreaterOutput) then
+      if AnsiContainsStr(sl[i], '[Line ') or AnsiContainsStr(sl[i], 'left:') or
+        AnsiEndsStr('ms', sl[i]) or (not FIsCompiling) or (FAdvancedCompilerOutput) then
+        if Assigned(FOnOutput) then
+          FOnOutput(Self, FCurrentProject.MainFile, sl[i]);
+  finally
+    sl.Free;
+  end;
+end;
+
+procedure TAALCompiler.ProcTerm(Sender: TObject);
+begin
+  if FIsCompiling then
+  begin
+    ForceDirectories(ExtractFilePath(AnsiReplaceStr(FCompilerOutput,
+      '($ProjDir)', ExcludeTrailingPathDelimiter(FCurrentProject.ProjectDir))));
+    FOutput.SaveToFile(AnsiReplaceStr(FCompilerOutput, '($ProjDir)',
+      ExcludeTrailingPathDelimiter(FCurrentProject.ProjectDir)));
+  end
+  else
+  begin
+    ForceDirectories(ExtractFilePath(AnsiReplaceStr(FInterpreaterOutput,
+      '($ProjDir)', ExcludeTrailingPathDelimiter(FCurrentProject.ProjectDir))));
+    FOutput.SaveToFile(AnsiReplaceStr(FInterpreaterOutput, '($ProjDir)',
+      ExcludeTrailingPathDelimiter(FCurrentProject.ProjectDir)));
+  end;
+  if FIsCompiling and Assigned(FOnFinishedCompiling) then
+    FOnFinishedCompiling(Self)
+  else if not FIsCompiling and Assigned(FOnFinishedRun) then
+    FOnFinishedRun(Self);
+end;
+
+procedure TAALCompiler.DoRun(Sender: TObject);
+begin
+  ForceDirectories(ExtractFilePath(AnsiReplaceStr(FCompilerOutput,
+    '($ProjDir)', ExcludeTrailingPathDelimiter(FCurrentProject.ProjectDir))));
+  FOutput.SaveToFile(AnsiReplaceStr(FCompilerOutput, '($ProjDir)',
+    ExcludeTrailingPathDelimiter(FCurrentProject.ProjectDir)));
+  if AnsiContainsStr(FOutput.Text, '[Line') then
+  begin
+    if Assigned(FOnCompileError) then
+      FOnCompileError(Self);
+  end
+  else
+  Run(IncludeTrailingPathDelimiter(FCurrentProject.ProjectDir) +
+    'bin' + PathDelim, FCurrentMode);
+end;
+
+constructor TAALCompiler.Create;
+begin
+  FCProcess := TAsyncProcess.Create(nil);
+  FOutput := TStringList.Create;
+  FCProcess.OnReadData := @ReadData;
+  FSTDOptions:=FCProcess.Options;
+end;
+
+destructor TAALCompiler.Destroy;
+begin
+  FCProcess.Free;
+  FOutput.Free;
+  inherited;
+end;
+
+procedure TAALCompiler.Stop;
+begin
+  if FCProcess.Running then
+    FCProcess.Terminate(-1);
+end;
+
+procedure TAALCompiler.CompileAndRun(P: TAALProject; Mode: TCompilerMode);
+begin
+  Stop;
+  FCurrentMode := Mode;
+  FCurrentProject := P;
+  FOutput.Clear;
+  FIsCompiling := True;
+  FCProcess.OnTerminate := @DoRun;
+  FCProcess.Options := FSTDOptions + [poUsePipes, poStderrToOutPut{, poNoConsole}];
+  if Mode = cmDebug then
+    FCProcess.Executable := FCompilerDebug
+  else
+    FCProcess.Executable := FCompilerRelease;
+  FCProcess.Parameters.Clear;
+  FCProcess.Parameters.Add(P.MainFile);
+  ForceDirectories(IncludeTrailingPathDelimiter(P.ProjectDir) + 'bin' + PathDelim);
+  FCProcess.Parameters.Add(IncludeTrailingPathDelimiter(P.ProjectDir) +
+    'bin' + PathDelim + 'out.aal1.bin');
+  FCProcess.Parameters.Add(IncludeTrailingPathDelimiter(P.ProjectDir));
+  FCProcess.Execute;
 end;
 
 end.

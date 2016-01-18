@@ -19,9 +19,11 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <BuildNr Value="33"/>
+      <RevisionNr Value="1"/>
+      <BuildNr Value="1"/>
       <Language Value="0407"/>
-      <StringTable ProductVersion=""/>
+      <Attributes pvaPreRelease="True"/>
+      <StringTable Comments="AALIDE Alpha 0.0.1" FileDescription="IDE for AAL automation language" LegalCopyright="Copyright (c) Frederic Kehrein 2016" ProductVersion="0.0.1 Alpha"/>
     </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Default" Default="True"/>

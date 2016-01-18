@@ -1,53 +1,53 @@
 object CompilerOptionsForm: TCompilerOptionsForm
   Left = 249
-  Height = 298
+  Height = 313
   Top = 153
   Width = 600
   BorderStyle = bsToolWindow
   Caption = 'Compiler Optionen'
-  ClientHeight = 298
+  ClientHeight = 313
   ClientWidth = 600
   Position = poScreenCenter
   ShowInTaskBar = stAlways
   LCLVersion = '1.7'
   object CompilerConfigBox: TGroupBox
     Left = 8
-    Height = 249
+    Height = 265
     Top = 8
     Width = 289
     Caption = 'Compiler'
-    ClientHeight = 229
+    ClientHeight = 235
     ClientWidth = 285
     TabOrder = 0
     object Label1: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 8
-      Width = 65
+      Width = 99
       Caption = 'Debug Pfad:'
       ParentColor = False
     end
     object Label2: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 64
-      Width = 69
+      Width = 103
       Caption = 'Release Pfad:'
       ParentColor = False
     end
     object Label3: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 120
-      Width = 50
+      Width = 75
       Caption = 'Log Pfad:'
       ParentColor = False
     end
     object COutputBox: TCheckBox
       Left = 8
-      Height = 19
+      Height = 29
       Top = 200
-      Width = 86
+      Width = 132
       Caption = 'IDE Ausgabe'
       Checked = True
       State = cbChecked
@@ -55,15 +55,15 @@ object CompilerOptionsForm: TCompilerOptionsForm
     end
     object CAdvOutputBox: TCheckBox
       Left = 128
-      Height = 19
+      Height = 29
       Top = 200
-      Width = 124
+      Width = 187
       Caption = 'Komplette Ausgabe'
       TabOrder = 1
     end
     object CLogEdit: TEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 144
       Width = 244
       TabOrder = 2
@@ -71,7 +71,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
     end
     object CDebugFileEdit: TFileNameEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 32
       Width = 271
       OnAcceptFileName = CDebugFileEditAcceptFileName
@@ -87,7 +87,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
     end
     object CReleaseFileEdit: TFileNameEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 88
       Width = 271
       OnAcceptFileName = CDebugFileEditAcceptFileName
@@ -104,16 +104,16 @@ object CompilerOptionsForm: TCompilerOptionsForm
   end
   object InterpreterConfigBox: TGroupBox
     Left = 304
-    Height = 249
+    Height = 265
     Top = 8
     Width = 288
     Caption = 'Interpreter'
-    ClientHeight = 229
+    ClientHeight = 235
     ClientWidth = 284
     TabOrder = 1
     object ILogEdit: TEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 144
       Width = 244
       TabOrder = 0
@@ -121,39 +121,39 @@ object CompilerOptionsForm: TCompilerOptionsForm
     end
     object Label4: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 8
-      Width = 65
+      Width = 99
       Caption = 'Debug Pfad:'
       ParentColor = False
     end
     object Label5: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 64
-      Width = 69
+      Width = 103
       Caption = 'Release Pfad:'
       ParentColor = False
     end
     object Label6: TLabel
       Left = 8
-      Height = 15
+      Height = 25
       Top = 120
-      Width = 50
+      Width = 75
       Caption = 'Log Pfad:'
       ParentColor = False
     end
     object IOutputBox: TCheckBox
       Left = 8
-      Height = 19
+      Height = 29
       Top = 200
-      Width = 86
+      Width = 132
       Caption = 'IDE Ausgabe'
       TabOrder = 1
     end
     object IDebugFileEdit: TFileNameEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 32
       Width = 271
       OnAcceptFileName = CDebugFileEditAcceptFileName
@@ -169,7 +169,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
     end
     object IReleaseFileEdit: TFileNameEdit
       Left = 8
-      Height = 23
+      Height = 33
       Top = 88
       Width = 271
       OnAcceptFileName = CDebugFileEditAcceptFileName
@@ -185,9 +185,9 @@ object CompilerOptionsForm: TCompilerOptionsForm
     end
   end
   object Button1: TButton
-    Left = 437
+    Left = 440
     Height = 25
-    Top = 268
+    Top = 283
     Width = 75
     Anchors = [akRight, akBottom]
     Caption = 'Ok'
@@ -197,7 +197,7 @@ object CompilerOptionsForm: TCompilerOptionsForm
   object Button2: TButton
     Left = 517
     Height = 25
-    Top = 268
+    Top = 283
     Width = 75
     Anchors = [akRight, akBottom]
     Caption = 'Abbrechen'

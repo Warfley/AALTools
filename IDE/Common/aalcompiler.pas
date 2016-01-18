@@ -257,6 +257,9 @@ end;
 
 constructor TAALCompiler.Create;
 begin
+  FCompilerOutput:='($ProjDir)\Output\Compile.txt';
+  FInterpreaterOutput:='($ProjDir)\Output\Interpreter.txt';
+  FPrintCompilerOutput:=True;
   FCProcess := TAsyncProcess.Create(nil);
   FOutput := TStringList.Create;
   FCProcess.OnReadData := @ReadData;

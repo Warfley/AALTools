@@ -962,6 +962,8 @@ object MainForm: TMainForm
           Hint = 'Modus'
           Top = -2
           Width = 100
+          Anchors = [akLeft]
+          AutoSize = False
           ItemHeight = 25
           ItemIndex = 0
           Items.Strings = (
@@ -1113,8 +1115,8 @@ object MainForm: TMainForm
   object OpenAALFileDialog: TOpenDialog
     Filter = 'AAL Quellcode|*.aal1;*.afm;*.apr'
     Options = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
-    left = 380
-    top = 28
+    left = 512
+    top = 160
   end
   object AALIDEProps: TApplicationProperties
     ShowMainForm = False

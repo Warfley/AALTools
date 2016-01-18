@@ -669,8 +669,19 @@ begin
   end
   else if FileExists(FCurrentProject.MainFile) then
   begin
-
+    sl:=TStringList.Create;
+    try
+      sl.LoadFromFile(FCurrentProject.MainFile);
+      for i := 0 to sl.Count - 1 do
+      if isEnd(sl[i], '#include') then
+        if ExtractBetween(sl[i], '"', '"') =
+          ChangeFileExt(FCurrentProject.MainForm, '.aal1') then
+          sl[i] := Format('#include("%s")', [FileName]);
+    finally
+      sl.Free;
+    end;
   end;
+  FCurrentProject.MainForm:=FCurrentProject.GetRelPath(FileName);
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);

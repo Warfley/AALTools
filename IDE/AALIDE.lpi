@@ -9,9 +9,6 @@
       <Title Value="AALIDE"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
-      <XPManifest>
-        <DpiAware Value="True"/>
-      </XPManifest>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -20,7 +17,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="1"/>
+      <BuildNr Value="2"/>
       <Language Value="0407"/>
       <Attributes pvaPreRelease="True"/>
       <StringTable Comments="AALIDE Alpha 0.0.1" FileDescription="IDE for AAL automation language" LegalCopyright="Copyright (c) Frederic Kehrein 2016" ProductVersion="0.0.1 Alpha"/>

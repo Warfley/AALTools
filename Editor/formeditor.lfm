@@ -93,7 +93,7 @@ object FormEditFrame: TFormEditFrame
             ''
           )
           TitleCaptions.Strings = (
-            'Eigenschafft'
+            'Eigenschaft'
             'Wert'
           )
           ColWidths = (

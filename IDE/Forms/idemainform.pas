@@ -305,6 +305,7 @@ end;
 
 procedure TMainForm.CompDebMenuItemClick(Sender: TObject);
 begin
+  SaveAllItemClick(SaveAllItem);
   OutputBox.Clear;
   FCompiler.Compile(FCurrentProject, cmDebug);
 end;
@@ -316,6 +317,7 @@ end;
 
 procedure TMainForm.CompRelMenuItemClick(Sender: TObject);
 begin
+  SaveAllItemClick(SaveAllItem);
   OutputBox.Clear;
   FCompiler.Compile(FCurrentProject, TCompilerMode.cmRelease);
 end;
@@ -779,6 +781,7 @@ end;
 
 procedure TMainForm.RenReleaseMenuItemClick(Sender: TObject);
 begin
+  SaveAllItemClick(SaveAllItem);
   OutputBox.Items.Clear;
   OutputBox.Items.Add('Kompiliere: ' + FCurrentProject.Name + ' Modus: ' +
     IfThen(SelectModeBox.ItemIndex = 0, 'Debug', 'Release'));
@@ -789,6 +792,7 @@ end;
 
 procedure TMainForm.RunBtnClick(Sender: TObject);
 begin
+  SaveAllItemClick(SaveAllItem);
   OutputBox.Items.Clear;
   OutputBox.Items.Add('Kompiliere: ' + FCurrentProject.Name + ' Modus: ' +
     IfThen(SelectModeBox.ItemIndex = 0, 'Debug', 'Release'));
@@ -799,6 +803,7 @@ end;
 
 procedure TMainForm.RunDebugMenuItemClick(Sender: TObject);
 begin
+  SaveAllItemClick(SaveAllItem);
   OutputBox.Items.Clear;
   OutputBox.Items.Add('Kompiliere: ' + FCurrentProject.Name + ' Modus: ' +
     IfThen(SelectModeBox.ItemIndex = 0, 'Debug', 'Release'));

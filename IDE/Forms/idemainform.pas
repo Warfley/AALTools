@@ -28,6 +28,7 @@ type
 
   TMainForm = class(TForm)
     AALIDEProps: TApplicationProperties;
+    TextEditorOptionsItem: TMenuItem;
     OutputBox: TListBox;
     SaveAllBtn: TSpeedButton;
     CloseAllBtn: TSpeedButton;

@@ -77,6 +77,8 @@ type
     FKeyWords: TStringList;
     FDefRanges: TObjectList;
     Parser: TUnitParser;
+    procedure ReLoadConf;
+    procedure LoadFuncList;
     procedure CompleteKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     function GetCurrWord: string;
     function GetFont: TFont;
@@ -109,12 +111,25 @@ type
       write FOnParserFinished;
     property RequiredFiles: TStringList read FRequiredFiles;
     property OpenEditor: TOpenEditorEvent read FOpenEditor write FOpenEditor;
+    property Highlighter: TAALSynHighlight read Highlight;
+    property ToolTip: TEditorToolTip read FToolTip;
     { public declarations }
   end;
 
 implementation
 
 {$R *.lfm}
+
+procedure TEditorFrame.ReLoadConf;
+begin
+  Highlight.LoadConfig(IncludeTrailingPathDelimiter(
+    ExtractFilePath(ParamStr(0))) + 'HL');
+  FKeyWords.Clear;
+  FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+    'Keywords.lst');
+  FStdFunc.Clear;
+  LoadFuncList;
+end;
 
 procedure TEditorFrame.MoveHorz(i: IntPtr);
 var
@@ -169,32 +184,31 @@ begin
   SearchEdit.SetFocus;
 end;
 
-constructor TEditorFrame.Create(TheOwner: TComponent);
-
-  procedure LoadFuncList;
-  var
-    sl1, sl2: TStringList;
-    i: integer;
-  begin
-    sl1 := TStringList.Create;
-    sl2 := TStringList.Create;
-    try
-      sl1.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
-        'Funcs.lst');
-      for i := 0 to sl1.Count - 1 do
-        if sl1[i][1] = ';' then
-          sl2.Add(Copy(sl1[i], 2, Length(sl1[i])))
-        else
-        begin
-          FStdFunc.Add(FuncInfo(sl1[i], -1, sl2.Text));
-          sl2.Clear;
-        end;
-    finally
-      sl1.Free;
-      sl2.Free;
-    end;
+procedure TEditorFrame.LoadFuncList;
+var
+  sl1, sl2: TStringList;
+  i: integer;
+begin
+  sl1 := TStringList.Create;
+  sl2 := TStringList.Create;
+  try
+    sl1.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+      'Funcs.lst');
+    for i := 0 to sl1.Count - 1 do
+      if sl1[i][1] = ';' then
+        sl2.Add(Copy(sl1[i], 2, Length(sl1[i])))
+      else
+      begin
+        FStdFunc.Add(FuncInfo(sl1[i], -1, sl2.Text));
+        sl2.Clear;
+      end;
+  finally
+    sl1.Free;
+    sl2.Free;
   end;
+end;
 
+constructor TEditorFrame.Create(TheOwner: TComponent);
 begin
   inherited;
   currInfo := '';
@@ -206,8 +220,6 @@ begin
   moveright := True;
   Parser := TUnitParser.Create(True);
   Highlight := TAALSynHighlight.Create(nil);
-  Highlight.LoadConfig(IncludeTrailingPathDelimiter(
-    ExtractFilePath(ParamStr(0))) + 'HL');
   CodeEditor.Highlighter := Highlight;
   FFunctions := TFuncList.Create;
   FVars := TVarList.Create;
@@ -215,9 +227,7 @@ begin
   FKeyWords := TStringList.Create;
   FDefRanges := TObjectList.Create(False);
   FRequiredFiles := TStringList.Create;
-  LoadFuncList;
-  FKeyWords.LoadFromFile(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
-    'Keywords.lst');
+  ReLoadConf;
   UpdateTimerTimer(nil);
   currWord := '';
 end;

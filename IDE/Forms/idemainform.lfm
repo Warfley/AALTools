@@ -1,12 +1,13 @@
 object MainForm: TMainForm
   Left = 605
-  Height = 563
+  Height = 647
   Top = 141
   Width = 1260
   ActiveControl = EditorManager1.EditorControl
   Caption = 'AAL IDE'
-  ClientHeight = 533
+  ClientHeight = 617
   ClientWidth = 1260
+  Color = clBtnFace
   Menu = MainFormMenu
   OnClose = FormClose
   OnCreate = FormCreate
@@ -15,29 +16,29 @@ object MainForm: TMainForm
   WindowState = wsMaximized
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 417
+    Height = 501
     Top = 36
     Width = 913
     Align = alClient
-    ClientHeight = 417
+    ClientHeight = 501
     ClientWidth = 913
     inherited EditorControl: TPageControl
-      Height = 417
+      Height = 501
       Width = 913
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 417
+    Height = 501
     Top = 36
     Align = alLeft
-    ClientHeight = 417
+    ClientHeight = 501
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 181
+      Height = 265
       DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 238
+      Top = 322
       inherited AddButton: TButton
         OnClick = nil
       end
@@ -982,7 +983,7 @@ object MainForm: TMainForm
   object OutputBox: TListBox
     Left = 0
     Height = 80
-    Top = 453
+    Top = 537
     Width = 1260
     Align = alBottom
     ItemHeight = 0
@@ -1105,6 +1106,9 @@ object MainForm: TMainForm
       object CompOptionMenuItem: TMenuItem
         Caption = 'Compiler Optionen'
         OnClick = CompOptionMenuItemClick
+      end
+      object TextEditorOptionsItem: TMenuItem
+        Caption = 'AAL Editor Optionen'
       end
     end
   end

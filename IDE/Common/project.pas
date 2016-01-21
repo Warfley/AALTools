@@ -328,8 +328,8 @@ begin
     ProjFile.Free;
   end;
   if Assigned(FCheckInclude) and Assigned(FAddInclude) and FGUIBased then
-    if not FCheckInclude(MainFile, MainForm) then
-      FAddInclude(MainFile, FMainForm);
+    if not FCheckInclude(MainFile, ChangeFileExt(MainForm,'.aal1')) then
+      FAddInclude(MainFile, ChangeFileExt(MainForm,'.aal1'));
   FChanged := False;
 end;
 

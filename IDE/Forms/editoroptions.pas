@@ -175,6 +175,7 @@ type
     procedure AddKeywordButtonClick(Sender: TObject);
     procedure BGColorBtnClick(Sender: TObject);
     procedure BGColorPicklistChange(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure CaretAlwaysVisibleBoxChange(Sender: TObject);
     procedure CESideBoxChange(Sender: TObject);
     procedure CommentBChange(Sender: TObject);
@@ -283,6 +284,8 @@ type
     procedure VariableUChange(Sender: TObject);
   private
     FFuncList: TFuncList;
+    procedure Save(P: string);
+    procedure Load(P: string);
     { private declarations }
   public
     { public declarations }
@@ -296,6 +299,50 @@ implementation
 {$R *.lfm}
 
 { TEditorConf }
+
+
+procedure TEditorConf.Save(P: string);
+
+  procedure SaveGeneralData(FName: string);
+  var
+    conf: TEditorConfig;
+    f: file of TEditorConfig;
+  begin
+    with conf do
+    begin
+      CERight := CESideBox.Checked;
+      BGCol := BGColorPicklist.Selected;
+      EditBGCol := EditorColorPicklist.Selected;
+      GutterCol := GutterColorPicklist.Selected;
+      GutterFore := GutterForeColorPicklist.Selected;
+      GutterEdited := EditedColorPicklist.Color;
+      GutterSaved := SavedColorPicklist.Selected;
+      SelCol := SelectedColorPicklist.Selected;
+      SelFCol := SelectedForeColorPicklist.Selected;
+      PastEOL := ScrollPastEOLBox.Checked;
+      CaretAV := CaretAlwaysVisibleBox.Checked;
+      TabWidth := StrToInt(TabLenEdit.Text);
+      TTipColor := TooltipColorPicklist.Selected;
+      TTipFont := TooltipForeColorPicklist.Selected;
+      EditorFont := EditorFrame1.Font.FontData;
+    end;
+    AssignFile(f, FName);
+    try
+      Rewrite(f);
+      Write(f, conf);
+    finally
+      CloseFile(f);
+    end;
+  end;
+
+begin
+  SaveGeneralData(IncludeTrailingPathDelimiter(p) + 'editor.cfg');
+end;
+
+procedure TEditorConf.Load(P: string);
+begin
+
+end;
 
 procedure TEditorConf.CESideBoxChange(Sender: TObject);
 begin
@@ -538,7 +585,7 @@ end;
 
 procedure TEditorConf.FuncNameEditChange(Sender: TObject);
 begin
-  AddFuncButton.Enabled:=Length(FuncNameEdit.Text)>0;
+  AddFuncButton.Enabled := Length(FuncNameEdit.Text) > 0;
 end;
 
 procedure TEditorConf.FunctionBChange(Sender: TObject);
@@ -1269,6 +1316,11 @@ begin
     (Sender as TColorBox).Color := (Sender as TColorBox).Selected
   else
     (Sender as TColorBox).Color := clDefault;
+end;
+
+procedure TEditorConf.Button2Click(Sender: TObject);
+begin
+  Save(ExtractFilePath(ParamStr(0)));
 end;
 
 procedure TEditorConf.CaretAlwaysVisibleBoxChange(Sender: TObject);

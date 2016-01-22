@@ -1,7 +1,7 @@
 object EditorConf: TEditorConf
-  Left = 405
+  Left = 296
   Height = 682
-  Top = 163
+  Top = 10
   Width = 747
   BorderStyle = bsToolWindow
   Caption = 'AAL Editor Optionen'
@@ -36,6 +36,7 @@ object EditorConf: TEditorConf
       Top = 8
       Width = 99
       Caption = 'Ok'
+      OnClick = Button2Click
       TabOrder = 1
     end
   end
@@ -61,6 +62,16 @@ object EditorConf: TEditorConf
         Width = 747
         ClientWidth = 747
         Visible = True
+        inherited Label1: TLabel
+          Height = 15
+          Width = 35
+        end
+        inherited SearchEdit: TEdit
+          Height = 23
+        end
+        inherited ReplaceEdit: TEdit
+          Height = 23
+        end
         inherited CloseSearchButton: TSpeedButton
           Left = 712
         end
@@ -86,8 +97,20 @@ object EditorConf: TEditorConf
         Left = 512
         Height = 250
         ClientHeight = 250
+        inherited CodeExplorerHead: TPanel
+          ClientHeight = 30
+          ClientWidth = 231
+          inherited CloseCodeExplorerButton: TSpeedButton
+            Left = 201
+          end
+        end
         inherited CodeExplorer: TTreeView
           Height = 216
+          DefaultItemHeight = 24
+        end
+        inherited Label2: TLabel
+          Height = 15
+          Width = 34
         end
       end
     end
@@ -96,19 +119,19 @@ object EditorConf: TEditorConf
       Height = 348
       Top = 0
       Width = 747
-      ActivePage = FunctionOptionTab
+      ActivePage = GeneralOptionsTab
       Align = alClient
-      TabIndex = 3
+      TabIndex = 0
       TabOrder = 1
       object GeneralOptionsTab: TTabSheet
         Caption = 'Allgemein'
-        ClientHeight = 310
-        ClientWidth = 740
+        ClientHeight = 320
+        ClientWidth = 739
         object Label1: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 8
-          Width = 115
+          Width = 76
           Caption = 'Code Explorer:'
           ParentColor = False
         end
@@ -137,9 +160,9 @@ object EditorConf: TEditorConf
         end
         object Label2: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 43
-          Width = 100
+          Width = 68
           Caption = 'Hintergrund:'
           ParentColor = False
         end
@@ -175,9 +198,9 @@ object EditorConf: TEditorConf
         end
         object Label3: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 80
-          Width = 152
+          Width = 102
           Caption = 'Editor Hintergrund:'
           ParentColor = False
         end
@@ -204,9 +227,9 @@ object EditorConf: TEditorConf
         end
         object Label4: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 120
-          Width = 150
+          Width = 101
           Caption = 'Seitenleisten Farbe:'
           ParentColor = False
         end
@@ -233,9 +256,9 @@ object EditorConf: TEditorConf
         end
         object Label5: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 160
-          Width = 157
+          Width = 106
           Caption = 'Seitenleisten Schrift:'
           ParentColor = False
         end
@@ -266,9 +289,9 @@ object EditorConf: TEditorConf
         end
         object Label6: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 200
-          Width = 116
+          Width = 78
           Caption = 'Zeile geändert:'
           ParentColor = False
         end
@@ -295,9 +318,9 @@ object EditorConf: TEditorConf
         end
         object Label7: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 240
-          Width = 116
+          Width = 79
           Caption = 'Zeile gesichert:'
           ParentColor = False
         end
@@ -324,9 +347,9 @@ object EditorConf: TEditorConf
         end
         object Label8: TLabel
           Left = 0
-          Height = 25
+          Height = 15
           Top = 280
-          Width = 118
+          Width = 80
           Caption = 'Auswahl Farbe:'
           ParentColor = False
         end
@@ -353,41 +376,41 @@ object EditorConf: TEditorConf
         end
         object Label9: TLabel
           Left = 376
-          Height = 25
+          Height = 15
           Top = 9
-          Width = 153
+          Width = 104
           Caption = 'Auswahl Text Farbe:'
           ParentColor = False
         end
         object ScrollPastEOLBox: TCheckBox
           Left = 376
-          Height = 29
+          Height = 19
           Top = 40
-          Width = 277
+          Width = 187
           Caption = 'Über Zeilenende Hinausscrollen'
           OnChange = ScrollPastEOLBoxChange
           TabOrder = 17
         end
         object CaretAlwaysVisibleBox: TCheckBox
           Left = 376
-          Height = 29
+          Height = 19
           Top = 76
-          Width = 205
+          Width = 138
           Caption = 'Cursor immer sichtbar'
           OnChange = CaretAlwaysVisibleBoxChange
           TabOrder = 18
         end
         object Label10: TLabel
           Left = 376
-          Height = 25
+          Height = 15
           Top = 120
-          Width = 80
+          Width = 55
           Caption = 'Tab Breite:'
           ParentColor = False
         end
         object TabLenEdit: TEdit
           Left = 544
-          Height = 33
+          Height = 23
           Top = 120
           Width = 160
           Alignment = taRightJustify
@@ -419,17 +442,17 @@ object EditorConf: TEditorConf
         end
         object Label25: TLabel
           Left = 376
-          Height = 25
+          Height = 15
           Top = 177
-          Width = 106
+          Width = 72
           Caption = 'Tooltip Farbe:'
           ParentColor = False
         end
         object Label26: TLabel
           Left = 376
-          Height = 25
+          Height = 15
           Top = 209
-          Width = 154
+          Width = 104
           Caption = 'Tooltip Schriftfarbe:'
           ParentColor = False
         end
@@ -454,9 +477,9 @@ object EditorConf: TEditorConf
         end
         object Label27: TLabel
           Left = 376
-          Height = 25
+          Height = 15
           Top = 256
-          Width = 127
+          Width = 85
           Caption = 'Editor Schriftart:'
           ParentColor = False
         end
@@ -1425,10 +1448,10 @@ object EditorConf: TEditorConf
         end
         object KeyTypeBox: TComboBox
           Left = 416
-          Height = 33
+          Height = 23
           Top = 112
           Width = 320
-          ItemHeight = 25
+          ItemHeight = 15
           ItemIndex = 1
           Items.Strings = (
             'Kommentar'
@@ -1468,11 +1491,11 @@ object EditorConf: TEditorConf
       end
       object FunctionOptionTab: TTabSheet
         Caption = 'Standard Funktionen'
-        ClientHeight = 310
+        ClientHeight = 320
         ClientWidth = 739
         object FuncBox: TListBox
           Left = 0
-          Height = 310
+          Height = 320
           Top = 0
           Width = 296
           Align = alLeft
@@ -1482,7 +1505,7 @@ object EditorConf: TEditorConf
         end
         object FuncNameEdit: TEdit
           Left = 304
-          Height = 33
+          Height = 23
           Top = 40
           Width = 432
           OnChange = FuncNameEditChange
@@ -1490,9 +1513,9 @@ object EditorConf: TEditorConf
         end
         object Label29: TLabel
           Left = 304
-          Height = 25
+          Height = 15
           Top = 8
-          Width = 69
+          Width = 47
           Caption = 'Funktion'
           ParentColor = False
         end
@@ -1505,9 +1528,9 @@ object EditorConf: TEditorConf
         end
         object Label30: TLabel
           Left = 304
-          Height = 25
+          Height = 15
           Top = 80
-          Width = 124
+          Width = 83
           Caption = 'Dokumentation'
           ParentColor = False
         end

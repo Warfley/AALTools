@@ -5,7 +5,7 @@ unit AALTypes;
 interface
 
 uses
-  Classes, SysUtils, fgl, ListRecords;
+  Classes, SysUtils, fgl, ListRecords, Graphics;
 
 type
   TTokenType = (tkComment, tkIdentifier, tkFunction, tkSymbol, tkNumber, tkSpace,
@@ -20,6 +20,24 @@ type
 
   TOpenFunctionEvent = function(FileName, FuncName: string; Params: String;
     CreateNew: Boolean): string of object;
+
+  TEditorConfig = packed record
+    CERight: Boolean;
+    BGCol: TColor;
+    EditBGCol: TColor;
+    GutterCol: TColor;
+    GutterFore: TColor;
+    GutterEdited: TColor;
+    GutterSaved: TColor;
+    SelCol: TColor;
+    SelFCol: TColor;
+    PastEOL: Boolean;
+    CaretAV: Boolean;
+    TabWidth: Integer;
+    TTipColor: TColor;
+    TTipFont: TColor;
+    EditorFont: TFontData;
+  end;
 
   THashInfo = record
     Key: ansistring;

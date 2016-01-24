@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
   Dialogs, Graphics, StdCtrls, Buttons, ComCtrls, strutils, CodeFormatter,
-  ToolTip, ListRecords, SynEditTypes, Math;
+  ToolTip, ListRecords, SynEditTypes, Math, SynGutterBase, SynGutterChanges;
 
 type
 
@@ -77,7 +77,6 @@ type
     FKeyWords: TStringList;
     FDefRanges: TObjectList;
     Parser: TUnitParser;
-    procedure ReLoadConf;
     procedure LoadFuncList;
     procedure CompleteKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     function GetCurrWord: string;
@@ -89,8 +88,10 @@ type
     function GetAtCursor(x, y: integer): string;
     function GetAtPoint(p: TPoint): string;
     procedure ParserHasFinished(Sender: TObject);
+    procedure LoadGeneralConf(FileName: string);
     { private declarations }
   public
+    procedure ReLoadConf;
     procedure MoveHorz(i: IntPtr);
     procedure MoveVert(i: IntPtr);
     procedure ShowSearch;
@@ -120,8 +121,89 @@ implementation
 
 {$R *.lfm}
 
+procedure TEditorFrame.LoadGeneralConf(FileName: string);
+var
+  conf: TEditorConfig;
+  f: file of TEditorConfig;
+  i: integer;
+  fd: TFontData;
+begin
+  AssignFile(f, FileName);
+  try
+    Reset(f);
+    Read(f, conf);
+  finally
+    CloseFile(f);
+  end;
+  with conf do
+  begin
+    if CERight then
+      CodeExplorerPanel.Align := alRight
+    else
+      CodeExplorerPanel.Align := alLeft;
+    Self.Color := BGCol;
+    CodeEditor.Color := EditBGCol;
+    CodeExplorer.BackgroundColor := EditBGCol;
+    SearchEdit.Color := EditBGCol;
+    ReplaceEdit.Color := EditBGCol;
+    with CodeEditor.Gutter do
+    begin
+      Color := GutterCol;
+      for i := 0 to Parts.Count - 1 do
+      begin
+        if Parts[i] is TSynGutterPartBase then
+        begin
+          (Parts[i] as TSynGutterPartBase).MarkupInfo.Background :=
+            GutterCol;
+          (Parts[i] as TSynGutterPartBase).MarkupInfo.Foreground :=
+            GutterFore;
+        end;
+        if Parts[i] is TSynGutterChanges then
+        begin
+          (Parts[i] as TSynGutterChanges).ModifiedColor :=
+            GutterEdited;
+          (Parts[i] as TSynGutterChanges).SavedColor :=
+            GutterSaved;
+        end;
+      end;
+      CodeEditor.SelectedColor.Background := SelCol;
+      CodeEditor.SelectedColor.Foreground := SelFCol;
+      if PastEOL then
+        CodeEditor.Options :=
+          CodeEditor.Options + [eoScrollPastEol]
+      else
+        CodeEditor.Options :=
+          CodeEditor.Options - [eoScrollPastEol];
+      if CaretAV then
+        CodeEditor.Options2 :=
+          CodeEditor.Options2 + [eoAlwaysVisibleCaret]
+      else
+        CodeEditor.Options2 :=
+          CodeEditor.Options2 - [eoAlwaysVisibleCaret];
+      CodeEditor.TabWidth := TabWidth;
+      FToolTip.Color := TTipColor;
+      FToolTip.Font.Color := TTipFont;
+      CodeEditor.Font.Name := FontName;
+      fd := CodeEditor.Font.FontData;
+      with fd do
+      begin
+        Height := EditorFont.Height;
+        Pitch := EditorFont.Pitch;
+        Style := EditorFont.Style;
+        CharSet := EditorFont.CharSet;
+        Quality := EditorFont.Quality;
+        Name := EditorFont.Name;
+        Orientation := EditorFont.Orientation;
+      end;
+      CodeEditor.Font.FontData := fd;
+    end;
+  end;
+end;
+
 procedure TEditorFrame.ReLoadConf;
 begin
+  LoadGeneralConf(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+    'editor.cfg');
   Highlight.LoadConfig(IncludeTrailingPathDelimiter(
     ExtractFilePath(ParamStr(0))) + 'HL');
   FKeyWords.Clear;

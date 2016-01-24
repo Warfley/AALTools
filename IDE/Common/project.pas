@@ -239,11 +239,11 @@ begin
       FFiles.EndUpdate;
     end;
     FilesNode := ProjFile.DocumentElement.FindNode('OpendFiles');
+    FFocusedFile := 0;
     for i := 0 to FilesNode.ChildNodes.Count - 1 do
       if FilesNode.ChildNodes.Item[i].NodeName = 'Opend' then
         with TDOMElement(FilesNode.ChildNodes.Item[i]) do
         begin
-          FFocusedFile := 0;
           s1 := GetAttribute('Line');
           s2 := GetAttribute('Pos');
           GetInt(s1, s2, l, p);
@@ -328,8 +328,8 @@ begin
     ProjFile.Free;
   end;
   if Assigned(FCheckInclude) and Assigned(FAddInclude) and FGUIBased then
-    if not FCheckInclude(MainFile, ChangeFileExt(MainForm,'.aal1')) then
-      FAddInclude(MainFile, ChangeFileExt(MainForm,'.aal1'));
+    if not FCheckInclude(MainFile, ChangeFileExt(MainForm, '.aal1')) then
+      FAddInclude(MainFile, ChangeFileExt(MainForm, '.aal1'));
   FChanged := False;
 end;
 

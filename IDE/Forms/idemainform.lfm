@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 605
+  Left = 378
   Height = 647
-  Top = 141
+  Top = 150
   Width = 1260
   ActiveControl = EditorManager1.EditorControl
   Caption = 'AAL IDE'
@@ -12,33 +12,36 @@ object MainForm: TMainForm
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnResize = FormResize
+  OnShow = FormShow
+  OnWindowStateChange = FormWindowStateChange
   LCLVersion = '1.7'
   WindowState = wsMaximized
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 501
+    Height = 485
     Top = 36
     Width = 913
     Align = alClient
-    ClientHeight = 501
+    ClientHeight = 485
     ClientWidth = 913
     inherited EditorControl: TPageControl
-      Height = 501
+      Height = 485
       Width = 913
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 501
+    Height = 485
     Top = 36
     Align = alLeft
-    ClientHeight = 501
+    ClientHeight = 485
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 265
+      Height = 249
       DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 322
+      Top = 306
       inherited AddButton: TButton
         OnClick = nil
       end
@@ -982,8 +985,8 @@ object MainForm: TMainForm
   end
   object OutputBox: TListBox
     Left = 0
-    Height = 80
-    Top = 537
+    Height = 96
+    Top = 521
     Width = 1260
     Align = alBottom
     ItemHeight = 0
@@ -1101,14 +1104,27 @@ object MainForm: TMainForm
         OnClick = RenReleaseMenuItemClick
       end
     end
+    object ExtrasMenuItem: TMenuItem
+      Caption = 'Extras'
+      object SampeButton: TMenuItem
+        Caption = 'Beispiele'
+      end
+    end
     object ConfigMenuItem: TMenuItem
       Caption = 'Einstellungen'
+      object IDEOptionItem: TMenuItem
+        Caption = 'IDE Optionen'
+      end
       object CompOptionMenuItem: TMenuItem
         Caption = 'Compiler Optionen'
         OnClick = CompOptionMenuItemClick
       end
       object TextEditorOptionsItem: TMenuItem
         Caption = 'AAL Editor Optionen'
+        OnClick = TextEditorOptionsItemClick
+      end
+      object FormOptionsItem: TMenuItem
+        Caption = 'Formular Editor Optionen'
       end
     end
   end

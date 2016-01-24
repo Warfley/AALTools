@@ -535,6 +535,29 @@ begin
 end;
 
 procedure TFormEditFrame.PropEditorEditingDone(Sender: TObject);
+function isNumeric(s: String): Boolean;
+var c: Char;
+begin
+  Result:=Length(s)>0;
+  for c in s do
+    if not (c in ['0'..'9']) then
+    begin
+      Result:=False;
+      Break;
+    end;
+end;
+
+function isValidName(s: String): Boolean;
+var c: Char;
+begin
+  Result:=Length(s)>0;
+  for c in s do
+    if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
+    begin
+      Result:=False;
+      Break;
+    end;
+end;
 var
   o: TObject;
   s, v: string;
@@ -546,19 +569,19 @@ begin
   v := PropEditor.Rows[PropEditor.Row][1];
   if o = FormPanel then
   begin
-    if s = 'name' then
+    if (s = 'name') and isValidName(v) then
       FFormName := v
     else if s = 'text' then
       FormCaptionLabel.Caption := v
-    else if s = 'x' then
+    else if (s = 'x') and isNumeric(v) then
       FFormLeft := StrToInt(v)
-    else if s = 'y' then
+    else if (s = 'y') and isNumeric(v) then
       FFormTop := StrToInt(v)
-    else if s = 'width' then
+    else if (s = 'width') and isNumeric(v) then
       FormPanel.Width := StrToInt(v)
-    else if s = 'height' then
+    else if (s = 'height') and isNumeric(v) then
       FormPanel.Height := StrToInt(v)
-    else if s = 'style' then
+    else if (s = 'style') and isNumeric(v) then
       FFormStyle := StrToInt(v);
     PositionPicker.Invalidate;
   end

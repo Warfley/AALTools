@@ -284,6 +284,29 @@ type
 implementation
 
 { Edit }
+function isNumeric(s: String): Boolean;
+var c: Char;
+begin
+  Result:=Length(s)>0;
+  for c in s do
+    if not (c in ['0'..'9']) then
+    begin
+      Result:=False;
+      Break;
+    end;
+end;
+
+function isValidName(s: String): Boolean;
+var c: Char;
+begin
+  Result:=Length(s)>0;
+  for c in s do
+    if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
+    begin
+      Result:=False;
+      Break;
+    end;
+end;
 
 function TAALEdit.GetProp(p: string): string;
 begin
@@ -309,21 +332,21 @@ end;
 procedure TAALEdit.SetProp(p, val: string);
 begin
   p := LowerCase(p);
-  if p = 'name' then
+  if (p = 'name') and isValidName(val) then
     Name := val
   else if p = 'text' then
     Text := val
-  else if p = 'x' then
+  else if (p = 'x') and isNumeric(val) then
     Left := StrToInt(val)
-  else if p = 'y' then
+  else if (p = 'y') and isNumeric(val) then
     Top := StrToInt(val)
-  else if p = 'width' then
+  else if (p = 'width') and isNumeric(val) then
     Width := StrToInt(val)
-  else if p = 'height' then
+  else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
-  else if p = 'style' then
+  else if (p = 'style') and isNumeric(val) then
     FStyle := StrToInt(val)
-  else if p = 'styleex' then
+  else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
 
@@ -432,21 +455,21 @@ end;
 procedure TAALButton.SetProp(p, val: string);
 begin
   p := LowerCase(p);
-  if p = 'name' then
+  if (p = 'name') and isValidName(val) then
     Name := val
   else if p = 'text' then
     Caption := val
-  else if p = 'x' then
+  else if (p = 'x') and isNumeric(val) then
     Left := StrToInt(val)
-  else if p = 'y' then
+  else if (p = 'y') and isNumeric(val) then
     Top := StrToInt(val)
-  else if p = 'width' then
+  else if (p = 'width') and isNumeric(val) then
     Width := StrToInt(val)
-  else if p = 'height' then
+  else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
-  else if p = 'style' then
+  else if (p = 'style') and isNumeric(val) then
     FStyle := StrToInt(val)
-  else if p = 'styleex' then
+  else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
 
@@ -567,21 +590,21 @@ end;
 procedure TAALCheckbox.SetProp(p, val: string);
 begin
   p := LowerCase(p);
-  if p = 'name' then
+  if (p = 'name') and isValidName(val) then
     Name := val
   else if p = 'text' then
     Caption := val
-  else if p = 'x' then
+  else if (p = 'x') and isNumeric(val) then
     Left := StrToInt(val)
-  else if p = 'y' then
+  else if (p = 'y') and isNumeric(val) then
     Top := StrToInt(val)
-  else if p = 'width' then
+  else if (p = 'width') and isNumeric(val) then
     Width := StrToInt(val)
-  else if p = 'height' then
+  else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
-  else if p = 'style' then
+  else if (p = 'style') and isNumeric(val) then
     FStyle := StrToInt(val)
-  else if p = 'styleex' then
+  else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
 
@@ -696,21 +719,21 @@ end;
 procedure TAALLabel.SetProp(p, val: string);
 begin
   p := LowerCase(p);
-  if p = 'name' then
+  if (p = 'name') and isValidName(val) then
     Name := val
   else if p = 'text' then
     Caption := val
-  else if p = 'x' then
+  else if (p = 'x') and isNumeric(val) then
     Left := StrToInt(val)
-  else if p = 'y' then
+  else if (p = 'y') and isNumeric(val) then
     Top := StrToInt(val)
-  else if p = 'width' then
+  else if (p = 'width') and isNumeric(val) then
     Width := StrToInt(val)
-  else if p = 'height' then
+  else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
-  else if p = 'style' then
+  else if (p = 'style') and isNumeric(val) then
     FStyle := StrToInt(val)
-  else if p = 'styleex' then
+  else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
 

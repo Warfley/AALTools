@@ -178,8 +178,10 @@ begin
   Stop;
   FCProcess.OnTerminate := @ProcTerm;
   FCProcess.Options := FSTDOptions + [poUsePipes, poStderrToOutPut];
-  (*if FCurrentProject.GUIBased then
-    FCProcess.Options:=FCProcess.Options+[poNoConsole];   *)
+  (*if FCurrentProject.GUIBased and (not FPrintInterpreaterOutput) then
+    FCProcess.Options:=FCProcess.Options+[poNoConsole]
+  else
+    FCProcess.Options:=FCProcess.Options-[poNoConsole]; *)
   FCurrentMode := Mode;
   FIsCompiling := False;
   if mode = cmDebug then

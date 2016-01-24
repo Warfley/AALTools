@@ -175,7 +175,6 @@ type
     procedure AddKeywordButtonClick(Sender: TObject);
     procedure BGColorBtnClick(Sender: TObject);
     procedure BGColorPicklistChange(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
     procedure CaretAlwaysVisibleBoxChange(Sender: TObject);
     procedure CESideBoxChange(Sender: TObject);
     procedure CommentBChange(Sender: TObject);
@@ -284,10 +283,10 @@ type
     procedure VariableUChange(Sender: TObject);
   private
     FFuncList: TFuncList;
-    procedure Save(P: string);
-    procedure Load(P: string);
     { private declarations }
   public
+    procedure Save(P: string);
+    procedure Load(P: string);
     { public declarations }
   end;
 
@@ -324,7 +323,8 @@ procedure TEditorConf.Save(P: string);
       TabWidth := StrToInt(TabLenEdit.Text);
       TTipColor := TooltipColorPicklist.Selected;
       TTipFont := TooltipForeColorPicklist.Selected;
-      EditorFont := EditorFrame1.Font.FontData;
+      EditorFont := EditorFrame1.CodeEditor.Font.FontData;
+      FontName := EditorFrame1.Font.Name;
     end;
     AssignFile(f, FName);
     try
@@ -335,13 +335,487 @@ procedure TEditorConf.Save(P: string);
     end;
   end;
 
+  procedure SaveHLFonts(FileName: string);
+  type
+    TFontInfo = packed record
+      FontCol: TColor;
+      Big, Italics, Underline, Frame: boolean;
+      FrameColor: TColor;
+      Background: boolean;
+      BackColor: TColor;
+    end;
+
+  var
+    tmp: TFontInfo;
+    fs: TFileStream;
+  begin
+    if FileExists(FileName) then
+      DeleteFile(FileName);
+    fs := TFileStream.Create(FileName, fmCreate);
+    try
+      // Comment
+      tmp.FontCol := CommentTC.ButtonColor;
+      tmp.Big := CommentB.Checked;
+      tmp.Italics := CommentI.Checked;
+      tmp.Underline := CommentU.Checked;
+      tmp.Frame := CommentFB.Checked;
+      tmp.FrameColor := CommentFC.ButtonColor;
+      tmp.Background := CommentBG.Checked;
+      tmp.BackColor := CommentBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Identifier
+      tmp.FontCol := IdentifierTC.ButtonColor;
+      tmp.Big := IdentifierB.Checked;
+      tmp.Italics := IdentifierI.Checked;
+      tmp.Underline := IdentifierU.Checked;
+      tmp.Frame := IdentifierFB.Checked;
+      tmp.FrameColor := IdentifierFC.ButtonColor;
+      tmp.Background := IdentifierBG.Checked;
+      tmp.BackColor := IdentifierBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Function
+      tmp.FontCol := FunctionTC.ButtonColor;
+      tmp.Big := FunctionB.Checked;
+      tmp.Italics := FunctionI.Checked;
+      tmp.Underline := FunctionU.Checked;
+      tmp.Frame := FunctionFB.Checked;
+      tmp.FrameColor := FunctionFC.ButtonColor;
+      tmp.Background := FunctionBG.Checked;
+      tmp.BackColor := FunctionBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Symbol
+      tmp.FontCol := SymbolTC.ButtonColor;
+      tmp.Big := SymbolB.Checked;
+      tmp.Italics := SymbolI.Checked;
+      tmp.Underline := SymbolU.Checked;
+      tmp.Frame := SymbolFB.Checked;
+      tmp.FrameColor := SymbolFC.ButtonColor;
+      tmp.Background := SymbolBG.Checked;
+      tmp.BackColor := SymbolBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Number
+      tmp.FontCol := NumberTC.ButtonColor;
+      tmp.Big := NumberB.Checked;
+      tmp.Italics := NumberI.Checked;
+      tmp.Underline := NumberU.Checked;
+      tmp.Frame := NumberFB.Checked;
+      tmp.FrameColor := NumberFC.ButtonColor;
+      tmp.Background := NumberBG.Checked;
+      tmp.BackColor := NumberBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Space
+      tmp.FontCol := SpaceTC.ButtonColor;
+      tmp.Big := SpaceB.Checked;
+      tmp.Italics := SpaceI.Checked;
+      tmp.Underline := SpaceU.Checked;
+      tmp.Frame := SpaceFB.Checked;
+      tmp.FrameColor := SpaceFC.ButtonColor;
+      tmp.Background := SpaceBG.Checked;
+      tmp.BackColor := SpaceBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // String
+      tmp.FontCol := StringTC.ButtonColor;
+      tmp.Big := StringB.Checked;
+      tmp.Italics := StringI.Checked;
+      tmp.Underline := StringU.Checked;
+      tmp.Frame := StringFB.Checked;
+      tmp.FrameColor := StringFC.ButtonColor;
+      tmp.Background := StringBG.Checked;
+      tmp.BackColor := StringBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Variable
+      tmp.FontCol := VariableTC.ButtonColor;
+      tmp.Big := VariableB.Checked;
+      tmp.Italics := VariableI.Checked;
+      tmp.Underline := VariableU.Checked;
+      tmp.Frame := VariableFB.Checked;
+      tmp.FrameColor := VariableFC.ButtonColor;
+      tmp.Background := VariableBG.Checked;
+      tmp.BackColor := VariableBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Doc
+      tmp.FontCol := DocTC.ButtonColor;
+      tmp.Big := DocB.Checked;
+      tmp.Italics := DocI.Checked;
+      tmp.Underline := DocU.Checked;
+      tmp.Frame := DocFB.Checked;
+      tmp.FrameColor := DocFC.ButtonColor;
+      tmp.Background := DocBG.Checked;
+      tmp.BackColor := DocBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+      // Other
+      tmp.FontCol := OtherTC.ButtonColor;
+      tmp.Big := OtherB.Checked;
+      tmp.Italics := OtherI.Checked;
+      tmp.Underline := OtherU.Checked;
+      tmp.Frame := OtherFB.Checked;
+      tmp.FrameColor := OtherFC.ButtonColor;
+      tmp.Background := OtherBG.Checked;
+      tmp.BackColor := OtherBC.ButtonColor;
+      fs.Write(tmp, SizeOf(tmp));
+    finally
+      fs.Free;
+    end;
+  end;
+  procedure SaveSTDFunc(FileName: String);
+  var sl, inf: TStringList;
+    i, n: Integer;
+  begin
+    sl:=TStringList.Create;
+    inf:=TStringList.Create;
+    try
+      for i:=0 to FFuncList.Count-1 do
+      begin
+        inf.Text:=FFuncList[i].Info;
+        for n:=0 to inf.Count-1 do
+          inf[n]:=';'+inf[n];
+        sl.AddStrings(inf);
+        sl.Add(FFuncList[i].Name);
+      end;
+      sl.SaveToFile(FileName);
+    finally
+      inf.Free;
+      sl.Free;
+    end;
+  end;
+
+  function GetHash(toHash: PChar; out Len: integer): byte;
+  begin
+    Result := 0;
+    Len := 0;
+    while ToHash^ in ['_', '0'..'9', 'a'..'z', 'A'..'Z'] do
+    begin
+      if (toHash^ in ['A'..'Z']) then
+        Result := (Result + Ord(toHash^) - Ord('A') + Ord('a')) mod 256
+      else
+        Result := (Result + Ord(toHash^)) mod 256;
+      Inc(ToHash);
+      Inc(Len);
+    end;
+  end;
+
+  procedure SaveHLKeywords(FileName: String);
+  var i, n, a: Integer;
+    h: Byte;
+    tmp: PHashInfo;
+    HL: array[0..255] of TList;
+    fs: TFileStream;
+  begin
+    for i:=0 to 255 do
+      HL[i]:=TList.Create;
+    try
+      for i:=0 to KeyWordView.Items.Count-1 do
+      begin
+        h:=GetHash(PChar(LowerCase(KeyWordView.Items[i].Caption)), n);
+        new(tmp);
+        tmp^.Key:=LowerCase(KeyWordView.Items[i].Caption);
+        tmp^.Kind:=TTokenType(IntPtr(KeyWordView.Items[i].Data));
+        HL[h].Add(tmp);
+      end;
+      fs := TFileStream.Create(FileName, fmCreate);
+  try
+    for i := 0 to 255 do
+    begin
+      fs.Write(HL[i].Count, SizeOf(integer));
+      for n := 0 to HL[i].Count - 1 do
+      begin
+        tmp := PHashInfo(HL[i][n]);
+        fs.Write(tmp^.Kind, SizeOf(tmp^.Kind));
+        a := Length(tmp^.Key);
+        fs.Write(a, SizeOf(a));
+        fs.Write(tmp^.Key[1], a);
+      end;
+    end;
+  finally
+    fs.Free;
+  end;
+
+    finally
+      for i:=0 to 255 do
+      begin
+        for n:=0 to HL[i].Count-1 do
+          Dispose(PHashInfo(HL[i][n]));
+        HL[i].Free;
+      end;
+    end;
+
+  end;
+
+  procedure SaveKeywords(Filename: String);
+  var sl: TStringList;
+    i: Integer;
+  begin
+    sl:=TStringList.Create;
+    try
+      for i:=0 to KeyWordView.Items.Count-1 do
+        sl.Add(KeyWordView.Items[i].Caption);
+      sl.SaveToFile(Filename);
+    finally
+      sl.Free;
+    end;
+  end;
+
 begin
   SaveGeneralData(IncludeTrailingPathDelimiter(p) + 'editor.cfg');
+  SaveHLFonts(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'colors.cnf');
+  SaveSTDFunc(IncludeTrailingPathDelimiter(p) + 'Funcs.lst');
+  SaveHLKeywords(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'Keywords.lst');
+  SaveKeywords(IncludeTrailingPathDelimiter(p)+'Keywords.lst');
 end;
 
 procedure TEditorConf.Load(P: string);
-begin
 
+  procedure LoadGeneralData(FName: string);
+  var
+    conf: TEditorConfig;
+    f: file of TEditorConfig;
+  begin
+    AssignFile(f, FName);
+    try
+      Reset(f);
+      Read(f, conf);
+    finally
+      CloseFile(f);
+    end;
+    with conf do
+    begin
+      CESideBox.Checked:=CERight;
+      BGColorPicklist.Selected:=BGCol;
+      EditorColorPicklist.Selected:=EditBGCol;
+      GutterColorPicklist.Selected:=GutterCol;
+      GutterForeColorPicklist.Selected:=GutterFore;
+      EditedColorPicklist.Color:=GutterEdited;
+      SavedColorPicklist.Selected:=GutterSaved;
+      SelectedColorPicklist.Selected:=SelCol;
+      SelectedForeColorPicklist.Selected:=SelFCol;
+      ScrollPastEOLBox.Checked:=PastEOL;
+      CaretAlwaysVisibleBox.Checked:=CaretAV;
+      TabLenEdit.Text:=IntToStr(TabWidth);
+      TooltipColorPicklist.Selected:=TTipColor;
+      TooltipForeColorPicklist.Selected:=TTipFont;
+      EditorFontButton.Caption:=FontName;
+    end;
+  end;
+
+  procedure LoadHLFonts(FName: String);
+type
+  TFontInfo = packed record
+    FontCol: TColor;
+    Big, Italics, Underline, Frame: boolean;
+    FrameColor: TColor;
+    Background: boolean;
+    BackColor: TColor;
+  end;
+
+var
+  tmp: TFontInfo;
+  fs: TFileStream;
+begin
+    fs := TFileStream.Create(FName, fmOpenRead);
+    try
+      // Comment
+      fs.Read(tmp, SizeOf(tmp));
+      CommentTC.ButtonColor := tmp.FontCol;
+      CommentB.Checked := tmp.Big;
+      CommentI.Checked := tmp.Italics;
+      CommentU.Checked := tmp.Underline;
+      CommentFB.Checked := tmp.Frame;
+      CommentFC.ButtonColor := tmp.FrameColor;
+      CommentBG.Checked := tmp.Background;
+      CommentBC.ButtonColor := tmp.BackColor;
+      // Identifier
+      fs.Read(tmp, SizeOf(tmp));
+      IdentifierTC.ButtonColor := tmp.FontCol;
+      IdentifierB.Checked := tmp.Big;
+      IdentifierI.Checked := tmp.Italics;
+      IdentifierU.Checked := tmp.Underline;
+      IdentifierFB.Checked := tmp.Frame;
+      IdentifierFC.ButtonColor := tmp.FrameColor;
+      IdentifierBG.Checked := tmp.Background;
+      IdentifierBC.ButtonColor := tmp.BackColor;
+      // Function
+      fs.Read(tmp, SizeOf(tmp));
+      FunctionTC.ButtonColor := tmp.FontCol;
+      FunctionB.Checked := tmp.Big;
+      FunctionI.Checked := tmp.Italics;
+      FunctionU.Checked := tmp.Underline;
+      FunctionFB.Checked := tmp.Frame;
+      FunctionFC.ButtonColor := tmp.FrameColor;
+      FunctionBG.Checked := tmp.Background;
+      FunctionBC.ButtonColor := tmp.BackColor;
+      // Symbol
+      fs.Read(tmp, SizeOf(tmp));
+      SymbolTC.ButtonColor := tmp.FontCol;
+      SymbolB.Checked := tmp.Big;
+      SymbolI.Checked := tmp.Italics;
+      SymbolU.Checked := tmp.Underline;
+      SymbolFB.Checked := tmp.Frame;
+      SymbolFC.ButtonColor := tmp.FrameColor;
+      SymbolBG.Checked := tmp.Background;
+      SymbolBC.ButtonColor := tmp.BackColor;
+      // Number
+      fs.Read(tmp, SizeOf(tmp));
+      NumberTC.ButtonColor := tmp.FontCol;
+      NumberB.Checked := tmp.Big;
+      NumberI.Checked := tmp.Italics;
+      NumberU.Checked := tmp.Underline;
+      NumberFB.Checked := tmp.Frame;
+      NumberFC.ButtonColor := tmp.FrameColor;
+      NumberBG.Checked := tmp.Background;
+      NumberBC.ButtonColor := tmp.BackColor;
+      // Space
+      fs.Read(tmp, SizeOf(tmp));
+      SpaceTC.ButtonColor := tmp.FontCol;
+      SpaceB.Checked := tmp.Big;
+      SpaceI.Checked := tmp.Italics;
+      SpaceU.Checked := tmp.Underline;
+      SpaceFB.Checked := tmp.Frame;
+      SpaceFC.ButtonColor := tmp.FrameColor;
+      SpaceBG.Checked := tmp.Background;
+      SpaceBC.ButtonColor := tmp.BackColor;
+      // String
+      fs.Read(tmp, SizeOf(tmp));
+      StringTC.ButtonColor := tmp.FontCol;
+      StringB.Checked := tmp.Big;
+      StringI.Checked := tmp.Italics;
+      StringU.Checked := tmp.Underline;
+      StringFB.Checked := tmp.Frame;
+      StringFC.ButtonColor := tmp.FrameColor;
+      StringBG.Checked := tmp.Background;
+      StringBC.ButtonColor := tmp.BackColor;
+      // Variable
+      fs.Read(tmp, SizeOf(tmp));
+      VariableTC.ButtonColor := tmp.FontCol;
+      VariableB.Checked := tmp.Big;
+      VariableI.Checked := tmp.Italics;
+      VariableU.Checked := tmp.Underline;
+      VariableFB.Checked := tmp.Frame;
+      VariableFC.ButtonColor := tmp.FrameColor;
+      VariableBG.Checked := tmp.Background;
+      VariableBC.ButtonColor := tmp.BackColor;
+      // Doc
+      fs.Read(tmp, SizeOf(tmp));
+      DocTC.ButtonColor := tmp.FontCol;
+      DocB.Checked := tmp.Big;
+      DocI.Checked := tmp.Italics;
+      DocU.Checked := tmp.Underline;
+      DocFB.Checked := tmp.Frame;
+      DocFC.ButtonColor := tmp.FrameColor;
+      DocBG.Checked := tmp.Background;
+      DocBC.ButtonColor := tmp.BackColor;
+      // Other
+      fs.Read(tmp, SizeOf(tmp));
+      OtherTC.ButtonColor := tmp.FontCol;
+      OtherB.Checked := tmp.Big;
+      OtherI.Checked := tmp.Italics;
+      OtherU.Checked := tmp.Underline;
+      OtherFB.Checked := tmp.Frame;
+      OtherFC.ButtonColor := tmp.FrameColor;
+      OtherBG.Checked := tmp.Background;
+      OtherBC.ButtonColor := tmp.BackColor;
+    finally
+      fs.Free;
+    end;
+  end;
+
+  procedure LoadSTDFunc(FName: String);
+  var sl, inf: TStringList;
+    i: Integer;
+  begin
+    FFuncList.Clear;
+    FuncBox.Clear;
+    sl:=TStringList.Create;
+    inf:=TStringList.Create;
+    try
+      sl.LoadFromFile(FName);
+      for i:=0 to sl.Count-1 do
+      if length(sl[i])>0 then
+        if sl[i][1] = ';' then
+          inf.Add(Copy(sl[i], 2, Length(sl[i])-1))
+        else
+        begin
+          FFuncList.Add(FuncInfo(sl[i],0, inf.Text));
+          FuncBox.Items.Add(sl[i]);
+          inf.Clear;
+        end;
+    finally
+      sl.Free;
+      inf.Free;
+    end;
+  end;
+
+  procedure LoadHLKeywords(FName: String);
+  function FindItem(n: String): TListItem;
+      var i: Integer;
+  begin
+    Result:=Nil;
+    for i:=0 to KeyWordView.Items.Count-1 do
+      if LowerCase(KeyWordView.Items[i].Caption)=LowerCase(n) then
+      begin
+        Result:=KeyWordView.Items[i];
+        break;
+      end;
+  end;
+
+  var fs: TFileStream;
+    i, x, a, ln: Integer;
+    n: String;
+    itm: TListItem;
+    k: TTokenType;
+  begin
+    fs:=TFileStream.Create(FName, fmOpenRead);
+    try
+      for x:=0 to 255 do
+      begin
+        fs.Read(a, SizeOf(Integer));
+        for i:=0 to a-1 do
+        begin
+          fs.Read(k, SizeOf(k));
+          fs.Read(ln, SizeOf(Integer));
+          SetLength(n, ln);
+          fs.Read(n[1], ln);
+          itm:=FindItem(n);
+          if not Assigned(itm) then
+          begin
+            itm:=KeyWordView.Items.Add;
+            itm.Caption:=n;
+          end;
+          if itm.SubItems.Count=0 then
+          begin
+            itm.SubItems.Add(KeyTypeBox.Items[Ord(k)]);
+            itm.Data:=Pointer(ord(k));
+          end;
+        end;
+      end;
+    finally
+      fs.Free;
+    end;
+  end;
+
+  procedure LoadKeywords(FName:String);
+  var sl: TStringList;
+    i: Integer;
+  begin
+    KeyWordView.Clear;
+    sl:=TStringList.Create;
+    try
+      sl.LoadFromFile(FName);
+      for i:=0 to sl.Count-1 do
+      begin
+        KeyWordView.Items.Add.Caption:=sl[i];
+      end;
+    finally
+      sl.Free;
+    end;
+  end;
+
+begin
+  LoadGeneralData(IncludeTrailingPathDelimiter(p) + 'editor.cfg');
+  LoadHLFonts(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'colors.cnf');
+  LoadSTDFunc(IncludeTrailingPathDelimiter(p) + 'Funcs.lst');
+  LoadKeywords(IncludeTrailingPathDelimiter(p)+'Keywords.lst');
+  LoadHLKeywords(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'Keywords.lst');
+  EditorFrame1.ReLoadConf;
 end;
 
 procedure TEditorConf.CESideBoxChange(Sender: TObject);
@@ -1173,7 +1647,8 @@ end;
 
 procedure TEditorConf.TabLenEditChange(Sender: TObject);
 begin
-  EditorFrame1.CodeEditor.TabWidth := StrToInt(TabLenEdit.Text);
+  if TabLenEdit.Text <> '' then
+    EditorFrame1.CodeEditor.TabWidth := StrToInt(TabLenEdit.Text);
 end;
 
 procedure TEditorConf.TooltipColorButtonClick(Sender: TObject);
@@ -1316,11 +1791,6 @@ begin
     (Sender as TColorBox).Color := (Sender as TColorBox).Selected
   else
     (Sender as TColorBox).Color := clDefault;
-end;
-
-procedure TEditorConf.Button2Click(Sender: TObject);
-begin
-  Save(ExtractFilePath(ParamStr(0)));
 end;
 
 procedure TEditorConf.CaretAlwaysVisibleBoxChange(Sender: TObject);

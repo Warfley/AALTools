@@ -161,6 +161,8 @@ end;
 procedure TEditorManager.SetIndex(i: integer);
 begin
   EditorControl.PageIndex := i;
+  if CurrentEditor is TEditorFrame then
+    (CurrentEditor as TEditorFrame).SetFocus;
 end;
 
 procedure TEditorManager.EditorChanged(Sender: TObject);

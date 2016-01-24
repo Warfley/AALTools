@@ -17,7 +17,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="3"/>
+      <BuildNr Value="4"/>
       <Language Value="0407"/>
       <Attributes pvaPreRelease="True"/>
       <StringTable Comments="AALIDE Alpha 0.0.1" FileDescription="IDE for AAL automation language" LegalCopyright="Copyright (c) Frederic Kehrein 2016" ProductVersion="0.0.1 Alpha"/>
@@ -108,7 +108,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="18">
+    <Units Count="19">
       <Unit0>
         <Filename Value="AALIDE.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -217,6 +217,13 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="CompilerOptions"/>
       </Unit17>
+      <Unit18>
+        <Filename Value="Forms\editoroptions.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="EditorConf"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="EditorOptions"/>
+      </Unit18>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

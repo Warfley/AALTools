@@ -37,6 +37,7 @@ type
     TTipColor: TColor;
     TTipFont: TColor;
     EditorFont: TFontData;
+    FontName: ShortString;
   end;
 
   THashInfo = record

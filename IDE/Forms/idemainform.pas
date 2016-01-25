@@ -99,7 +99,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormShow(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
     procedure NewFileItemClick(Sender: TObject);
     procedure NewFormItemClick(Sender: TObject);
@@ -349,6 +348,8 @@ begin
   end;
   FLastOpend.SaveToFile(ExtractFilePath(ParamStr(0)) + 'LastOpend.txt');
 
+  FCurrentState.Left:=Left;
+  FCurrentState.Top:=Top;
   AssignFile(f, IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'wnd.cnf');
   try
     Rewrite(f);
@@ -781,6 +782,11 @@ begin
       Top := 200;
       Left := 200;
     end;
+  Width := FCurrentState.Width;
+  Height := FCurrentState.Height;
+  Left := FCurrentState.Left;
+  Top := FCurrentState.Top;
+  WindowState := FCurrentState.State;
   FSaveOnClosing:=False;
   FFirstLoad := True;
   FCompiler := TAALCompiler.Create;
@@ -817,22 +823,13 @@ end;
 
 procedure TMainForm.FormResize(Sender: TObject);
 begin
-  if WindowState = wsNormal then
+  if (WindowState = wsNormal) and (Width<>Screen.Width) then
   begin
     FCurrentState.Width := Width;
     FCurrentState.Height := Height;
     FCurrentState.Left := Left;
     FCurrentState.Top := Top;
   end;
-end;
-
-procedure TMainForm.FormShow(Sender: TObject);
-begin
-  Width := FCurrentState.Width;
-  Height := FCurrentState.Height;
-  Left := FCurrentState.Left;
-  Top := FCurrentState.Top;
-  WindowState := FCurrentState.State;
 end;
 
 procedure TMainForm.FormWindowStateChange(Sender: TObject);

@@ -108,7 +108,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="19">
+    <Units Count="20">
       <Unit0>
         <Filename Value="AALIDE.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -224,6 +224,13 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="EditorOptions"/>
       </Unit18>
+      <Unit19>
+        <Filename Value="Forms\formeditoroptions.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormEditorOptionsForm"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="FormEditorOptions"/>
+      </Unit19>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

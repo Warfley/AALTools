@@ -1,0 +1,8 @@
+object FormEditorOptionsForm: TFormEditorOptionsForm
+  Left = 404
+  Height = 240
+  Top = 203
+  Width = 320
+  Caption = 'Formular Editor Optionen'
+  LCLVersion = '1.7'
+end

@@ -1,0 +1,115 @@
+#include("MainForm.afm")
+
+$CurrentVal = 0
+$CurrentOperator = "_"
+$Override = 1
+
+;*Summary: Calculates the new Stored Value
+Func Calculate()
+  $EditVal = ReadText($IOEdit)
+  if $CurrentOperator == "+"
+    $CurrentVal = $CurrentVal + $EditVal
+  Else
+    if $CurrentOperator == "-"
+      $CurrentVal = $CurrentVal - $EditVal
+    Else
+      if $CurrentOperator == "*"
+        $CurrentVal = $CurrentVal * $EditVal
+      Else
+        if $CurrentOperator == "/"
+          $CurrentVal = $CurrentVal / $EditVal
+        Else
+          $CurrentVal = $EditVal
+        EndIf
+      EndIf
+    EndIf
+  EndIf
+  SetText($IOEdit, $CurrentVal)
+  $Override = 1
+EndFunc
+
+;*Summary: Adds a Number to the Edit
+Func AddToText($Num)
+  $Curr = ReadText($IOEdit)
+  if $Num != "."
+    if($Curr == "0") or($Override == 1)
+      SetText($IOEdit, $Num)
+      $Override = 0
+    Else
+      SetText($IOEdit, $Curr & $Num)
+    EndIf
+  Else
+    If StrContains($Curr, ".", 0) < 0
+      SetText($IOEdit, $Curr & $Num)
+    EndIf
+  EndIf
+EndFunc
+
+Func Button1Click()
+  AddToText("1")
+EndFunc
+
+Func Button2Click()
+  AddToText("2")
+EndFunc
+
+Func Button3Click()
+  AddToText("3")
+EndFunc
+
+Func Button4Click()
+  AddToText("4")
+EndFunc
+
+Func Button5Click()
+  AddToText("5")
+EndFunc
+
+Func Button6Click()
+  AddToText("6")
+EndFunc
+
+Func Button7Click()
+  AddToText("7")
+EndFunc
+
+Func Button8Click()
+  AddToText("8")
+EndFunc
+
+Func Button9Click()
+  AddToText("9")
+EndFunc
+
+Func Button0Click()
+  AddToText("0")
+EndFunc
+
+Func ButtonDotClick()
+  AddToText(".")
+EndFunc
+
+Func ButtonResultClick()
+  Calculate()
+  $CurrentOperator = "_"
+EndFunc
+
+Func ButtonAddClick()
+  Calculate()
+  $CurrentOperator = "+"
+EndFunc
+
+Func ButtonSubClick()
+  Calculate()
+  $CurrentOperator = "-"
+EndFunc
+
+Func ButtonMulClick()
+  Calculate()
+  $CurrentOperator = "*"
+EndFunc
+
+Func ButtonDivClick()
+  Calculate()
+  $CurrentOperator = "/"
+EndFunc

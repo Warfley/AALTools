@@ -1112,7 +1112,9 @@ object MainForm: TMainForm
     object ConfigMenuItem: TMenuItem
       Caption = 'Einstellungen'
       object IDEOptionItem: TMenuItem
-        Caption = 'IDE Optionen'
+        AutoCheck = True
+        Caption = 'Projektinspektor Links'
+        OnClick = IDEOptionItemClick
       end
       object CompOptionMenuItem: TMenuItem
         Caption = 'Compiler Optionen'
@@ -1124,6 +1126,7 @@ object MainForm: TMainForm
       end
       object FormOptionsItem: TMenuItem
         Caption = 'Formular Editor Optionen'
+        OnClick = FormOptionsItemClick
       end
     end
   end

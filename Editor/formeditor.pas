@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, TreeFilterEdit, Forms, Controls, Graphics,
   ExtCtrls, StdCtrls, ValEdit, ComCtrls, Grids, contnrs, AALTypes, Dialogs,
-  FormEditComponents, LCLIntf, Math;
+  FormEditComponents, LCLIntf, Math, GraphUtil;
 
 type
 
@@ -31,6 +31,7 @@ type
     TreeFilterEdit1: TTreeFilterEdit;
     FormControlView: TTreeView;
     PropEditor: TValueListEditor;
+    procedure EditorScrollBoxPaint(Sender: TObject);
     procedure EventEditorEditingDone(Sender: TObject);
     procedure EventEditorGetPickList(Sender: TObject; const KeyName: string;
       Values: TStrings);
@@ -62,6 +63,7 @@ type
   private
     FFileName: string;
     FFormName: string;
+    FConf: TFormEditorConfig;
     Moved: boolean;
     FLastClickTime: cardinal;
     FFormEvents: TStringList;
@@ -86,6 +88,7 @@ type
     function CreateEdit(P: TWinControl): TAALEdit;
     procedure LoadControlData(c: TComponent);
   public
+    procedure ReLoadConf;
     constructor Create(TheOwner: TComponent); override;
     procedure AddToVarlist(l: TVarList);
     destructor Destroy; override;
@@ -103,6 +106,53 @@ type
 implementation
 
 {$R *.lfm}
+
+
+procedure TFormEditFrame.ReLoadConf;
+var
+  f: file of TFormEditorConfig;
+begin
+  AssignFile(f, IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+    'foms.cfg');
+  try
+    Reset(f);
+    Read(f, FConf);
+  finally
+    CloseFile(f);
+  end;
+  with FConf do
+  begin
+    if OIRight then
+    begin
+      PropertyPanel.Align := alRight;
+    PositionPickerPanel.Left := ClientWidth-PropertyPanel.Width-8-PositionPickerPanel.Width;
+    ToolBoxPanel.Left := 8;
+    end
+    else
+    begin
+      PropertyPanel.Align := alLeft;
+    PositionPickerPanel.Left := ClientWidth-8-PositionPickerPanel.Width;
+    ToolBoxPanel.Left := PropertyPanel.Width+ 8;
+    end;
+    Color := BGCol;
+    FormControlView.BackgroundColor := BGCol;
+    EditorScrollBox.Color := BGCol;
+    PropertyPages.Color := BGCol;
+    PropertyPanel.Color := BGCol;
+    PropEditor.Color := BGCol;
+    EventEditor.Color := BGCol;
+    TreeFilterEdit1.Color:=BGCol;
+    TreeFilterEdit1.Font.Color:=ForeCol;
+    Font.Color := ForeCol;
+    ToolboxHeaderPanel.Color := TBCol;
+    ToolboxHeaderPanel.Font.Color := ForeCol;
+    FormControlView.Color := ForeCol;
+    FormControlView.ExpandSignColor := GetHighLightColor(ForeCol);
+    FormControlView.TreeLineColor := GetHighLightColor(ForeCol);
+    FormControlView.SeparatorColor := GetHighLightColor(ForeCol);
+    Invalidate;
+  end;
+end;
 
 procedure TFormEditFrame.LoadControlData(c: TComponent);
 var
@@ -333,6 +383,7 @@ begin
   PropEditor.ColWidths[0] := PropEditor.Width div 2;
   EventEditor.ColWidths[0] := EventEditor.Width div 2;
   FFormStyle := 0;
+  ReLoadConf;
 end;
 
 destructor TFormEditFrame.Destroy;
@@ -490,7 +541,6 @@ procedure TFormEditFrame.PositionPickerMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: integer);
 var
   fh, fw: double;
-  w, h: integer;
 begin
   if ssLeft in Shift then
   begin
@@ -518,7 +568,7 @@ begin
   with PositionPicker.Canvas do
   begin
     Brush.Style := bsSolid;
-    Brush.Color := clBtnFace;
+    Brush.Color := FConf.TBCol;
     Pen.Style := psClear;
     Rectangle(0, 0, PositionPicker.Width, PositionPicker.Height);
     fw := PositionPicker.Width / Screen.Width;
@@ -535,29 +585,33 @@ begin
 end;
 
 procedure TFormEditFrame.PropEditorEditingDone(Sender: TObject);
-function isNumeric(s: String): Boolean;
-var c: Char;
-begin
-  Result:=Length(s)>0;
-  for c in s do
-    if not (c in ['0'..'9']) then
-    begin
-      Result:=False;
-      Break;
-    end;
-end;
 
-function isValidName(s: String): Boolean;
-var c: Char;
-begin
-  Result:=Length(s)>0;
-  for c in s do
-    if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
-    begin
-      Result:=False;
-      Break;
-    end;
-end;
+  function isNumeric(s: string): boolean;
+  var
+    c: char;
+  begin
+    Result := Length(s) > 0;
+    for c in s do
+      if not (c in ['0'..'9']) then
+      begin
+        Result := False;
+        Break;
+      end;
+  end;
+
+  function isValidName(s: string): boolean;
+  var
+    c: char;
+  begin
+    Result := Length(s) > 0;
+    for c in s do
+      if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
+      begin
+        Result := False;
+        Break;
+      end;
+  end;
+
 var
   o: TObject;
   s, v: string;
@@ -594,7 +648,11 @@ begin
   else if o is TAALEdit then
     (o as TAALEdit).ControlProp[s] := v;
   if s = 'name' then
+  begin
     FormControlView.Selected.Text := v;
+    if Assigned(FOnVarChanged) then
+      FOnVarChanged(Self);
+  end;
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -614,12 +672,12 @@ end;
 
 procedure TFormEditFrame.ToolboxHeaderPanelMouseEnter(Sender: TObject);
 begin
-  ToolboxHeaderPanel.Color := clSilver;
+  ToolboxHeaderPanel.Color := clWhite;
 end;
 
 procedure TFormEditFrame.ToolboxHeaderPanelMouseLeave(Sender: TObject);
 begin
-  ToolboxHeaderPanel.Color := clBtnFace;
+  ToolboxHeaderPanel.Color := FConf.TBCol;
 end;
 
 procedure TFormEditFrame.FormPanelMouseDown(Sender: TObject;
@@ -675,6 +733,15 @@ begin
   LoadControlData(c);
 end;
 
+procedure TFormEditFrame.EditorScrollBoxPaint(Sender: TObject);
+begin
+  EditorScrollBox.Canvas.Brush.Color := (EditorScrollBox.Color);
+  EditorScrollBox.Canvas.Brush.Style := bsSolid;
+  EditorScrollBox.Canvas.Pen.Style := psClear;
+  EditorScrollBox.Canvas.Rectangle(0, 0, EditorScrollBox.ClientWidth,
+    EditorScrollBox.ClientHeight);
+end;
+
 procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;
   const KeyName: string; Values: TStrings);
 var
@@ -719,7 +786,7 @@ procedure TFormEditFrame.FormControlViewEdited(Sender: TObject;
   Node: TTreeNode; var S: string);
 begin
   if TControl(Node.Data) = FormPanel then
-    FFormName:=s
+    FFormName := s
   else
     TControl(Node.Data).Name := s;
   FormControlViewChange(Sender, Node);
@@ -779,7 +846,7 @@ begin
   try
     sl.Add(Format('$%s = CreateWindow("%s", %d, %d, %d, %d, %d)',
       [FFormName, FormCaptionLabel.Caption, FFormLeft, FFormTop,
-      FormPanel.Width, FormPanel.Height, 0]));
+      FormPanel.Width + 16, FormPanel.Height + 32, 0]));
 
     for i := 0 to FFormEvents.Count - 1 do
       if FFormEvents.ValueFromIndex[i] <> '' then
@@ -844,7 +911,7 @@ procedure TFormEditFrame.Load(p: string = '');
         while (len + 2 < length(s)) and (s[2 + len] <> '"') do
           Inc(len);
         Result := Copy(s, 2, len);
-        NewPos := len + 1;
+        NewPos := len + 2;
         while not (s[NewPos] in [',', ')']) do
           Inc(NewPos);
       end
@@ -974,8 +1041,8 @@ begin
           FormCaptionLabel.Caption := FuncParams[0];
           FFormLeft := StrToInt(FuncParams[1]);
           FFormTop := StrToInt(FuncParams[2]);
-          FormPanel.Width := StrToInt(FuncParams[3]);
-          FormPanel.Height := StrToInt(FuncParams[4]);
+          FormPanel.Width := StrToInt(FuncParams[3]) - 16;
+          FormPanel.Height := StrToInt(FuncParams[4]) - 32;
           FFormStyle := StrToInt(FuncParams[5]);
           FormFound := True;
         end

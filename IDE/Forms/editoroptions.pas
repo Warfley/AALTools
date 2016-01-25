@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   StdCtrls, ColorBox, ComCtrls, Editor, strutils, SynGutterBase, SynEdit,
-  SynGutterChanges, AALHighlighter, SynEditTypes, AALTypes;
+  SynGutterChanges, AALHighlighter, SynEditTypes, AALTypes, GraphUtil;
 
 type
 
@@ -81,6 +81,7 @@ type
     Label30: TLabel;
     FuncBox: TListBox;
     FuncInfoMemo: TMemo;
+    Label31: TLabel;
     ModalPanel: TPanel;
     FillPanel: TPanel;
     ConfigPageControl: TPageControl;
@@ -100,6 +101,8 @@ type
     OtherI: TToggleBox;
     OtherTC: TColorButton;
     OtherU: TToggleBox;
+    TextColorButton: TButton;
+    TextColorPicklist: TColorBox;
     TooltipColorButton: TButton;
     TooltipForeColorButton: TButton;
     TooltipColorPicklist: TColorBox;
@@ -270,6 +273,8 @@ type
     procedure SymbolTCColorChanged(Sender: TObject);
     procedure SymbolUChange(Sender: TObject);
     procedure TabLenEditChange(Sender: TObject);
+    procedure TextColorButtonClick(Sender: TObject);
+    procedure TextColorPicklistChange(Sender: TObject);
     procedure TooltipColorButtonClick(Sender: TObject);
     procedure TooltipColorPicklistChange(Sender: TObject);
     procedure TooltipForeColorButtonClick(Sender: TObject);
@@ -318,6 +323,7 @@ procedure TEditorConf.Save(P: string);
       GutterSaved := SavedColorPicklist.Selected;
       SelCol := SelectedColorPicklist.Selected;
       SelFCol := SelectedForeColorPicklist.Selected;
+      TextColor := TextColorPicklist.Selected;
       PastEOL := ScrollPastEOLBox.Checked;
       CaretAV := CaretAlwaysVisibleBox.Checked;
       TabWidth := StrToInt(TabLenEdit.Text);
@@ -457,18 +463,20 @@ procedure TEditorConf.Save(P: string);
       fs.Free;
     end;
   end;
-  procedure SaveSTDFunc(FileName: String);
-  var sl, inf: TStringList;
-    i, n: Integer;
+
+  procedure SaveSTDFunc(FileName: string);
+  var
+    sl, inf: TStringList;
+    i, n: integer;
   begin
-    sl:=TStringList.Create;
-    inf:=TStringList.Create;
+    sl := TStringList.Create;
+    inf := TStringList.Create;
     try
-      for i:=0 to FFuncList.Count-1 do
+      for i := 0 to FFuncList.Count - 1 do
       begin
-        inf.Text:=FFuncList[i].Info;
-        for n:=0 to inf.Count-1 do
-          inf[n]:=';'+inf[n];
+        inf.Text := FFuncList[i].Info;
+        for n := 0 to inf.Count - 1 do
+          inf[n] := ';' + inf[n];
         sl.AddStrings(inf);
         sl.Add(FFuncList[i].Name);
       end;
@@ -494,46 +502,47 @@ procedure TEditorConf.Save(P: string);
     end;
   end;
 
-  procedure SaveHLKeywords(FileName: String);
-  var i, n, a: Integer;
-    h: Byte;
+  procedure SaveHLKeywords(FileName: string);
+  var
+    i, n, a: integer;
+    h: byte;
     tmp: PHashInfo;
     HL: array[0..255] of TList;
     fs: TFileStream;
   begin
-    for i:=0 to 255 do
-      HL[i]:=TList.Create;
+    for i := 0 to 255 do
+      HL[i] := TList.Create;
     try
-      for i:=0 to KeyWordView.Items.Count-1 do
+      for i := 0 to KeyWordView.Items.Count - 1 do
       begin
-        h:=GetHash(PChar(LowerCase(KeyWordView.Items[i].Caption)), n);
+        h := GetHash(PChar(LowerCase(KeyWordView.Items[i].Caption)), n);
         new(tmp);
-        tmp^.Key:=LowerCase(KeyWordView.Items[i].Caption);
-        tmp^.Kind:=TTokenType(IntPtr(KeyWordView.Items[i].Data));
+        tmp^.Key := LowerCase(KeyWordView.Items[i].Caption);
+        tmp^.Kind := TTokenType(IntPtr(KeyWordView.Items[i].Data));
         HL[h].Add(tmp);
       end;
       fs := TFileStream.Create(FileName, fmCreate);
-  try
-    for i := 0 to 255 do
-    begin
-      fs.Write(HL[i].Count, SizeOf(integer));
-      for n := 0 to HL[i].Count - 1 do
-      begin
-        tmp := PHashInfo(HL[i][n]);
-        fs.Write(tmp^.Kind, SizeOf(tmp^.Kind));
-        a := Length(tmp^.Key);
-        fs.Write(a, SizeOf(a));
-        fs.Write(tmp^.Key[1], a);
+      try
+        for i := 0 to 255 do
+        begin
+          fs.Write(HL[i].Count, SizeOf(integer));
+          for n := 0 to HL[i].Count - 1 do
+          begin
+            tmp := PHashInfo(HL[i][n]);
+            fs.Write(tmp^.Kind, SizeOf(tmp^.Kind));
+            a := Length(tmp^.Key);
+            fs.Write(a, SizeOf(a));
+            fs.Write(tmp^.Key[1], a);
+          end;
+        end;
+      finally
+        fs.Free;
       end;
-    end;
-  finally
-    fs.Free;
-  end;
 
     finally
-      for i:=0 to 255 do
+      for i := 0 to 255 do
       begin
-        for n:=0 to HL[i].Count-1 do
+        for n := 0 to HL[i].Count - 1 do
           Dispose(PHashInfo(HL[i][n]));
         HL[i].Free;
       end;
@@ -541,13 +550,14 @@ procedure TEditorConf.Save(P: string);
 
   end;
 
-  procedure SaveKeywords(Filename: String);
-  var sl: TStringList;
-    i: Integer;
+  procedure SaveKeywords(Filename: string);
+  var
+    sl: TStringList;
+    i: integer;
   begin
-    sl:=TStringList.Create;
+    sl := TStringList.Create;
     try
-      for i:=0 to KeyWordView.Items.Count-1 do
+      for i := 0 to KeyWordView.Items.Count - 1 do
         sl.Add(KeyWordView.Items[i].Caption);
       sl.SaveToFile(Filename);
     finally
@@ -557,10 +567,10 @@ procedure TEditorConf.Save(P: string);
 
 begin
   SaveGeneralData(IncludeTrailingPathDelimiter(p) + 'editor.cfg');
-  SaveHLFonts(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'colors.cnf');
+  SaveHLFonts(IncludeTrailingPathDelimiter(p) + 'HL' + PathDelim + 'colors.cnf');
   SaveSTDFunc(IncludeTrailingPathDelimiter(p) + 'Funcs.lst');
-  SaveHLKeywords(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'Keywords.lst');
-  SaveKeywords(IncludeTrailingPathDelimiter(p)+'Keywords.lst');
+  SaveHLKeywords(IncludeTrailingPathDelimiter(p) + 'HL' + PathDelim + 'Keywords.lst');
+  SaveKeywords(IncludeTrailingPathDelimiter(p) + 'Keywords.lst');
 end;
 
 procedure TEditorConf.Load(P: string);
@@ -579,38 +589,39 @@ procedure TEditorConf.Load(P: string);
     end;
     with conf do
     begin
-      CESideBox.Checked:=CERight;
-      BGColorPicklist.Selected:=BGCol;
-      EditorColorPicklist.Selected:=EditBGCol;
-      GutterColorPicklist.Selected:=GutterCol;
-      GutterForeColorPicklist.Selected:=GutterFore;
-      EditedColorPicklist.Color:=GutterEdited;
-      SavedColorPicklist.Selected:=GutterSaved;
-      SelectedColorPicklist.Selected:=SelCol;
-      SelectedForeColorPicklist.Selected:=SelFCol;
-      ScrollPastEOLBox.Checked:=PastEOL;
-      CaretAlwaysVisibleBox.Checked:=CaretAV;
-      TabLenEdit.Text:=IntToStr(TabWidth);
-      TooltipColorPicklist.Selected:=TTipColor;
-      TooltipForeColorPicklist.Selected:=TTipFont;
-      EditorFontButton.Caption:=FontName;
+      CESideBox.Checked := CERight;
+      BGColorPicklist.Selected := BGCol;
+      EditorColorPicklist.Selected := EditBGCol;
+      GutterColorPicklist.Selected := GutterCol;
+      GutterForeColorPicklist.Selected := GutterFore;
+      EditedColorPicklist.Color := GutterEdited;
+      SavedColorPicklist.Selected := GutterSaved;
+      SelectedColorPicklist.Selected := SelCol;
+      SelectedForeColorPicklist.Selected := SelFCol;
+      TextColorPicklist.Selected := TextColor;
+      ScrollPastEOLBox.Checked := PastEOL;
+      CaretAlwaysVisibleBox.Checked := CaretAV;
+      TabLenEdit.Text := IntToStr(TabWidth);
+      TooltipColorPicklist.Selected := TTipColor;
+      TooltipForeColorPicklist.Selected := TTipFont;
+      EditorFontButton.Caption := FontName;
     end;
   end;
 
-  procedure LoadHLFonts(FName: String);
-type
-  TFontInfo = packed record
-    FontCol: TColor;
-    Big, Italics, Underline, Frame: boolean;
-    FrameColor: TColor;
-    Background: boolean;
-    BackColor: TColor;
-  end;
+  procedure LoadHLFonts(FName: string);
+  type
+    TFontInfo = packed record
+      FontCol: TColor;
+      Big, Italics, Underline, Frame: boolean;
+      FrameColor: TColor;
+      Background: boolean;
+      BackColor: TColor;
+    end;
 
-var
-  tmp: TFontInfo;
-  fs: TFileStream;
-begin
+  var
+    tmp: TFontInfo;
+    fs: TFileStream;
+  begin
     fs := TFileStream.Create(FName, fmOpenRead);
     try
       // Comment
@@ -718,72 +729,76 @@ begin
     end;
   end;
 
-  procedure LoadSTDFunc(FName: String);
-  var sl, inf: TStringList;
-    i: Integer;
+  procedure LoadSTDFunc(FName: string);
+  var
+    sl, inf: TStringList;
+    i: integer;
   begin
     FFuncList.Clear;
     FuncBox.Clear;
-    sl:=TStringList.Create;
-    inf:=TStringList.Create;
+    sl := TStringList.Create;
+    inf := TStringList.Create;
     try
       sl.LoadFromFile(FName);
-      for i:=0 to sl.Count-1 do
-      if length(sl[i])>0 then
-        if sl[i][1] = ';' then
-          inf.Add(Copy(sl[i], 2, Length(sl[i])-1))
-        else
-        begin
-          FFuncList.Add(FuncInfo(sl[i],0, inf.Text));
-          FuncBox.Items.Add(sl[i]);
-          inf.Clear;
-        end;
+      for i := 0 to sl.Count - 1 do
+        if length(sl[i]) > 0 then
+          if sl[i][1] = ';' then
+            inf.Add(Copy(sl[i], 2, Length(sl[i]) - 1))
+          else
+          begin
+            FFuncList.Add(FuncInfo(sl[i], 0, inf.Text));
+            FuncBox.Items.Add(sl[i]);
+            inf.Clear;
+          end;
     finally
       sl.Free;
       inf.Free;
     end;
   end;
 
-  procedure LoadHLKeywords(FName: String);
-  function FindItem(n: String): TListItem;
-      var i: Integer;
-  begin
-    Result:=Nil;
-    for i:=0 to KeyWordView.Items.Count-1 do
-      if LowerCase(KeyWordView.Items[i].Caption)=LowerCase(n) then
-      begin
-        Result:=KeyWordView.Items[i];
-        break;
-      end;
-  end;
+  procedure LoadHLKeywords(FName: string);
 
-  var fs: TFileStream;
-    i, x, a, ln: Integer;
-    n: String;
+    function FindItem(n: string): TListItem;
+    var
+      i: integer;
+    begin
+      Result := nil;
+      for i := 0 to KeyWordView.Items.Count - 1 do
+        if LowerCase(KeyWordView.Items[i].Caption) = LowerCase(n) then
+        begin
+          Result := KeyWordView.Items[i];
+          break;
+        end;
+    end;
+
+  var
+    fs: TFileStream;
+    i, x, a, ln: integer;
+    n: string;
     itm: TListItem;
     k: TTokenType;
   begin
-    fs:=TFileStream.Create(FName, fmOpenRead);
+    fs := TFileStream.Create(FName, fmOpenRead);
     try
-      for x:=0 to 255 do
+      for x := 0 to 255 do
       begin
-        fs.Read(a, SizeOf(Integer));
-        for i:=0 to a-1 do
+        fs.Read(a, SizeOf(integer));
+        for i := 0 to a - 1 do
         begin
           fs.Read(k, SizeOf(k));
-          fs.Read(ln, SizeOf(Integer));
+          fs.Read(ln, SizeOf(integer));
           SetLength(n, ln);
           fs.Read(n[1], ln);
-          itm:=FindItem(n);
+          itm := FindItem(n);
           if not Assigned(itm) then
           begin
-            itm:=KeyWordView.Items.Add;
-            itm.Caption:=n;
+            itm := KeyWordView.Items.Add;
+            itm.Caption := n;
           end;
-          if itm.SubItems.Count=0 then
+          if itm.SubItems.Count = 0 then
           begin
             itm.SubItems.Add(KeyTypeBox.Items[Ord(k)]);
-            itm.Data:=Pointer(ord(k));
+            itm.Data := Pointer(Ord(k));
           end;
         end;
       end;
@@ -792,17 +807,18 @@ begin
     end;
   end;
 
-  procedure LoadKeywords(FName:String);
-  var sl: TStringList;
-    i: Integer;
+  procedure LoadKeywords(FName: string);
+  var
+    sl: TStringList;
+    i: integer;
   begin
     KeyWordView.Clear;
-    sl:=TStringList.Create;
+    sl := TStringList.Create;
     try
       sl.LoadFromFile(FName);
-      for i:=0 to sl.Count-1 do
+      for i := 0 to sl.Count - 1 do
       begin
-        KeyWordView.Items.Add.Caption:=sl[i];
+        KeyWordView.Items.Add.Caption := sl[i];
       end;
     finally
       sl.Free;
@@ -811,10 +827,10 @@ begin
 
 begin
   LoadGeneralData(IncludeTrailingPathDelimiter(p) + 'editor.cfg');
-  LoadHLFonts(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'colors.cnf');
+  LoadHLFonts(IncludeTrailingPathDelimiter(p) + 'HL' + PathDelim + 'colors.cnf');
   LoadSTDFunc(IncludeTrailingPathDelimiter(p) + 'Funcs.lst');
-  LoadKeywords(IncludeTrailingPathDelimiter(p)+'Keywords.lst');
-  LoadHLKeywords(IncludeTrailingPathDelimiter(p)+'HL'+PathDelim+'Keywords.lst');
+  LoadKeywords(IncludeTrailingPathDelimiter(p) + 'Keywords.lst');
+  LoadHLKeywords(IncludeTrailingPathDelimiter(p) + 'HL' + PathDelim + 'Keywords.lst');
   EditorFrame1.ReLoadConf;
 end;
 
@@ -1649,6 +1665,33 @@ procedure TEditorConf.TabLenEditChange(Sender: TObject);
 begin
   if TabLenEdit.Text <> '' then
     EditorFrame1.CodeEditor.TabWidth := StrToInt(TabLenEdit.Text);
+end;
+
+procedure TEditorConf.TextColorButtonClick(Sender: TObject);
+begin
+  ColorDialog1.Color := TextColorPicklist.Selected;
+  if ColorDialog1.Execute then
+    TextColorPicklist.Selected := ColorDialog1.Color;
+
+  if TextColorPicklist.Text = '' then
+    TextColorPicklistChange(TextColorPicklist);
+end;
+
+procedure TEditorConf.TextColorPicklistChange(Sender: TObject);
+begin
+  EditorFrame1.Font.Color := TextColorPicklist.Selected;
+  EditorFrame1.CodeExplorer.Color := TextColorPicklist.Selected;
+  EditorFrame1.CodeExplorer.ExpandSignColor :=
+    GetHighLightColor(TextColorPicklist.Selected);
+  EditorFrame1.CodeExplorer.TreeLineColor :=
+    GetHighLightColor(TextColorPicklist.Selected);
+  EditorFrame1.CodeExplorer.SeparatorColor :=
+    GetHighLightColor(TextColorPicklist.Selected);
+  EditorFrame1.CodeExplorer.Invalidate;
+  if (Sender as TColorBox).Text = '' then
+    (Sender as TColorBox).Color := (Sender as TColorBox).Selected
+  else
+    (Sender as TColorBox).Color := clDefault;
 end;
 
 procedure TEditorConf.TooltipColorButtonClick(Sender: TObject);

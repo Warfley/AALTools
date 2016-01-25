@@ -31,6 +31,7 @@ type
     GutterSaved: TColor;
     SelCol: TColor;
     SelFCol: TColor;
+    TextColor: TColor;
     PastEOL: Boolean;
     CaretAV: Boolean;
     TabWidth: Integer;
@@ -38,6 +39,13 @@ type
     TTipFont: TColor;
     EditorFont: TFontData;
     FontName: ShortString;
+  end;
+
+  TFormEditorConfig = packed record
+    OIRight: Boolean;
+    BGCol: TColor;
+    ForeCol: TColor;
+    TBCol: TColor;
   end;
 
   THashInfo = record

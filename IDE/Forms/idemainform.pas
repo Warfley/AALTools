@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Menus, ComCtrls, Buttons, ExtCtrls, PairSplitter, Project, IDEStartupScreen,
   ProjectInspector, EditorManagerFrame, AALTypes, FormEditor, Editor,
-  AALFileInfo, strutils, CompilerOptions, AALCompiler, EditorOptions;
+  AALFileInfo, strutils, CompilerOptions, AALCompiler, EditorOptions, FormEditorOptions;
 
 type
 
@@ -26,6 +26,7 @@ type
     Width,
     Height: integer;
     State: TWindowState;
+    PILeft: Boolean;
   end;
 
   PCreateFuncInfo = ^TCreateFuncInfo;
@@ -98,8 +99,10 @@ type
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormOptionsItemClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
+    procedure IDEOptionItemClick(Sender: TObject);
     procedure NewFileItemClick(Sender: TObject);
     procedure NewFormItemClick(Sender: TObject);
     procedure NewProjectItemClick(Sender: TObject);
@@ -123,6 +126,7 @@ type
     FFileData: TAALFileManager;
     FCurrentState: TIDEState;
     { private declarations }
+    function ShowFormConf: Boolean;
     procedure EditorParserFinished(Sender: TObject);
     procedure ShowStartupScreen(Data: IntPtr);
     procedure OpenFile(Filename: string; Pos: TPoint);
@@ -156,6 +160,22 @@ implementation
 {$R *.lfm}
 
 { TMainForm }
+
+    function TMainForm.ShowFormConf: Boolean;
+var
+  i: integer;
+begin
+  FormEditorOptionsForm.Load(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'foms.cfg');
+  Result := False;
+  if FormEditorOptionsForm.ShowModal = mrOk then
+  begin
+    Result := True;
+    FormEditorOptionsForm.Save(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'foms.cfg');
+    for i := 0 to EditorManager1.Count - 1 do
+      if EditorManager1.Editors[i] is TFormEditFrame then
+        (EditorManager1.Editors[i] as TFormEditFrame).ReLoadConf;
+  end;
+end;
 
 function TMainForm.ShowEditorConf: boolean;
 var
@@ -307,6 +327,7 @@ procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 var
   mr: TModalResult;
   f: file of TIDEState;
+  fb: file of Boolean;
 begin
   FSaveOnClosing:=False;
   if FCompiler.Active then
@@ -664,6 +685,20 @@ begin
   end
   else if Sender is TEditorFrame then
   begin
+    e := EditorManager1.FormEditor[ChangeFileExt(
+      (Sender as TEditorFrame).FileName, '.afm')];
+    if Assigned(e) then
+    begin
+      with Sender as TEditorFrame do
+      begin
+        e.FuncList.Clear;
+        for i := 0 to FunctionList.Count - 1 do
+        begin
+          e.FuncList.Add(Copy(FunctionList[i].Name, 1,
+            Pos('(', FunctionList[i].Name) - 1));
+        end;
+      end;
+    end;
     idx := FFileData.FileIndex[(Sender as TEditorFrame).FileName];
     if idx = -1 then
       idx := FFileData.CreateFile((Sender as TEditorFrame).FileName);
@@ -686,18 +721,6 @@ begin
       end
       else
         FFileData.LoadFile(req);
-    end;
-    e := EditorManager1.FormEditor[ChangeFileExt(
-      (Sender as TEditorFrame).FileName, '.afm')];
-    if Assigned(e) then
-    begin
-      with Sender as TEditorFrame do
-      begin
-        e.FuncList.Clear;
-        for i := 0 to FunctionList.Count - 1 do
-          e.FuncList.Add(Copy(FunctionList[i].Name, 1,
-            Pos('(', FunctionList[i].Name) - 1));
-      end;
     end;
   end;
 end;
@@ -781,12 +804,15 @@ begin
       State := wsMaximized;
       Top := 200;
       Left := 200;
+      PILeft:=True;
     end;
   Width := FCurrentState.Width;
   Height := FCurrentState.Height;
   Left := FCurrentState.Left;
   Top := FCurrentState.Top;
   WindowState := FCurrentState.State;
+  IDEOptionItem.Checked:=FCurrentState.PILeft;
+  IDEOptionItemClick(IDEOptionItem);
   FSaveOnClosing:=False;
   FFirstLoad := True;
   FCompiler := TAALCompiler.Create;
@@ -821,6 +847,11 @@ begin
   FCompiler.Free;
 end;
 
+procedure TMainForm.FormOptionsItemClick(Sender: TObject);
+begin
+  ShowFormConf;
+end;
+
 procedure TMainForm.FormResize(Sender: TObject);
 begin
   if (WindowState = wsNormal) and (Width<>Screen.Width) then
@@ -842,6 +873,21 @@ begin
     Left := FCurrentState.Left;
     Top := FCurrentState.Top;
   end;
+end;
+
+procedure TMainForm.IDEOptionItemClick(Sender: TObject);
+begin
+  if (sender as TMenuItem).Checked then
+  begin
+    (Sender as TMenuItem).Caption:='Projektinspektor Links';
+    ProjectInspector1.Align:=alLeft;
+  end
+  else
+  begin
+    (Sender as TMenuItem).Caption:='Projektinspektor Rechts';
+    ProjectInspector1.Align:=alRight;
+  end;
+  FCurrentState.PILeft:=(sender as TMenuItem).Checked;
 end;
 
 procedure TMainForm.NewFileItemClick(Sender: TObject);

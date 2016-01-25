@@ -5,7 +5,7 @@ object FormEditFrame: TFormEditFrame
   Width = 896
   ClientHeight = 563
   ClientWidth = 896
-  Color = clDefault
+  Color = clWindow
   ParentColor = False
   TabOrder = 0
   DesignLeft = 411
@@ -26,7 +26,10 @@ object FormEditFrame: TFormEditFrame
     Align = alClient
     ClientHeight = 559
     ClientWidth = 621
+    Color = clWindow
+    ParentColor = False
     TabOrder = 0
+    OnPaint = EditorScrollBoxPaint
     object FormPanel: TPanel
       Left = 16
       Height = 312
@@ -36,6 +39,7 @@ object FormEditFrame: TFormEditFrame
       BorderStyle = bsSingle
       Color = clBtnFace
       ParentColor = False
+      ParentFont = False
       TabOrder = 0
       OnDblClick = FormPanelDblClick
       OnMouseDown = FormPanelMouseDown
@@ -50,6 +54,7 @@ object FormEditFrame: TFormEditFrame
       Width = 52
       Caption = 'Form1'
       ParentColor = False
+      ParentFont = False
     end
   end
   object PropertyPanel: TPanel
@@ -143,10 +148,12 @@ object FormEditFrame: TFormEditFrame
       Align = alClient
       DefaultItemHeight = 28
       Images = ImageList1
+      MultiSelectStyle = [msControlSelect, msShiftSelect]
       TabOrder = 1
       OnChange = FormControlViewChange
       OnEdited = FormControlViewEdited
       OnKeyUp = FormControlViewKeyUp
+      Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips]
     end
     object TreeFilterEdit1: TTreeFilterEdit
       Left = 0
@@ -236,8 +243,8 @@ object FormEditFrame: TFormEditFrame
   object ImageList1: TImageList
     Height = 24
     Width = 24
-    left = 768
-    top = 240
+    left = 744
+    top = 80
     Bitmap = {
       4C69050000001800000018000000FF9933000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

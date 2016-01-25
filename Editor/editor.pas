@@ -8,7 +8,8 @@ uses
   Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
   Dialogs, Graphics, StdCtrls, Buttons, ComCtrls, strutils, CodeFormatter,
-  ToolTip, ListRecords, SynEditTypes, Math, SynGutterBase, SynGutterChanges;
+  ToolTip, ListRecords, SynEditTypes, Math, SynGutterBase, SynGutterChanges,
+  GraphUtil;
 
 type
 
@@ -45,6 +46,8 @@ type
       X, Y: integer);
     procedure CodeEditorMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
+    procedure CodeExplorerCustomDrawItem(Sender: TCustomTreeView;
+      Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure CodeExplorerDblClick(Sender: TObject);
     procedure CompletionCodeCompletion(var Value: string; SourceValue: string;
       var SourceStart, SourceEnd: TPoint; KeyChar: TUTF8Char; Shift: TShiftState);
@@ -168,6 +171,13 @@ begin
       end;
       CodeEditor.SelectedColor.Background := SelCol;
       CodeEditor.SelectedColor.Foreground := SelFCol;
+      Font.Color:=TextColor;
+      SearchBar.Font.Color:=TextColor;
+      CodeExplorer.Color:=TextColor;
+      CodeExplorer.ExpandSignColor:=GetHighLightColor(TextColor);
+      CodeExplorer.TreeLineColor:=GetHighLightColor(TextColor);
+      CodeExplorer.SeparatorColor:=GetHighLightColor(TextColor);
+      CodeExplorer.Invalidate;
       if PastEOL then
         CodeEditor.Options :=
           CodeEditor.Options + [eoScrollPastEol]
@@ -1029,6 +1039,12 @@ begin
     end;
   end;
 
+end;
+
+procedure TEditorFrame.CodeExplorerCustomDrawItem(Sender: TCustomTreeView;
+  Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
+begin
+  Sender.Canvas.Font.Color:=Sender.Color;
 end;
 
 procedure TEditorFrame.CodeExplorerDblClick(Sender: TObject);

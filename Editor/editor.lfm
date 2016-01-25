@@ -6,7 +6,6 @@ object EditorFrame: TEditorFrame
   ClientHeight = 563
   ClientWidth = 878
   Font.Quality = fqProof
-  LCLVersion = '1.7'
   ParentFont = False
   TabOrder = 0
   DesignLeft = 1270
@@ -607,11 +606,11 @@ object EditorFrame: TEditorFrame
       BevelOuter = bvNone
       BorderStyle = bsSingle
       Caption = 'Code Explorer'
-      ClientHeight = 34
-      ClientWidth = 235
+      ClientHeight = 30
+      ClientWidth = 231
       TabOrder = 0
       object CloseCodeExplorerButton: TSpeedButton
-        Left = 205
+        Left = 201
         Height = 28
         Top = 0
         Width = 28
@@ -630,10 +629,12 @@ object EditorFrame: TEditorFrame
       DefaultItemHeight = 28
       ExpandSignType = tvestPlusMinus
       Images = CodeExplorerImages
+      MultiSelectStyle = [msControlSelect, msShiftSelect]
       ReadOnly = True
       TabOrder = 1
+      OnCustomDrawItem = CodeExplorerCustomDrawItem
       OnDblClick = CodeExplorerDblClick
-      Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+      Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips]
       Items.Data = {
         F9FFFFFF0200030000000000000000000000FFFFFFFFFFFFFFFF000000000000
         00000008000000496E636C756465730000000000000000FFFFFFFFFFFFFFFF00

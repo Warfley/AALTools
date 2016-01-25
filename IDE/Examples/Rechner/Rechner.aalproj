@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Rechner>
+  <MainFile>Rechner.apr</MainFile>
+  <Apptype>GUI</Apptype>
+  <MainForm>MainForm.afm</MainForm>
+  <Files>
+    <File>MainForm.aal1</File>
+    <File>MainForm.afm</File>
+  </Files>
+  <OpendFiles>
+    <Opend Pos="0" Line="0" Focused="1">MainForm.afm</Opend>
+  </OpendFiles>
+</Rechner>

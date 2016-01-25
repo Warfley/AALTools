@@ -127,6 +127,7 @@ begin
       ParseLine(ln, curr.Vars, i);
     Inc(i);
   end;
+  Dec(i);
   curr.EndLine := i;
   FMyRanges.Add(curr);
   for x := 0 to curr.Vars.Count - 1 do

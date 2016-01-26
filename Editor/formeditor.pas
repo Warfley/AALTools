@@ -125,14 +125,15 @@ begin
     if OIRight then
     begin
       PropertyPanel.Align := alRight;
-    PositionPickerPanel.Left := ClientWidth-PropertyPanel.Width-8-PositionPickerPanel.Width;
-    ToolBoxPanel.Left := 8;
+      PositionPickerPanel.Left :=
+        ClientWidth - PropertyPanel.Width - 8 - PositionPickerPanel.Width;
+      ToolBoxPanel.Left := 8;
     end
     else
     begin
       PropertyPanel.Align := alLeft;
-    PositionPickerPanel.Left := ClientWidth-8-PositionPickerPanel.Width;
-    ToolBoxPanel.Left := PropertyPanel.Width+ 8;
+      PositionPickerPanel.Left := ClientWidth - 8 - PositionPickerPanel.Width;
+      ToolBoxPanel.Left := PropertyPanel.Width + 8;
     end;
     Color := BGCol;
     FormControlView.BackgroundColor := BGCol;
@@ -141,8 +142,8 @@ begin
     PropertyPanel.Color := BGCol;
     PropEditor.Color := BGCol;
     EventEditor.Color := BGCol;
-    TreeFilterEdit1.Color:=BGCol;
-    TreeFilterEdit1.Font.Color:=ForeCol;
+    TreeFilterEdit1.Color := BGCol;
+    TreeFilterEdit1.Font.Color := ForeCol;
     Font.Color := ForeCol;
     ToolboxHeaderPanel.Color := TBCol;
     ToolboxHeaderPanel.Font.Color := ForeCol;
@@ -242,6 +243,7 @@ begin
         Data := Result;
         ImageIndex := 1;
         SelectedIndex := 1;
+        FormControlView.MultiSelect:=False;
         Selected := True;
         Break;
       end;
@@ -274,6 +276,7 @@ begin
         Data := Result;
         ImageIndex := 2;
         SelectedIndex := 2;
+        FormControlView.MultiSelect:=False;
         Selected := True;
         Break;
       end;
@@ -324,7 +327,8 @@ begin
         Data := Result;
         ImageIndex := 4;
         SelectedIndex := 4;
-        Selected := True;
+        FormControlView.MultiSelect:=False;
+        Selected:=False;
         Break;
       end;
   FEditorControls.Add(Result);
@@ -372,6 +376,7 @@ begin
   EventEditor.EditorByStyle(cbsPickList).OnClick := @PickListClick;
   EventEditor.EditorByStyle(cbsPickList).OnEnter := @PickListClick;
   FEditorControls := TObjectList.Create(True);
+  FMousePoint := Point(-1, -1);
   FormControlView.Items.Add(nil, 'Form1').Data := FormPanel;
   FormControlView.Items[0].ImageIndex := 0;
   FormControlView.Items[0].SelectedIndex := 0;
@@ -492,6 +497,7 @@ begin
       FOnChange(Self);
     Moved := False;
     PositionPickerPanel.Show;
+    FMousePoint := Point(-1, -1);
   end;
 end;
 
@@ -507,6 +513,9 @@ begin
 end;
 
 procedure TFormEditFrame.FormPanelPaint(Sender: TObject);
+var
+  i: integer;
+  c: TControl;
 begin
   if (FSelPoint.x >= 0) and (FSelPoint.y >= 0) then
   begin
@@ -519,6 +528,21 @@ begin
     (Sender as TCustomControl).Canvas.Rectangle(FPanelMousePoint.X,
       FPanelMousePoint.Y, FSelPoint.x, FSelPoint.Y);
   end;
+  if (FMousePoint.x = -1) and (FMousePoint.y = -1) then
+    for i := 0 to FormControlView.Items.Count - 1 do
+      if FormControlView.Items[i].Selected then
+      begin
+        c := (Sender as TCustomControl).FindChildControl(
+          TControl(FormControlView.Items[i].Data).Name);
+        if Assigned(c) then
+          with (Sender as TCustomControl).Canvas do
+          begin
+            Pen.Style := psDash;
+            Pen.Mode := pmNotXor;
+            Brush.Style := bsClear;
+            Rectangle(c.Left - 1, c.Top - 1, c.Left + c.Width + 1, c.Top + c.Height + 1);
+          end;
+      end;
 end;
 
 procedure TFormEditFrame.PositionPickerMouseEnter(Sender: TObject);
@@ -690,6 +714,7 @@ begin
       (Sender as TControl).ClientToScreen(Point(X, Y)));
     if FormPanel.Cursor = crSizeNWSE then
       PositionPickerPanel.Hide;
+    EditorScrollBox.Invalidate;
   end;
 end;
 
@@ -705,6 +730,7 @@ begin
   end;
   c := TControl(Node.Data);
   LoadControlData(c);
+  EditorScrollBox.Invalidate;
 end;
 
 procedure TFormEditFrame.EventEditorEditingDone(Sender: TObject);
@@ -734,12 +760,23 @@ begin
 end;
 
 procedure TFormEditFrame.EditorScrollBoxPaint(Sender: TObject);
+var
+  i: Integer;
 begin
   EditorScrollBox.Canvas.Brush.Color := (EditorScrollBox.Color);
   EditorScrollBox.Canvas.Brush.Style := bsSolid;
   EditorScrollBox.Canvas.Pen.Style := psClear;
   EditorScrollBox.Canvas.Rectangle(0, 0, EditorScrollBox.ClientWidth,
     EditorScrollBox.ClientHeight);
+  if (FMousePoint.x=-1) and (FMousePoint.y=-1) then
+  for i:=0 to FormControlView.Items.Count-1 do
+    if (FormControlView.Items[i].Selected) And (TControl(FormControlView.Items[i].Data) =FormPanel) then
+    begin
+  EditorScrollBox.Canvas.Brush.Style := bsClear;
+  EditorScrollBox.Canvas.Pen.Style := psDash;
+  EditorScrollBox.Canvas.Pen.Mode:=pmNotXor;
+  EditorScrollBox.Canvas.Rectangle(FormPanel.Left-1, FormPanel.Top-1, FormPanel.Left+FormPanel.Width+1, FormPanel.Top+FormPanel.Height+1);
+    end;
 end;
 
 procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;

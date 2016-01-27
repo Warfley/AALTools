@@ -49,6 +49,7 @@ type
     UseHelpLines: Boolean;
     UseRaster: Boolean;
     RasterSize: Integer;
+    DoubleBuffer: Boolean;
   end;
 
   THashInfo = record

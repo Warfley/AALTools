@@ -8,8 +8,8 @@ object FormEditFrame: TFormEditFrame
   Color = clWindow
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 246
-  DesignTop = 109
+  DesignLeft = 399
+  DesignTop = 157
   object EditorScrollBox: TScrollBox
     Left = 0
     Height = 563
@@ -46,12 +46,13 @@ object FormEditFrame: TFormEditFrame
       OnMouseMove = FormPanelMouseMove
       OnMouseUp = FormPanelMouseUp
       OnPaint = FormPanelPaint
+      OnResize = FormPanelResize
     end
     object FormCaptionLabel: TLabel
       Left = 16
-      Height = 15
+      Height = 25
       Top = 8
-      Width = 34
+      Width = 52
       Caption = 'Form1'
       ParentColor = False
       ParentFont = False
@@ -79,11 +80,11 @@ object FormEditFrame: TFormEditFrame
       TabOrder = 0
       object ControlProps: TTabSheet
         Caption = 'Eigenschaften'
-        ClientHeight = 228
+        ClientHeight = 218
         ClientWidth = 263
         object PropEditor: TValueListEditor
           Left = 0
-          Height = 228
+          Height = 218
           Top = 0
           Width = 263
           Align = alClient
@@ -135,29 +136,30 @@ object FormEditFrame: TFormEditFrame
           OnGetPickList = EventEditorGetPickList
           ColWidths = (
             64
-            181
+            172
           )
         end
       end
     end
     object FormControlView: TTreeView
       Left = 0
-      Height = 284
-      Top = 23
+      Height = 274
+      Top = 33
       Width = 271
       Align = alClient
-      DefaultItemHeight = 24
+      DefaultItemHeight = 28
       Images = ImageList1
+      MultiSelect = True
       MultiSelectStyle = [msControlSelect, msShiftSelect]
       TabOrder = 1
       OnChange = FormControlViewChange
       OnEdited = FormControlViewEdited
       OnKeyUp = FormControlViewKeyUp
-      Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips]
+      Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips]
     end
     object TreeFilterEdit1: TTreeFilterEdit
       Left = 0
-      Height = 23
+      Height = 33
       Top = 0
       Width = 271
       ButtonWidth = 23

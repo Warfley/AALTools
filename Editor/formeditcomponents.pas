@@ -381,7 +381,6 @@ end;
 
 procedure TAALEdit.FillProps(g: TValueListEditor);
 begin
-  g.Clear;
   g.Values['Name'] := Name;
   g.Values['Text'] := Text;
   g.Values['X'] := IntToStr(Left);
@@ -402,7 +401,6 @@ procedure TAALEdit.FillEvents(g: TValueListEditor);
 var
   i: integer;
 begin
-  g.Clear;
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
@@ -516,7 +514,6 @@ end;
 
 procedure TAALButton.FillProps(g: TValueListEditor);
 begin
-  g.Clear;
   g.Values['Name'] := Name;
   g.Values['Text'] := Caption;
   g.Values['X'] := IntToStr(Left);
@@ -537,7 +534,6 @@ procedure TAALButton.FillEvents(g: TValueListEditor);
 var
   i: integer;
 begin
-  g.Clear;
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
@@ -645,7 +641,6 @@ end;
 
 procedure TAALCheckbox.FillProps(g: TValueListEditor);
 begin
-  g.Clear;
   g.Values['Name'] := Name;
   g.Values['Text'] := Caption;
   g.Values['X'] := IntToStr(Left);
@@ -666,7 +661,6 @@ procedure TAALCheckbox.FillEvents(g: TValueListEditor);
 var
   i: integer;
 begin
-  g.Clear;
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
@@ -796,7 +790,6 @@ end;
 
 procedure TAALLabel.FillProps(g: TValueListEditor);
 begin
-  g.Clear;
   g.Values['Name'] := Name;
   g.Values['Text'] := Caption;
   g.Values['X'] := IntToStr(Left);
@@ -817,7 +810,6 @@ procedure TAALLabel.FillEvents(g: TValueListEditor);
 var
   i: integer;
 begin
-  g.Clear;
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];

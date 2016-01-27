@@ -1,11 +1,11 @@
 object MainForm: TMainForm
-  Left = 41
+  Left = 124
   Height = 647
-  Top = 6
+  Top = 157
   Width = 1260
   ActiveControl = EditorManager1.EditorControl
   Caption = 'AAL IDE'
-  ClientHeight = 627
+  ClientHeight = 617
   ClientWidth = 1260
   Color = clBtnFace
   Menu = MainFormMenu
@@ -18,41 +18,32 @@ object MainForm: TMainForm
   WindowState = wsMaximized
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 495
+    Height = 485
     Top = 36
     Width = 913
     Align = alClient
-    ClientHeight = 495
+    ClientHeight = 485
     ClientWidth = 913
     inherited EditorControl: TPageControl
-      Height = 495
+      Height = 485
       Width = 913
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 495
+    Height = 485
     Top = 36
     Align = alLeft
-    ClientHeight = 495
+    ClientHeight = 485
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 269
-      Top = 47
+      Height = 249
       DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 316
-      inherited PathEdit: TLabeledEdit
-        Height = 23
-        EditLabel.Height = 15
-        EditLabel.Top = 6
-      end
+      Top = 306
       inherited AddButton: TButton
         OnClick = nil
       end
-    end
-    inherited TreeFilterEdit1: TTreeFilterEdit
-      Height = 23
     end
   end
   object ToolBar1: TToolBar
@@ -970,13 +961,13 @@ object MainForm: TMainForm
         end
         object SelectModeBox: TComboBox
           Left = 80
-          Height = 23
+          Height = 33
           Hint = 'Modus'
-          Top = 3
+          Top = -2
           Width = 100
           Anchors = [akLeft]
           AutoSize = False
-          ItemHeight = 15
+          ItemHeight = 25
           ItemIndex = 0
           Items.Strings = (
             'Debug'
@@ -994,7 +985,7 @@ object MainForm: TMainForm
   object OutputBox: TListBox
     Left = 0
     Height = 96
-    Top = 531
+    Top = 521
     Width = 1260
     Align = alBottom
     ItemHeight = 0

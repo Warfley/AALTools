@@ -15,6 +15,7 @@ type
   TFormEditorOptionsForm = class(TForm)
     BGColorBtn: TButton;
     HelpLineBox: TCheckBox;
+    DBBox: TCheckBox;
     RasterSizeEdit: TEdit;
     Label6: TLabel;
     RasterBox: TCheckBox;
@@ -121,6 +122,7 @@ begin
     RasterBox.Checked:=UseRaster;
     RasterSizeEdit.Text:=IntToStr(RasterSize);
     HelpLineBox.Checked:=UseHelpLines;
+    DBBox.Checked:=DoubleBuffer;
   end;
 end;
 
@@ -138,6 +140,7 @@ begin
     UseRaster:=RasterBox.Checked;
     RasterSize:=StrToInt(RasterSizeEdit.Text);
     UseHelpLines:=HelpLineBox.Checked;
+    DoubleBuffer:=DBBox.Checked;
   end;
   AssignFile(f, P);
   try

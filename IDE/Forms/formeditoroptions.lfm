@@ -1,18 +1,18 @@
 object FormEditorOptionsForm: TFormEditorOptionsForm
-  Left = 346
-  Height = 296
-  Top = 183
-  Width = 454
+  Left = 490
+  Height = 304
+  Top = 213
+  Width = 378
   Caption = 'Formular Editor Optionen'
-  ClientHeight = 296
-  ClientWidth = 454
+  ClientHeight = 304
+  ClientWidth = 378
   Position = poScreenCenter
   LCLVersion = '1.7'
   object Label1: TLabel
     Left = 0
-    Height = 15
+    Height = 25
     Top = 8
-    Width = 90
+    Width = 137
     Caption = 'Objekt Inspektor:'
     ParentColor = False
   end
@@ -29,9 +29,9 @@ object FormEditorOptionsForm: TFormEditorOptionsForm
   end
   object Label2: TLabel
     Left = 0
-    Height = 15
+    Height = 25
     Top = 51
-    Width = 68
+    Width = 100
     Caption = 'Hintergrund:'
     ParentColor = False
   end
@@ -77,9 +77,9 @@ object FormEditorOptionsForm: TFormEditorOptionsForm
   end
   object Label3: TLabel
     Left = 0
-    Height = 15
+    Height = 25
     Top = 91
-    Width = 69
+    Width = 105
     Caption = 'Vordergrund:'
     ParentColor = False
   end
@@ -106,25 +106,25 @@ object FormEditorOptionsForm: TFormEditorOptionsForm
   end
   object Label4: TLabel
     Left = 0
-    Height = 15
+    Height = 25
     Top = 131
-    Width = 84
+    Width = 125
     Caption = 'Toolbox Button:'
     ParentColor = False
   end
   object Button2: TButton
-    Left = 248
+    Left = 168
     Height = 32
-    Top = 248
+    Top = 264
     Width = 99
     Caption = 'Ok'
     ModalResult = 1
     TabOrder = 7
   end
   object Button1: TButton
-    Left = 352
+    Left = 272
     Height = 32
-    Top = 248
+    Top = 264
     Width = 99
     Caption = 'Abbrechen'
     ModalResult = 2
@@ -132,48 +132,61 @@ object FormEditorOptionsForm: TFormEditorOptionsForm
   end
   object Label5: TLabel
     Left = 0
-    Height = 15
+    Height = 25
     Top = 176
-    Width = 35
+    Width = 53
     Caption = 'Raster:'
     ParentColor = False
   end
   object RasterBox: TCheckBox
     Left = 168
-    Height = 19
+    Height = 29
     Top = 174
-    Width = 20
+    Width = 30
     Checked = True
     State = cbChecked
     TabOrder = 9
   end
   object Label6: TLabel
     Left = 192
-    Height = 15
+    Height = 25
     Top = 176
-    Width = 35
+    Width = 52
     Caption = 'Größe:'
     ParentColor = False
   end
   object RasterSizeEdit: TEdit
     Left = 248
-    Height = 23
+    Height = 33
     Top = 174
     Width = 80
     Alignment = taRightJustify
     NumbersOnly = True
     TabOrder = 10
-    Text = '4'
+    Text = '8'
   end
   object HelpLineBox: TCheckBox
-    Left = 168
-    Height = 19
+    Left = 0
+    Height = 29
     Top = 216
-    Width = 73
+    Width = 106
     Caption = 'Hilfslinien'
     Checked = True
     State = cbChecked
     TabOrder = 11
+  end
+  object DBBox: TCheckBox
+    Left = 168
+    Height = 29
+    Hint = 'Auf langsamen Computern und VMs nicht empfohlen'
+    Top = 216
+    Width = 141
+    Caption = 'Doppel Puffer'
+    Checked = True
+    ParentShowHint = False
+    ShowHint = True
+    State = cbChecked
+    TabOrder = 12
   end
   object ColorDialog1: TColorDialog
     Color = clBlack

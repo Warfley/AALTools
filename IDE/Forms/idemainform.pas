@@ -8,7 +8,8 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Menus, ComCtrls, Buttons, ExtCtrls, PairSplitter, Project, IDEStartupScreen,
   ProjectInspector, EditorManagerFrame, AALTypes, FormEditor, Editor,
-  AALFileInfo, strutils, CompilerOptions, AALCompiler, EditorOptions, FormEditorOptions;
+  AALFileInfo, strutils, CompilerOptions, AALCompiler, EditorOptions, FormEditorOptions,
+  SampeProjectView;
 
 type
 
@@ -26,7 +27,7 @@ type
     Width,
     Height: integer;
     State: TWindowState;
-    PILeft: Boolean;
+    PILeft: boolean;
   end;
 
   PCreateFuncInfo = ^TCreateFuncInfo;
@@ -109,16 +110,18 @@ type
     procedure RenReleaseMenuItemClick(Sender: TObject);
     procedure RunBtnClick(Sender: TObject);
     procedure RunDebugMenuItemClick(Sender: TObject);
+    procedure SampeButtonClick(Sender: TObject);
     procedure SaveAllItemClick(Sender: TObject);
     procedure SaveAsItemClick(Sender: TObject);
     procedure SaveFileItemClick(Sender: TObject);
     procedure KillEditor(s: string);
+    procedure SelectModeBoxChange(Sender: TObject);
     procedure StopBtnClick(Sender: TObject);
     procedure TextEditorOptionsItemClick(Sender: TObject);
     procedure ToolBar1Paint(Sender: TObject);
   private
     FFirstLoad: boolean;
-    FSaveOnClosing: Boolean;
+    FSaveOnClosing: boolean;
     FCompiler: TAALCompiler;
     FFormIsClosing: boolean;
     FCurrentProject: TAALProject;
@@ -126,7 +129,8 @@ type
     FFileData: TAALFileManager;
     FCurrentState: TIDEState;
     { private declarations }
-    function ShowFormConf: Boolean;
+    procedure OpenProject(P: string);
+    function ShowFormConf: boolean;
     procedure EditorParserFinished(Sender: TObject);
     procedure ShowStartupScreen(Data: IntPtr);
     procedure OpenFile(Filename: string; Pos: TPoint);
@@ -161,16 +165,35 @@ implementation
 
 { TMainForm }
 
-    function TMainForm.ShowFormConf: Boolean;
+
+procedure TMainForm.OpenProject(P: string);
+var
+  c: TCloseAction;
+begin
+  if FileExists(P) and (ExtractFileExt(P) = '.aalproj') then
+  begin
+    StartupScreen.SelectedPath := P;
+    c := caNone;
+    FormClose(Self, c);
+    if EditorManager1.Count > 0 then
+      exit;
+    FCurrentProject.Clear;
+    Application.QueueAsyncCall(@ShowStartupScreen, 1);
+  end;
+end;
+
+function TMainForm.ShowFormConf: boolean;
 var
   i: integer;
 begin
-  FormEditorOptionsForm.Load(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'foms.cfg');
+  FormEditorOptionsForm.Load(IncludeTrailingPathDelimiter(
+    ExtractFilePath(ParamStr(0))) + 'foms.cfg');
   Result := False;
   if FormEditorOptionsForm.ShowModal = mrOk then
   begin
     Result := True;
-    FormEditorOptionsForm.Save(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+'foms.cfg');
+    FormEditorOptionsForm.Save(IncludeTrailingPathDelimiter(
+      ExtractFilePath(ParamStr(0))) + 'foms.cfg');
     for i := 0 to EditorManager1.Count - 1 do
       if EditorManager1.Editors[i] is TFormEditFrame then
         (EditorManager1.Editors[i] as TFormEditFrame).ReLoadConf;
@@ -292,7 +315,7 @@ begin
   if FFirstLoad and (Paramcount > 0) and FileExists(ParamStr(1)) and
     (LowerCase(ExtractFileExt(ParamStr(1))) = '.aalproj') then
     StartupScreen.SelectedPath := ParamStr(1)
-  else
+  else if Data <> 1 then
     StartupScreen.ShowModal;
   FFirstLoad := False;
   if FileExists(StartupScreen.SelectedPath) then
@@ -327,9 +350,9 @@ procedure TMainForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 var
   mr: TModalResult;
   f: file of TIDEState;
-  fb: file of Boolean;
+  fb: file of boolean;
 begin
-  FSaveOnClosing:=False;
+  FSaveOnClosing := False;
   if FCompiler.Active then
     if MessageDlg('Ausführung noch nicht beendet',
       'Der Compiler oder Interpreter ist noch aktiv, soll der Prozess gestoppt werden?',
@@ -365,12 +388,12 @@ begin
     EditorManager1.OnEditorChanged := @EditorChanged;
     EditorManager1.OnEditorCreated := @EditorCreated;
     FFormIsClosing := False;
-    FSaveOnClosing:=True;
+    FSaveOnClosing := True;
   end;
   FLastOpend.SaveToFile(ExtractFilePath(ParamStr(0)) + 'LastOpend.txt');
 
-  FCurrentState.Left:=Left;
-  FCurrentState.Top:=Top;
+  FCurrentState.Left := Left;
+  FCurrentState.Top := Top;
   AssignFile(f, IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'wnd.cnf');
   try
     Rewrite(f);
@@ -595,11 +618,13 @@ begin
       'Datei wurde Verändert'#10#13'Vor dem schließen Sichern?',
       mtConfirmation, mbYesNoCancel, 'Schließen?');
     case res of
-      mrYes: if FFormIsClosing then begin
-        SaveAllItemClick(SaveAllItem);
-        FSaveOnClosing:=True;
-      end
-      else SaveFileItemClick(SaveFileItem);
+      mrYes: if FFormIsClosing then
+        begin
+          SaveAllItemClick(SaveAllItem);
+          FSaveOnClosing := True;
+        end
+        else
+          SaveFileItemClick(SaveFileItem);
       mrNo: Exit;
       mrCancel: Proceed := False;
     end;
@@ -642,6 +667,18 @@ begin
       EditorManager1.EditorControl.Pages[i].Free;
       Break;
     end;
+end;
+
+procedure TMainForm.SelectModeBoxChange(Sender: TObject);
+var
+  HotKey: string;
+begin
+  if SelectModeBox.ItemIndex = 0 then
+    HotKey := 'F5'
+  else
+    HotKey := 'Strg + R';
+  RunBtn.Hint := Format('Ausführen %s (%s)',
+    [SelectModeBox.Items[SelectModeBox.ItemIndex], Hotkey]);
 end;
 
 procedure TMainForm.StopBtnClick(Sender: TObject);
@@ -804,16 +841,16 @@ begin
       State := wsMaximized;
       Top := 200;
       Left := 200;
-      PILeft:=True;
+      PILeft := True;
     end;
   Width := FCurrentState.Width;
   Height := FCurrentState.Height;
   Left := FCurrentState.Left;
   Top := FCurrentState.Top;
   WindowState := FCurrentState.State;
-  IDEOptionItem.Checked:=FCurrentState.PILeft;
+  IDEOptionItem.Checked := FCurrentState.PILeft;
   IDEOptionItemClick(IDEOptionItem);
-  FSaveOnClosing:=False;
+  FSaveOnClosing := False;
   FFirstLoad := True;
   FCompiler := TAALCompiler.Create;
   FCompiler.OnOutput := @PrintText;
@@ -854,7 +891,7 @@ end;
 
 procedure TMainForm.FormResize(Sender: TObject);
 begin
-  if (WindowState = wsNormal) and (Width<>Screen.Width) then
+  if (WindowState = wsNormal) and (Width <> Screen.Width) then
   begin
     FCurrentState.Width := Width;
     FCurrentState.Height := Height;
@@ -877,17 +914,17 @@ end;
 
 procedure TMainForm.IDEOptionItemClick(Sender: TObject);
 begin
-  if (sender as TMenuItem).Checked then
+  if (Sender as TMenuItem).Checked then
   begin
-    (Sender as TMenuItem).Caption:='Projektinspektor Links';
-    ProjectInspector1.Align:=alLeft;
+    (Sender as TMenuItem).Caption := 'Projektinspektor Links';
+    ProjectInspector1.Align := alLeft;
   end
   else
   begin
-    (Sender as TMenuItem).Caption:='Projektinspektor Rechts';
-    ProjectInspector1.Align:=alRight;
+    (Sender as TMenuItem).Caption := 'Projektinspektor Rechts';
+    ProjectInspector1.Align := alRight;
   end;
-  FCurrentState.PILeft:=(sender as TMenuItem).Checked;
+  FCurrentState.PILeft := (Sender as TMenuItem).Checked;
 end;
 
 procedure TMainForm.NewFileItemClick(Sender: TObject);
@@ -977,6 +1014,13 @@ begin
   FCompiler.CompileAndRun(FCurrentProject, cmDebug);
   RunBtn.Enabled := False;
   StopBtn.Enabled := True;
+end;
+
+procedure TMainForm.SampeButtonClick(Sender: TObject);
+begin
+  SampleForm.ShowModal;
+  if FileExists(SampleForm.Selected) then
+    OpenProject(SampleForm.Selected);
 end;
 
 procedure TMainForm.SaveAllItemClick(Sender: TObject);

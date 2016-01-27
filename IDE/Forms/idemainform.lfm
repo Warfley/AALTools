@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 124
+  Left = 426
   Height = 647
-  Top = 157
+  Top = 195
   Width = 1260
   ActiveControl = EditorManager1.EditorControl
   Caption = 'AAL IDE'
@@ -785,7 +785,7 @@ object MainForm: TMainForm
         object RunBtn: TSpeedButton
           Left = 0
           Height = 32
-          Hint = 'Ausführen'
+          Hint = 'Ausführen Debug (F5)'
           Top = 0
           Width = 32
           Align = alLeft
@@ -973,6 +973,7 @@ object MainForm: TMainForm
             'Debug'
             'Release'
           )
+          OnChange = SelectModeBoxChange
           ParentShowHint = False
           ShowHint = True
           Style = csDropDownList
@@ -1107,6 +1108,7 @@ object MainForm: TMainForm
       Caption = 'Extras'
       object SampeButton: TMenuItem
         Caption = 'Beispiele'
+        OnClick = SampeButtonClick
       end
     end
     object ConfigMenuItem: TMenuItem

@@ -133,17 +133,24 @@ object FormEditorOptionsForm: TFormEditorOptionsForm
   object Label5: TLabel
     Left = 0
     Height = 25
+    Hint = 'Zeigt ein Raster auf allen Containerkomponenten an'#13#10#13#10'Verlangsamt den Editor bei großen Formen drastisch'
     Top = 176
-    Width = 53
+    Width = 168
+    AutoSize = False
     Caption = 'Raster:'
     ParentColor = False
+    ParentShowHint = False
+    ShowHint = True
   end
   object RasterBox: TCheckBox
     Left = 168
     Height = 29
+    Hint = 'Zeigt ein Raster auf allen Containerkomponenten an'#13#10#13#10'Verlangsamt den Editor bei großen Formen drastisch'
     Top = 174
     Width = 30
     Checked = True
+    ParentShowHint = False
+    ShowHint = True
     State = cbChecked
     TabOrder = 9
   end
@@ -168,10 +175,13 @@ object FormEditorOptionsForm: TFormEditorOptionsForm
   object HelpLineBox: TCheckBox
     Left = 0
     Height = 29
+    Hint = 'Hilfslinien zum Positionieren von Controls'
     Top = 216
     Width = 106
     Caption = 'Hilfslinien'
     Checked = True
+    ParentShowHint = False
+    ShowHint = True
     State = cbChecked
     TabOrder = 11
   end

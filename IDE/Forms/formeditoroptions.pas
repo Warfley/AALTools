@@ -14,7 +14,12 @@ type
 
   TFormEditorOptionsForm = class(TForm)
     BGColorBtn: TButton;
+    HelpLineBox: TCheckBox;
+    RasterSizeEdit: TEdit;
+    Label6: TLabel;
+    RasterBox: TCheckBox;
     ForeColorButton: TButton;
+    Label5: TLabel;
     TBColorButton: TButton;
     BGColorPicklist: TColorBox;
     ForeColorPicklist: TColorBox;
@@ -113,6 +118,9 @@ begin
     BGColorPicklist.Selected := BGCol;
     ForeColorPicklist.Selected := ForeCol;
     TBColorPicklist.Selected := TBCol;
+    RasterBox.Checked:=UseRaster;
+    RasterSizeEdit.Text:=IntToStr(RasterSize);
+    HelpLineBox.Checked:=UseHelpLines;
   end;
 end;
 
@@ -127,6 +135,9 @@ begin
     BGCol := ColorToRGB(BGColorPicklist.Selected);
     ForeCol := ColorToRGB(ForeColorPicklist.Selected);
     TBCol := ColorToRGB(TBColorPicklist.Selected);
+    UseRaster:=RasterBox.Checked;
+    RasterSize:=StrToInt(RasterSizeEdit.Text);
+    UseHelpLines:=HelpLineBox.Checked;
   end;
   AssignFile(f, P);
   try

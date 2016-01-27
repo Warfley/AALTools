@@ -8,8 +8,8 @@ object FormEditFrame: TFormEditFrame
   Color = clWindow
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 411
-  DesignTop = 175
+  DesignLeft = 246
+  DesignTop = 109
   object EditorScrollBox: TScrollBox
     Left = 0
     Height = 563

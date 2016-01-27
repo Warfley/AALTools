@@ -46,6 +46,9 @@ type
     BGCol: TColor;
     ForeCol: TColor;
     TBCol: TColor;
+    UseHelpLines: Boolean;
+    UseRaster: Boolean;
+    RasterSize: Integer;
   end;
 
   THashInfo = record

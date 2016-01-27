@@ -68,6 +68,7 @@ type
     FLastClickTime: cardinal;
     FFormEvents: TStringList;
     FFormStyle: integer;
+    FDrawLines: boolean;
     FFormLeft: integer;
     FFormTop: integer;
     FEditorControls: TObjectList;
@@ -243,7 +244,7 @@ begin
         Data := Result;
         ImageIndex := 1;
         SelectedIndex := 1;
-        FormControlView.MultiSelect:=False;
+        FormControlView.MultiSelect := False;
         Selected := True;
         Break;
       end;
@@ -276,7 +277,7 @@ begin
         Data := Result;
         ImageIndex := 2;
         SelectedIndex := 2;
-        FormControlView.MultiSelect:=False;
+        FormControlView.MultiSelect := False;
         Selected := True;
         Break;
       end;
@@ -327,8 +328,8 @@ begin
         Data := Result;
         ImageIndex := 4;
         SelectedIndex := 4;
-        FormControlView.MultiSelect:=False;
-        Selected:=False;
+        FormControlView.MultiSelect := False;
+        Selected := False;
         Break;
       end;
   FEditorControls.Add(Result);
@@ -368,11 +369,11 @@ begin
 end;
 
 constructor TFormEditFrame.Create(TheOwner: TComponent);
-var
-  i, n: integer;
 begin
   inherited;
+  FormPanel.DoubleBuffered := True;
   FFuncList := TStringList.Create;
+  FDrawLines := False;
   EventEditor.EditorByStyle(cbsPickList).OnClick := @PickListClick;
   EventEditor.EditorByStyle(cbsPickList).OnEnter := @PickListClick;
   FEditorControls := TObjectList.Create(True);
@@ -402,6 +403,9 @@ end;
 
 procedure TFormEditFrame.FormPanelMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: integer);
+var
+  n: integer;
+  b: boolean;
 begin
   if not (ssLeft in Shift) then
   begin
@@ -421,18 +425,22 @@ begin
     case (Sender as TControl).Cursor of
       crSizeNWSE:
       begin
-        (Sender as TControl).Width := X;
-        (Sender as TControl).Height := Y;
+        (Sender as TControl).Width :=
+          X div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
+        (Sender as TControl).Height :=
+          Y div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
         Moved := True;
       end;
       crSizeNS:
       begin
-        (Sender as TControl).Height := Y;
+        (Sender as TControl).Height :=
+          Y div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
         Moved := True;
       end;
       crSizeWE:
       begin
-        (Sender as TControl).Width := X;
+        (Sender as TControl).Width :=
+          X div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
         Moved := True;
       end;
       else
@@ -440,12 +448,38 @@ begin
         if Sender <> FormPanel then
         begin
           (Sender as TControl).Left :=
-            FormPanel.ScreenToClient(
-            (Sender as TControl).ClientToScreen(Point(X, Y))).X - FMousePoint.X;
+            (FormPanel.ScreenToClient(
+            (Sender as TControl).ClientToScreen(Point(X, Y))).X - FMousePoint.X) div
+            (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
           (Sender as TControl).Top :=
-            FormPanel.ScreenToClient(
-            (Sender as TControl).ClientToScreen(Point(X, Y))).Y - FMousePoint.y;
+            (FormPanel.ScreenToClient(
+            (Sender as TControl).ClientToScreen(Point(X, Y))).Y - FMousePoint.y) div
+            (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
           Moved := True;
+          b := False;
+          if FConf.UseHelpLines then
+            with Sender as TControl do
+              for n := 0 to Parent.ControlCount - 1 do
+              begin
+                if (Left < Parent.Controls[n].Left + FConf.RasterSize) and
+                  (Left > Parent.Controls[n].Left - FConf.RasterSize) then
+                begin
+                  Left := Parent.Controls[n].Left;
+                  b := True;
+                end;
+                if (Top < Parent.Controls[n].Top + FConf.RasterSize) and
+                  (Top > Parent.Controls[n].Top - FConf.RasterSize) then
+                begin
+                  Top := Parent.Controls[n].Top;
+                  b := True;
+                end;
+                if b then
+                begin
+                  FDrawLines := True;
+                  FormPanel.Invalidate;
+                  Exit;
+                end;
+              end;
         end;
         if ToolSelect.ItemIndex >= 0 then
         begin
@@ -498,6 +532,7 @@ begin
     Moved := False;
     PositionPickerPanel.Show;
     FMousePoint := Point(-1, -1);
+    FDrawLines := False;
   end;
 end;
 
@@ -514,9 +549,15 @@ end;
 
 procedure TFormEditFrame.FormPanelPaint(Sender: TObject);
 var
-  i: integer;
+  i, n: integer;
   c: TControl;
 begin
+  if FConf.UseRaster then
+    for i := 0 to (Sender as TCustomControl).Width div FConf.RasterSize do
+      for n := 0 to (Sender as TCustomControl).Height div FConf.RasterSize do
+        (Sender as TCustomControl).Canvas.Pixels[i * FConf.RasterSize,
+          n * FConf.RasterSize] :=
+          clgray;
   if (FSelPoint.x >= 0) and (FSelPoint.y >= 0) then
   begin
     (Sender as TCustomControl).Canvas.Brush.Color := (Sender as TCustomControl).Color;
@@ -528,7 +569,7 @@ begin
     (Sender as TCustomControl).Canvas.Rectangle(FPanelMousePoint.X,
       FPanelMousePoint.Y, FSelPoint.x, FSelPoint.Y);
   end;
-  if (FMousePoint.x = -1) and (FMousePoint.y = -1) then
+  if ((FMousePoint.x = -1) and (FMousePoint.y = -1)) or FDrawLines then
     for i := 0 to FormControlView.Items.Count - 1 do
       if FormControlView.Items[i].Selected then
       begin
@@ -537,10 +578,36 @@ begin
         if Assigned(c) then
           with (Sender as TCustomControl).Canvas do
           begin
-            Pen.Style := psDash;
-            Pen.Mode := pmNotXor;
-            Brush.Style := bsClear;
-            Rectangle(c.Left - 1, c.Top - 1, c.Left + c.Width + 1, c.Top + c.Height + 1);
+            if not FDrawLines then
+            begin
+              Pen.Style := psDash;
+              Pen.Mode := pmCopy;
+              Brush.Style := bsClear;
+              Pen.Color := clBlack;
+              Rectangle(c.Left - 1, c.Top - 1, c.Left + c.Width + 1, c.Top + c.Height + 1);
+              Pen.Color := clHighlight;
+              Pen.Style := psSolid;
+            end;
+            if FConf.UseHelpLines then
+              for n := 0 to (Sender as TCustomControl).ControlCount - 1 do
+              begin
+                if (Sender as TCustomControl).Controls[n].Left = c.Left then
+                  Line(c.Left, c.Top, c.Left,
+                    (Sender as TCustomControl).Controls[n].Top);
+                if (Sender as TCustomControl).Controls[n].top = c.Top then
+                  Line(c.Left, c.Top,
+                    (Sender as TCustomControl).Controls[n].Left, c.Top);
+                if (Sender as TCustomControl).Controls[n].top +
+                (Sender as TCustomControl).Controls[n].Height = c.Top + c.Height then
+                  Line(c.Left, c.Top + c.Height,
+                    (Sender as TCustomControl).Controls[n].Left,
+                    c.Top + c.Height);
+                if (Sender as TCustomControl).Controls[n].Left +
+                (Sender as TCustomControl).Controls[n].Width = c.Left + c.Width then
+                  Line(c.Left + c.Width, c.Top, c.Left + c.Width,
+                    (Sender as TCustomControl).Controls[n].Top);
+              end;
+
           end;
       end;
 end;
@@ -671,6 +738,7 @@ begin
     (o as TAALCheckbox).ControlProp[s] := v
   else if o is TAALEdit then
     (o as TAALEdit).ControlProp[s] := v;
+  FormPanel.Invalidate;
   if s = 'name' then
   begin
     FormControlView.Selected.Text := v;
@@ -761,22 +829,24 @@ end;
 
 procedure TFormEditFrame.EditorScrollBoxPaint(Sender: TObject);
 var
-  i: Integer;
+  i: integer;
 begin
   EditorScrollBox.Canvas.Brush.Color := (EditorScrollBox.Color);
   EditorScrollBox.Canvas.Brush.Style := bsSolid;
   EditorScrollBox.Canvas.Pen.Style := psClear;
   EditorScrollBox.Canvas.Rectangle(0, 0, EditorScrollBox.ClientWidth,
     EditorScrollBox.ClientHeight);
-  if (FMousePoint.x=-1) and (FMousePoint.y=-1) then
-  for i:=0 to FormControlView.Items.Count-1 do
-    if (FormControlView.Items[i].Selected) And (TControl(FormControlView.Items[i].Data) =FormPanel) then
-    begin
-  EditorScrollBox.Canvas.Brush.Style := bsClear;
-  EditorScrollBox.Canvas.Pen.Style := psDash;
-  EditorScrollBox.Canvas.Pen.Mode:=pmNotXor;
-  EditorScrollBox.Canvas.Rectangle(FormPanel.Left-1, FormPanel.Top-1, FormPanel.Left+FormPanel.Width+1, FormPanel.Top+FormPanel.Height+1);
-    end;
+  if (FMousePoint.x = -1) and (FMousePoint.y = -1) then
+    for i := 0 to FormControlView.Items.Count - 1 do
+      if (FormControlView.Items[i].Selected) and
+        (TControl(FormControlView.Items[i].Data) = FormPanel) then
+      begin
+        EditorScrollBox.Canvas.Brush.Style := bsClear;
+        EditorScrollBox.Canvas.Pen.Style := psDash;
+        EditorScrollBox.Canvas.Pen.Mode := pmNotXor;
+        EditorScrollBox.Canvas.Rectangle(FormPanel.Left - 1, FormPanel.Top - 1,
+          FormPanel.Left + FormPanel.Width + 1, FormPanel.Top + FormPanel.Height + 1);
+      end;
 end;
 
 procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;
@@ -821,7 +891,26 @@ end;
 
 procedure TFormEditFrame.FormControlViewEdited(Sender: TObject;
   Node: TTreeNode; var S: string);
+
+  function isValidName(s: string): boolean;
+  var
+    c: char;
+  begin
+    Result := Length(s) > 0;
+    for c in s do
+      if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
+      begin
+        Result := False;
+        Break;
+      end;
+  end;
+
 begin
+  if not isValidName(s) then
+  begin
+    s := Node.Text;
+    Exit;
+  end;
   if TControl(Node.Data) = FormPanel then
     FFormName := s
   else
@@ -829,6 +918,8 @@ begin
   FormControlViewChange(Sender, Node);
   if Assigned(FOnChange) then
     FOnChange(Self);
+  if Assigned(FOnVarChanged) then
+    FOnVarChanged(Self);
 end;
 
 procedure TFormEditFrame.DeleteItem(n: TTreeNode);

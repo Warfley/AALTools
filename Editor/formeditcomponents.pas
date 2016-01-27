@@ -20,6 +20,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
     procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
@@ -27,7 +28,10 @@ type
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
     property ControlProp[s: string]: string read GetProp write SetProp;
+    property Events: TStringList read FEvents;
   published
+    property Style: integer read FStyle write FStyle;
+    property StyleEX: integer read FStyleEX write FStyleEX;
     property Action;
     property Align;
     property Alignment;
@@ -106,6 +110,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
     procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
@@ -113,6 +118,7 @@ type
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
     property ControlProp[s: string]: string read GetProp write SetProp;
+    property Events: TStringList read FEvents;
   published
     property Action;
     property Align;
@@ -162,6 +168,8 @@ type
     property TabOrder;
     property TabStop;
     property Visible;
+    property Style: integer read FStyle write FStyle;
+    property StyleEX: integer read FStyleEX write FStyleEX;
   end;
 
   TAALCheckbox = class(TCustomCheckBox)
@@ -178,6 +186,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
     procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
@@ -185,6 +194,7 @@ type
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
     property ControlProp[s: string]: string read GetProp write SetProp;
+    property Events: TStringList read FEvents;
   published
     property Action;
     property Align;
@@ -239,6 +249,8 @@ type
     property TabOrder;
     property TabStop default True;
     property Visible;
+    property Style: integer read FStyle write FStyle;
+    property StyleEX: integer read FStyleEX write FStyleEX;
   end;
 
   TAALLabel = class(TCustomControl)
@@ -257,6 +269,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
     procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
@@ -264,6 +277,7 @@ type
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
     property ControlProp[s: string]: string read GetProp write SetProp;
+    property Events: TStringList read FEvents;
   published
     property Caption: string read FCaption write SetCaption;
     property OnClick;
@@ -279,31 +293,35 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnResize;
+    property Style: integer read FStyle write FStyle;
+    property StyleEX: integer read FStyleEX write FStyleEX;
   end;
 
 implementation
 
 { Edit }
-function isNumeric(s: String): Boolean;
-var c: Char;
+function isNumeric(s: string): boolean;
+var
+  c: char;
 begin
-  Result:=Length(s)>0;
+  Result := Length(s) > 0;
   for c in s do
     if not (c in ['0'..'9']) then
     begin
-      Result:=False;
+      Result := False;
       Break;
     end;
 end;
 
-function isValidName(s: String): Boolean;
-var c: Char;
+function isValidName(s: string): boolean;
+var
+  c: char;
 begin
-  Result:=Length(s)>0;
+  Result := Length(s) > 0;
   for c in s do
     if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
     begin
-      Result:=False;
+      Result := False;
       Break;
     end;
 end;
@@ -371,6 +389,24 @@ destructor TAALEdit.Destroy;
 begin
   FEvents.Free;
   inherited;
+end;
+
+procedure TAALEdit.CopyTo(c: TControl);
+begin
+  c.Left := Left;
+  c.Top := Top;
+  c.Width := Width;
+  c.Height := Height;
+  if (c is TAALEdit) then
+  begin
+    if Name = Text then
+      (c as TAALEdit).Text := c.Name
+    else
+      (c as TAALEdit).Text := Text;
+    (c as TAALEdit).Style := Style;
+    (c as TAALEdit).StyleEX := StyleEX;
+    (c as TAALEdit).Events.Assign(FEvents);
+  end;
 end;
 
 function TAALEdit.GetAALString(FormName: string): string;
@@ -506,6 +542,24 @@ begin
   inherited;
 end;
 
+procedure TAALButton.CopyTo(c: TControl);
+begin
+  c.Left := Left;
+  c.Top := Top;
+  c.Width := Width;
+  c.Height := Height;
+  if Name = Caption then
+    c.Caption := c.Name
+  else
+    c.Caption := Caption;
+  if (c is TAALButton) then
+  begin
+    (c as TAALButton).Style := Style;
+    (c as TAALButton).StyleEX := StyleEX;
+    (c as TAALButton).Events.Assign(FEvents);
+  end;
+end;
+
 function TAALButton.GetAALString(FormName: string): string;
 begin
   Result := Format('$%s = CreateButton($%s, "%s", %d, %d, %d, %d, %d, %d)',
@@ -631,6 +685,24 @@ destructor TAALCheckbox.Destroy;
 begin
   FEvents.Free;
   inherited;
+end;
+
+procedure TAALCheckbox.CopyTo(c: TControl);
+begin
+  c.Left := Left;
+  c.Top := Top;
+  c.Width := Width;
+  c.Height := Height;
+  if Name = Caption then
+    c.Caption := c.Name
+  else
+    c.Caption := Caption;
+  if (c is TAALCheckbox) then
+  begin
+    (c as TAALCheckbox).Style := Style;
+    (c as TAALCheckbox).StyleEX := StyleEX;
+    (c as TAALCheckbox).Events.Assign(FEvents);
+  end;
 end;
 
 function TAALCheckbox.GetAALString(FormName: string): string;
@@ -772,6 +844,24 @@ destructor TAALLabel.Destroy;
 begin
   FEvents.Free;
   inherited;
+end;
+
+procedure TAALLabel.CopyTo(c: TControl);
+begin
+  c.Left := Left;
+  c.Top := Top;
+  c.Width := Width;
+  c.Height := Height;
+  if Name = Caption then
+    c.Caption := c.Name
+  else
+    c.Caption := Caption;
+  if (c is TAALLabel) then
+  begin
+    (c as TAALLabel).Style := Style;
+    (c as TAALLabel).StyleEX := StyleEX;
+    (c as TAALLabel).Events.Assign(FEvents);
+  end;
 end;
 
 function TAALLabel.GetAALString(FormName: string): string;

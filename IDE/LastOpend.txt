@@ -1,2 +1,2 @@
-C:\Users\frede\Desktop\AALTools\IDE\Examples\Rechner\Rechner.aalproj
 C:\Users\frede\AAL\AALProjekt1\AALProjekt1.aalproj
+C:\Users\frede\Desktop\AALTools\IDE\Examples\Rechner\Rechner.aalproj

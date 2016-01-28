@@ -993,8 +993,8 @@ object MainForm: TMainForm
     TabOrder = 3
   end
   object MainFormMenu: TMainMenu
-    left = 264
-    top = 56
+    left = 512
+    top = 304
     object FileMenuItem: TMenuItem
       Caption = 'Datei'
       object NewMenuItem: TMenuItem
@@ -1140,11 +1140,11 @@ object MainForm: TMainForm
     Filter = 'AAL Quellcode|*.aal1;*.afm;*.apr'
     Options = [ofExtensionDifferent, ofFileMustExist, ofEnableSizing, ofViewDetail]
     left = 512
-    top = 160
+    top = 128
   end
   object AALIDEProps: TApplicationProperties
     ShowMainForm = False
-    left = 688
-    top = 32
+    left = 512
+    top = 216
   end
 end

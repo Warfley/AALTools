@@ -237,6 +237,7 @@
         <Filename Value="Forms\sampeprojectview.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="SampleForm"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="SampeProjectView"/>
       </Unit20>

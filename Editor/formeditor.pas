@@ -398,7 +398,7 @@ begin
   PropEditor.ColWidths[0] := PropEditor.Width div 2;
   EventEditor.ColWidths[0] := EventEditor.Width div 2;
   FFormStyle := 0;
-  FCopyLst:=TObjectList.Create(false);
+  FCopyLst := TObjectList.Create(False);
   ReLoadConf;
 end;
 
@@ -1086,46 +1086,57 @@ begin
           IntPtr(FormControlView.Items[i]));
     if Assigned(FOnVarChanged) then
       FOnVarChanged(Self);
-    if Assigned(FOnChange) then FOnChange(Self);
+    if Assigned(FOnChange) then
+      FOnChange(Self);
   end
-  else if (Key = ord('C')) and (ssCtrl in Shift) then
+  else if (Key = Ord('C')) and (ssCtrl in Shift) then
   begin
     FCopyLst.Clear;
-    for i:=0 to FormControlView.Items.Count-1 do
+    for i := 0 to FormControlView.Items.Count - 1 do
       if FormControlView.Items[i].Selected then
         FCopyLst.Add(TObject(FormControlView.Items[i].Data));
   end
-  else if (Key = ord('V')) and (ssCtrl in Shift) then
+  else if (Key = Ord('V')) and (ssCtrl in Shift) then
   begin
-    tmplst:=TObjectList.Create(False);
+    tmplst := TObjectList.Create(False);
     try
-    for i:=0 to FCopyLst.Count-1 do
-      if FCopyLst[i] is TAALButton then
-      begin
-        tmp:=tmplst.Add(CreateButton((FCopyLst[i] as TControl).Parent));
-        (FCopyLst[i] as TAALButton).CopyTo(tmplst[tmp] as TControl);
-      end
-      else if FCopyLst[i] is TAALLabel then
-      begin
-        tmp:=tmplst.Add(CreateLabel((FCopyLst[i] as TControl).Parent));
-        (FCopyLst[i] as TAALLabel).CopyTo(tmplst[tmp] as TControl);
-      end
-      else if FCopyLst[i] is TAALEdit then
-      begin
-        tmp:=tmplst.Add(CreateEdit((FCopyLst[i] as TControl).Parent));
-        (FCopyLst[i] as TAALEdit).CopyTo(tmplst[tmp] as TControl);
-      end
-      else if FCopyLst[i] is TAALCheckbox then
-      begin
-        tmp:=tmplst.Add(CreateCheckBox((FCopyLst[i] as TControl).Parent));
-        (FCopyLst[i] as TAALCheckbox).CopyTo(tmplst[tmp] as TControl);
-      end;
-    for i:=0 to tmplst.Count-1 do
-      for n:=0 to FormControlView.Items.Count-1 do
-        if FormControlView.Items[n].Data=Pointer(tmplst[i]) then
+      for i := 0 to FCopyLst.Count - 1 do
+        if FCopyLst[i] is TAALButton then
         begin
-          FormControlView.Items[n].Selected:=True;
-          Break;
+          tmp := tmplst.Add(CreateButton((FCopyLst[i] as TControl).Parent));
+          (FCopyLst[i] as TAALButton).CopyTo(tmplst[tmp] as TControl);
+        end
+        else if FCopyLst[i] is TAALLabel then
+        begin
+          tmp := tmplst.Add(CreateLabel((FCopyLst[i] as TControl).Parent));
+          (FCopyLst[i] as TAALLabel).CopyTo(tmplst[tmp] as TControl);
+        end
+        else if FCopyLst[i] is TAALEdit then
+        begin
+          tmp := tmplst.Add(CreateEdit((FCopyLst[i] as TControl).Parent));
+          (FCopyLst[i] as TAALEdit).CopyTo(tmplst[tmp] as TControl);
+        end
+        else if FCopyLst[i] is TAALCheckbox then
+        begin
+          tmp := tmplst.Add(CreateCheckBox((FCopyLst[i] as TControl).Parent));
+          (FCopyLst[i] as TAALCheckbox).CopyTo(tmplst[tmp] as TControl);
+        end;
+      for i := 0 to tmplst.Count - 1 do
+      begin
+        for n := 0 to FormControlView.Items.Count - 1 do
+          if FormControlView.Items[n].Data = Pointer(tmplst[i]) then
+          begin
+            FormControlView.Items[n].Selected := True;
+            Break;
+          end;
+        (tmplst[i] as TControl).Left := (tmplst[i] as TControl).Left + 10;
+        (tmplst[i] as TControl).Top := (tmplst[i] as TControl).Top + 10;
+      end;
+      for i:=0 to tmplst.Count do
+        if tmplst[i] is TWinControl then
+        begin
+        (tmplst[i] as TWinControl).SetFocus;
+        Break;
         end;
     finally
       tmplst.Free;

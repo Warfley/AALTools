@@ -9,7 +9,7 @@ uses
   Menus, ComCtrls, Buttons, ExtCtrls, PairSplitter, Project, IDEStartupScreen,
   ProjectInspector, EditorManagerFrame, AALTypes, FormEditor, Editor,
   AALFileInfo, strutils, CompilerOptions, AALCompiler, EditorOptions, FormEditorOptions,
-  SampeProjectView;
+  SampeProjectView, fphttpclient, process, AboutWindow;
 
 type
 
@@ -41,6 +41,8 @@ type
     FormOptionsItem: TMenuItem;
     IDEOptionItem: TMenuItem;
     ExtrasMenuItem: TMenuItem;
+    UpdateMenuItem: TMenuItem;
+    InfoMenuItem: TMenuItem;
     SampeButton: TMenuItem;
     TextEditorOptionsItem: TMenuItem;
     OutputBox: TListBox;
@@ -104,6 +106,7 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
     procedure IDEOptionItemClick(Sender: TObject);
+    procedure InfoMenuItemClick(Sender: TObject);
     procedure NewFileItemClick(Sender: TObject);
     procedure NewFormItemClick(Sender: TObject);
     procedure NewProjectItemClick(Sender: TObject);
@@ -119,6 +122,7 @@ type
     procedure StopBtnClick(Sender: TObject);
     procedure TextEditorOptionsItemClick(Sender: TObject);
     procedure ToolBar1Paint(Sender: TObject);
+    procedure UpdateMenuItemClick(Sender: TObject);
   private
     FFirstLoad: boolean;
     FSaveOnClosing: boolean;
@@ -151,6 +155,8 @@ type
     procedure FinishedComp(Sender: TObject);
     procedure FinishedRun(Sender: TObject);
     procedure CompileError(Sender: TObject);
+    function CheckForUpdates: boolean;
+    procedure PerformUpdate;
   public
     property CurrentProject: TAALProject read FCurrentProject;
     { public declarations }
@@ -165,6 +171,42 @@ implementation
 
 { TMainForm }
 
+function TMainForm.CheckForUpdates: boolean;
+var
+  sl: TStringList;
+  f: TFPHTTPClient;
+begin
+  sl := TStringList.Create;
+  f:=TFPHTTPClient.Create(nil);
+  try
+    sl.Text := f.Get(SUpdateURL + 'Update.txt');
+    Result := sl[0] <> Version;
+  finally
+    f.Free;
+    sl.Free;
+  end;
+end;
+
+procedure TMainForm.PerformUpdate;
+var
+  p: TProcess;
+  c: TCloseAction;
+begin
+  c := caNone;
+  FormClose(Self, c);
+  if EditorManager1.Count > 0 then
+    exit;
+  FCurrentProject.Clear;
+  p := TProcess.Create(nil);
+  try
+    p.Executable := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+      'Updater.exe';
+    p.Execute;
+  finally
+    p.Free;
+  end;
+  Close;
+end;
 
 procedure TMainForm.OpenProject(P: string);
 var
@@ -702,6 +744,19 @@ begin
   ToolBar1.Canvas.LineTo(ToolBar1.Width, ToolBar1.Height - 1);
 end;
 
+procedure TMainForm.UpdateMenuItemClick(Sender: TObject);
+begin
+  if CheckForUpdates then
+  begin
+    if MessageDlg('Neue Version gefunden',
+      'Eine neue Version Steht zum Download verfügbar.'#10#13'Jetzt aktualisieren?',
+      mtInformation, mbYesNo, 'Update') = mrYes then
+      PerformUpdate;
+  end
+  else
+    ShowMessage('Keine neue Version gefunden');
+end;
+
 procedure TMainForm.EditorParserFinished(Sender: TObject);
 var
   i, n, idx, f: integer;
@@ -925,6 +980,11 @@ begin
     ProjectInspector1.Align := alRight;
   end;
   FCurrentState.PILeft := (Sender as TMenuItem).Checked;
+end;
+
+procedure TMainForm.InfoMenuItemClick(Sender: TObject);
+begin
+  AboutForm.ShowModal;
 end;
 
 procedure TMainForm.NewFileItemClick(Sender: TObject);

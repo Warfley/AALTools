@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 195
   Width = 1260
   ActiveControl = EditorManager1.EditorControl
-  Caption = 'AAL IDE'
+  Caption = 'AET'
   ClientHeight = 617
   ClientWidth = 1260
   Color = clBtnFace
@@ -1109,6 +1109,14 @@ object MainForm: TMainForm
       object SampeButton: TMenuItem
         Caption = 'Beispiele'
         OnClick = SampeButtonClick
+      end
+      object UpdateMenuItem: TMenuItem
+        Caption = 'Nach Updates suchen'
+        OnClick = UpdateMenuItemClick
+      end
+      object InfoMenuItem: TMenuItem
+        Caption = 'Über...'
+        OnClick = InfoMenuItemClick
       end
     end
     object ConfigMenuItem: TMenuItem

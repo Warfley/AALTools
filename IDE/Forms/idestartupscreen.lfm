@@ -1,7 +1,7 @@
 object StartupScreen: TStartupScreen
-  Left = 319
+  Left = 438
   Height = 325
-  Top = 119
+  Top = 168
   Width = 605
   BorderStyle = bsToolWindow
   Caption = 'AAL IDE'

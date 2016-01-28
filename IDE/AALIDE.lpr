@@ -10,7 +10,7 @@ uses
   Forms, lazcontrols, IDEMainForm, Project, IDEStartupScreen, ProjectInspector,
   AALTypes, Editor, FormEditor, EditorManagerFrame, AALFileInfo, 
 FormEditComponents, AALCompiler, CompilerOptions, EditorOptions, 
-FormEditorOptions, SampeProjectView
+FormEditorOptions, SampeProjectView, AboutWindow
   { you can add units after this };
 
 {$R *.res}
@@ -24,6 +24,7 @@ begin
   Application.CreateForm(TEditorConf, EditorConf);
   Application.CreateForm(TFormEditorOptionsForm, FormEditorOptionsForm);
   Application.CreateForm(TSampleForm, SampleForm);
+  Application.CreateForm(TAboutForm, AboutForm);
   Application.Run;
 end.
 

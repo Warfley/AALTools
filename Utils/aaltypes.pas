@@ -81,6 +81,10 @@ type
     property EndLine: integer read FEnd write FEnd;
   end;
 
+const
+  Version = '0.0.3';
+  SUpdateURL = 'http://kehrein.org/AET/Updates/';
+
 function OpendFileInfo(Name: string; Line: integer = 1;
   Pos: integer = 1): TOpendFileInfo;
 function FuncInfo(Name: string; Line: integer; Inf: string = '';

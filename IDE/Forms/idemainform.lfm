@@ -14,34 +14,32 @@ object MainForm: TMainForm
   OnDestroy = FormDestroy
   OnResize = FormResize
   OnWindowStateChange = FormWindowStateChange
-  LCLVersion = '1.7'
   Visible = False
-  WindowState = wsMaximized
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 455
+    Height = 597
     Top = 36
-    Width = 913
+    Width = 957
     Align = alClient
-    ClientHeight = 455
-    ClientWidth = 913
+    ClientHeight = 597
+    ClientWidth = 957
     inherited EditorControl: TPageControl
-      Height = 455
-      Width = 913
+      Height = 597
+      Width = 957
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 455
+    Height = 597
     Top = 36
     Align = alLeft
-    ClientHeight = 455
+    ClientHeight = 597
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 219
+      Height = 361
       DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 276
+      Top = 418
       inherited AddButton: TButton
         OnClick = nil
       end
@@ -51,7 +49,7 @@ object MainForm: TMainForm
     Left = 0
     Height = 36
     Top = 0
-    Width = 1260
+    Width = 1304
     Caption = 'ToolBar1'
     TabOrder = 2
     OnPaint = ToolBar1Paint
@@ -59,7 +57,7 @@ object MainForm: TMainForm
       Left = 1
       Height = 32
       Top = 2
-      Width = 1259
+      Width = 1303
       Align = alTop
       Position = 264
       object PairSplitterSide1: TPairSplitterSide
@@ -780,8 +778,8 @@ object MainForm: TMainForm
         Left = 269
         Height = 32
         Top = 0
-        Width = 990
-        ClientWidth = 990
+        Width = 1034
+        ClientWidth = 1034
         ClientHeight = 32
         object RunBtn: TSpeedButton
           Left = 0
@@ -987,8 +985,8 @@ object MainForm: TMainForm
   object OutputBox: TListBox
     Left = 0
     Height = 96
-    Top = 491
-    Width = 1260
+    Top = 633
+    Width = 1304
     Align = alBottom
     ItemHeight = 0
     TabOrder = 3

@@ -3,16 +3,17 @@ object Form1: TForm1
   Height = 419
   Top = 189
   Width = 647
+  ActiveControl = CheckListBox1
   Caption = 'Update Generator'
   ClientHeight = 419
   ClientWidth = 647
   Position = poScreenCenter
-  LCLVersion = '1.7'
+  Visible = False
   object CheckListBox1: TCheckListBox
     Left = 0
-    Height = 351
+    Height = 575
     Top = 33
-    Width = 647
+    Width = 757
     Align = alClient
     ItemHeight = 0
     OnKeyUp = CheckListBox1KeyUp
@@ -22,7 +23,7 @@ object Form1: TForm1
     Left = 0
     Height = 33
     Top = 0
-    Width = 647
+    Width = 757
     ShowHidden = False
     ButtonWidth = 23
     NumGlyphs = 1
@@ -34,15 +35,15 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Height = 35
-    Top = 384
-    Width = 647
+    Top = 608
+    Width = 757
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 35
-    ClientWidth = 647
+    ClientWidth = 757
     TabOrder = 2
     object Button1: TButton
-      Left = 472
+      Left = 582
       Height = 35
       Top = 0
       Width = 175
@@ -55,7 +56,7 @@ object Form1: TForm1
       Left = 136
       Height = 35
       Top = 0
-      Width = 336
+      Width = 446
       ShowHidden = False
       ButtonWidth = 23
       NumGlyphs = 1

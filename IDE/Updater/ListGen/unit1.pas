@@ -5,7 +5,7 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, CheckLst,
+  Classes, SysUtils, FileUtil, LazFileUtils, Forms, Controls, Graphics, Dialogs, CheckLst,
   EditBtn, ExtCtrls, StdCtrls, sha1;
 
 type
@@ -58,6 +58,7 @@ begin
   finally
     sl.Free;
   end;
+  CheckListBox1.CheckAll(cbChecked);
 end;
 
 procedure TForm1.Edit1Enter(Sender: TObject);

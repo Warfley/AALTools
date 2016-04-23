@@ -5,9 +5,9 @@ unit FormEditor;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, TreeFilterEdit, Forms, Controls, Graphics,
-  ExtCtrls, StdCtrls, ValEdit, ComCtrls, Grids, contnrs, AALTypes, Dialogs,
-  FormEditComponents, LCLIntf, Math, GraphUtil;
+  Classes, SysUtils, FileUtil, TreeFilterEdit, RTTIGrids, Forms, Controls,
+  Graphics, ExtCtrls, StdCtrls, ValEdit, ComCtrls, Grids, contnrs, AALTypes,
+  Dialogs, FormEditComponents, LCLIntf, Math, GraphUtil, PropEdits, ObjectInspector;
 
 type
 
@@ -15,11 +15,11 @@ type
 
   TFormEditFrame = class(TFrame)
     FormCaptionLabel: TLabel;
-    FormPanel: TPanel;
     ImageList1: TImageList;
     EventEditor: TValueListEditor;
     PositionPickerPanel: TPanel;
     PositionPicker: TPaintBox;
+    PropEditor: TTIPropertyGrid;
     ToolSelect: TListView;
     ToolboxHeaderPanel: TPanel;
     ToolBoxPanel: TPanel;
@@ -30,7 +30,6 @@ type
     EditorScrollBox: TScrollBox;
     TreeFilterEdit1: TTreeFilterEdit;
     FormControlView: TTreeView;
-    PropEditor: TValueListEditor;
     procedure EditorScrollBoxPaint(Sender: TObject);
     procedure EventEditorEditingDone(Sender: TObject);
     procedure EventEditorGetPickList(Sender: TObject; const KeyName: string;
@@ -49,30 +48,26 @@ type
     procedure FormPanelMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure FormPanelPaint(Sender: TObject);
-    procedure FormPanelResize(Sender: TObject);
     procedure PositionPickerMouseEnter(Sender: TObject);
     procedure PositionPickerMouseLeave(Sender: TObject);
     procedure PositionPickerMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: integer);
     procedure PositionPickerPaint(Sender: TObject);
-    procedure PropEditorEditingDone(Sender: TObject);
+    procedure PropEditorEditorFilter(Sender: TObject; aEditor: TPropertyEditor;
+      var aShow: boolean);
     procedure PropertyPanelResize(Sender: TObject);
     procedure ToolboxHeaderPanelClick(Sender: TObject);
     procedure ToolboxHeaderPanelMouseEnter(Sender: TObject);
     procedure ToolboxHeaderPanelMouseLeave(Sender: TObject);
     procedure PickListClick(Sender: TObject);
   private
+    FFormular: TAALForm;
+    FChangeProps: boolean;
     FFileName: string;
-    FFormName: string;
     FConf: TFormEditorConfig;
     Moved: boolean;
     FLastClickTime: cardinal;
-    FFormEvents: TStringList;
-    FFormStyle: integer;
     FDrawLines: boolean;
-    FFormLeft: integer;
-    FFormTop: integer;
-    FEditorControls: TObjectList;
     FMousePoint: TPoint;
     FPanelMousePoint: TPoint;
     FSelPoint: TPoint;
@@ -91,6 +86,8 @@ type
     function CreateLabel(P: TWinControl): TAALLabel;
     function CreateEdit(P: TWinControl): TAALEdit;
     procedure LoadControlData(c: TComponent; Clear: boolean = True);
+    procedure PropChanged(Sender: TObject; PropName, PropVal: string);
+    procedure UpdateFormCaption(Sender: TObject);
   public
     procedure ReLoadConf;
     constructor Create(TheOwner: TComponent); override;
@@ -111,6 +108,43 @@ implementation
 
 {$R *.lfm}
 
+procedure TFormEditFrame.UpdateFormCaption(Sender: TObject);
+begin
+  FormCaptionLabel.Caption := FFormular.Caption;
+end;
+
+procedure TFormEditFrame.PropChanged(Sender: TObject; PropName, PropVal: string);
+var
+  i: integer;
+begin
+  if not FChangeProps then
+  begin
+    FChangeProps := True;
+    try
+      PropName := LowerCase(PropName);
+      if PropName = 'name' then
+      begin
+        for i := 0 to FormControlView.Items.Count - 1 do
+          if TObject(FormControlView.Items[i].Data) = Sender then
+          begin
+            FormControlView.Items[i].Text := PropVal;
+            break;
+          end;
+      end
+      else
+      begin
+        for i := 0 to FormControlView.Items.Count - 1 do
+          if FormControlView.Items[i].Selected then
+            (TObject(FormControlView.Items[i].Data) as IAALComponent).SetProp(
+              PropName, PropVal);
+        (Sender as TControl).Parent.Invalidate;
+      end;
+    finally
+      FChangeProps := False;
+    end;
+
+  end;
+end;
 
 procedure TFormEditFrame.ReLoadConf;
 var
@@ -149,7 +183,7 @@ begin
     TreeFilterEdit1.Color := BGCol;
     TreeFilterEdit1.Font.Color := ForeCol;
     Font.Color := ForeCol;
-    FormPanel.DoubleBuffered := DoubleBuffer;
+    FFormular.DoubleBuffered := DoubleBuffer;
     ToolboxHeaderPanel.Color := TBCol;
     ToolboxHeaderPanel.Font.Color := ForeCol;
     FormControlView.Color := ForeCol;
@@ -161,57 +195,10 @@ begin
 end;
 
 procedure TFormEditFrame.LoadControlData(c: TComponent; Clear: boolean = True);
-var
-  i: integer;
 begin
-  if Clear then
-  begin
-    PropEditor.Clear;
-    EventEditor.Clear;
-  end;
-  if c = FormPanel then
-  begin
-    with PropEditor do
-    begin
-      Clear;
-      Values['Name'] := FFormName;
-      Values['Text'] := FormCaptionLabel.Caption;
-      Values['X'] := IntToStr(FFormLeft);
-      Values['Y'] := IntToStr(FFormTop);
-      Values['Width'] := IntToStr(FormPanel.Width);
-      Values['Height'] := IntToStr(FormPanel.Height);
-      Values['Style'] := IntToStr(FFormStyle);
-    end;
-    EventEditor.Clear;
-    for i := 0 to FFormEvents.Count - 1 do
-    begin
-      EventEditor.Values[FFormEvents.Names[i]] := FFormEvents.ValueFromIndex[i];
-      EventEditor.ItemProps[FFormEvents.Names[i]].EditStyle := esPickList;
-    end;
-  end
-  else
-  begin
-    if c is TAALButton then
-    begin
-      (c as TAALButton).FillEvents(EventEditor);
-      (c as TAALButton).FillProps(PropEditor);
-    end
-    else if c is TAALLabel then
-    begin
-      (c as TAALLabel).FillEvents(EventEditor);
-      (c as TAALLabel).FillProps(PropEditor);
-    end
-    else if c is TAALCheckbox then
-    begin
-      (c as TAALCheckbox).FillEvents(EventEditor);
-      (c as TAALCheckbox).FillProps(PropEditor);
-    end
-    else if c is TAALEdit then
-    begin
-      (c as TAALEdit).FillEvents(EventEditor);
-      (c as TAALEdit).FillProps(PropEditor);
-    end;
-  end;
+  (c as IAALComponent).FillEvents(EventEditor);
+  PropEditor.TIObject := c;
+  PropEditor.Refresh;
 end;
 
 function TFormEditFrame.FindControl(s: string): integer;
@@ -219,8 +206,9 @@ var
   i: integer;
 begin
   Result := -1;
-  for i := 0 to FEditorControls.Count - 1 do
-    if LowerCase((FEditorControls[i] as TControl).Name) = LowerCase(s) then
+  for i := 0 to FormControlView.Items.Count - 1 do
+    if LowerCase((TObject(FormControlView.Items[i].Data) as TControl).Name) =
+      LowerCase(s) then
     begin
       Result := i;
       Break;
@@ -231,7 +219,7 @@ function TFormEditFrame.CreateButton(P: TWinControl): TAALButton;
 var
   i: integer;
 begin
-  Result := TAALButton.Create(FormPanel);
+  Result := TAALButton.Create(FFormular);
   Result.Parent := P;
   i := 1;
   while FindControl('Button' + IntToStr(i)) >= 0 do
@@ -244,6 +232,7 @@ begin
   Result.OnMouseUp := @FormPanelMouseUp;
   Result.OnKeyUp := @FormControlViewKeyUp;
   Result.OnMouseMove := @FormPanelMouseMove;
+  Result.OnChangeProp := @PropChanged;
   Result.Tag := 0;
   for i := 0 to FormControlView.Items.Count - 1 do
     if FormControlView.Items[i].Data = Pointer(P) then
@@ -257,14 +246,13 @@ begin
         Selected := True;
         Break;
       end;
-  FEditorControls.Add(Result);
 end;
 
 function TFormEditFrame.CreateCheckBox(P: TWinControl): TAALCheckbox;
 var
   i: integer;
 begin
-  Result := TAALCheckbox.Create(FormPanel);
+  Result := TAALCheckbox.Create(FFormular);
   Result.Parent := P;
   i := 1;
   while FindControl('CheckBox' + IntToStr(i)) >= 0 do
@@ -277,6 +265,7 @@ begin
   Result.OnMouseUp := @FormPanelMouseUp;
   Result.OnKeyUp := @FormControlViewKeyUp;
   Result.OnMouseMove := @FormPanelMouseMove;
+  Result.OnChangeProp := @PropChanged;
   Result.Tag := 0;
   for i := 0 to FormControlView.Items.Count - 1 do
     if FormControlView.Items[i].Data = Pointer(P) then
@@ -290,7 +279,6 @@ begin
         Selected := True;
         Break;
       end;
-  FEditorControls.Add(Result);
 end;
 
 procedure TFormEditFrame.PickListClick(Sender: TObject);
@@ -312,7 +300,7 @@ function TFormEditFrame.CreateLabel(P: TWinControl): TAALLabel;
 var
   i: integer;
 begin
-  Result := TAALLabel.Create(FormPanel);
+  Result := TAALLabel.Create(FFormular);
   Result.Parent := P;
   i := 1;
   while FindControl('Label' + IntToStr(i)) >= 0 do
@@ -328,6 +316,7 @@ begin
   Result.Width := Result.Canvas.TextWidth(Result.Caption);
   Result.Height := Result.Canvas.TextHeight(Result.Caption);
   Result.OnMouseMove := @FormPanelMouseMove;
+  Result.OnChangeProp := @PropChanged;
   Result.Tag := 0;
   for i := 0 to FormControlView.Items.Count - 1 do
     if FormControlView.Items[i].Data = Pointer(P) then
@@ -341,14 +330,13 @@ begin
         Selected := False;
         Break;
       end;
-  FEditorControls.Add(Result);
 end;
 
 function TFormEditFrame.CreateEdit(P: TWinControl): TAALEdit;
 var
   i: integer;
 begin
-  Result := TAALEdit.Create(FormPanel);
+  Result := TAALEdit.Create(FFormular);
   Result.Parent := P;
   i := 1;
   while FindControl('Edit' + IntToStr(i)) >= 0 do
@@ -362,6 +350,7 @@ begin
   Result.OnDblClick := @FormPanelDblClick;
   Result.OnMouseMove := @FormPanelMouseMove;
   Result.OnKeyUp := @FormControlViewKeyUp;
+  Result.OnChangeProp := @PropChanged;
   Result.Tag := 0;
   for i := 0 to FormControlView.Items.Count - 1 do
     if FormControlView.Items[i].Data = Pointer(P) then
@@ -375,7 +364,6 @@ begin
         Selected := True;
         Break;
       end;
-  FEditorControls.Add(Result);
 end;
 
 constructor TFormEditFrame.Create(TheOwner: TComponent);
@@ -385,19 +373,26 @@ begin
   FDrawLines := False;
   EventEditor.EditorByStyle(cbsPickList).OnClick := @PickListClick;
   EventEditor.EditorByStyle(cbsPickList).OnEnter := @PickListClick;
-  FEditorControls := TObjectList.Create(True);
   FMousePoint := Point(-1, -1);
-  FormControlView.Items.Add(nil, 'Form1').Data := FormPanel;
+  FChangeProps := False;
+  FFormular := TAALForm.Create(EditorScrollBox);
+  FFormular.Parent := EditorScrollBox;
+  FFormular.Height := 312;
+  FFormular.Width := 386;
+  FFormular.SetFormPos(16, 32);
+  FFormular.Visible := True;
+  FFormular.Color := clBtnFace;
+  FFormular.OnPaint := @FormPanelPaint;
+  FFormular.OnDblClick := @FormPanelDblClick;
+  FFormular.OnMouseDown := @FormPanelMouseDown;
+  FFormular.OnMouseMove := @FormPanelMouseMove;
+  FFormular.OnMouseUp := @FormPanelMouseUp;
+  FFormular.OnChangeProp := @PropChanged;
+  FFormular.OnChangeCaption := @UpdateFormCaption;
+  FormControlView.Items.Add(nil, 'Form1').Data := FFormular;
   FormControlView.Items[0].ImageIndex := 0;
   FormControlView.Items[0].SelectedIndex := 0;
-  FFormLeft := 0;
-  FFormTop := 0;
-  FFormEvents := TStringList.Create;
-  FFormEvents.Values['onClick'] := '';
-  FFormName := 'Form1';
-  PropEditor.ColWidths[0] := PropEditor.Width div 2;
   EventEditor.ColWidths[0] := EventEditor.Width div 2;
-  FFormStyle := 0;
   FCopyLst := TObjectList.Create(False);
   ReLoadConf;
 end;
@@ -405,9 +400,7 @@ end;
 destructor TFormEditFrame.Destroy;
 begin
   DeleteItem(FormControlView.Items[0]);
-  FEditorControls.Free;
   FFuncList.Free;
-  FFormEvents.Free;
   FCopyLst.Free;
   inherited;
 end;
@@ -418,160 +411,51 @@ var
   n, i: integer;
   b: boolean;
 begin
-  b := False;
-  if not (ssLeft in Shift) then
-  begin
-    FSelPoint := Point(-1, -1);
-    if (Y >= (Sender as TControl).ClientHeight - 5) and
-      (X >= (Sender as TControl).ClientWidth - 5) then
-      (Sender as TControl).Cursor := crSizeNWSE
-    else if (Y >= (Sender as TControl).ClientHeight - 5) then
-      (Sender as TControl).Cursor := crSizeNS
-    else if (X >= (Sender as TControl).ClientWidth - 5) then
-      (Sender as TControl).Cursor := crSizeWE
-    else
-      (Sender as TControl).Cursor := crDefault;
-  end
-  else
-  begin
-    case (Sender as TControl).Cursor of
-      crSizeNWSE:
-      begin
-        (Sender as TControl).Width :=
-          X div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
-        (Sender as TControl).Height :=
-          Y div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
-        Moved := True;
-        b := False;
-        if FConf.UseHelpLines then
-          with Sender as TControl do
-            for n := 0 to Parent.ControlCount - 1 do
-            begin
-              if (Left + Width < Parent.Controls[n].Left +
-                Parent.Controls[n].Width + FConf.RasterSize) and
-                (Left + Width > Parent.Controls[n].Left +
-                Parent.Controls[n].Width - FConf.RasterSize) then
-              begin
-                Width := Parent.Controls[n].Left + Parent.Controls[n].Width - Left;
-                b := True;
-              end;
-              if (Top + Height < Parent.Controls[n].Top +
-                Parent.Controls[n].Height + FConf.RasterSize) and
-                (Top + Height > Parent.Controls[n].Top +
-                Parent.Controls[n].Height - FConf.RasterSize) then
-              begin
-                Height := Parent.Controls[n].Top + Parent.Controls[n].Height - Top;
-                b := True;
-              end;
-              if b then
-              begin
-                FDrawLines := True;
-                Parent.Invalidate;
-                Exit;
-              end;
-              FDrawLines := False;
-            end;
-      end;
-      crSizeNS:
-      begin
-        (Sender as TControl).Height :=
-          Y div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
-        Moved := True;
-        if FConf.UseHelpLines then
-          with Sender as TControl do
-            for n := 0 to Parent.ControlCount - 1 do
-            begin
-
-              if (Top + Height < Parent.Controls[n].Top +
-                Parent.Controls[n].Height + FConf.RasterSize) and
-                (Top + Height > Parent.Controls[n].Top +
-                Parent.Controls[n].Height - FConf.RasterSize) then
-              begin
-                Height := Parent.Controls[n].Top + Parent.Controls[n].Height - Top;
-                FDrawLines := True;
-                FormPanel.Invalidate;
-                Exit;
-              end;
-              FDrawLines := False;
-            end;
-      end;
-      crSizeWE:
-      begin
-        (Sender as TControl).Width :=
-          X div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
-        Moved := True;
-        if FConf.UseHelpLines then
-          with Sender as TControl do
-            for n := 0 to Parent.ControlCount - 1 do
-            begin
-              if (Left + Width < Parent.Controls[n].Left +
-                Parent.Controls[n].Width + FConf.RasterSize) and
-                (Left + Width > Parent.Controls[n].Left +
-                Parent.Controls[n].Width - FConf.RasterSize) then
-              begin
-                Width := Parent.Controls[n].Left + Parent.Controls[n].Width - Left;
-                FDrawLines := True;
-                FormPanel.Invalidate;
-                Exit;
-              end;
-              FDrawLines := False;
-            end;
-      end;
+  FChangeProps := True;
+  try
+    b := False;
+    if not (ssLeft in Shift) then
+    begin
+      FSelPoint := Point(-1, -1);
+      if (Y >= (Sender as TControl).ClientHeight - 5) and
+        (X >= (Sender as TControl).ClientWidth - 5) then
+        (Sender as TControl).Cursor := crSizeNWSE
+      else if (Y >= (Sender as TControl).ClientHeight - 5) then
+        (Sender as TControl).Cursor := crSizeNS
+      else if (X >= (Sender as TControl).ClientWidth - 5) then
+        (Sender as TControl).Cursor := crSizeWE
       else
-      begin
-        if Sender <> FormPanel then
+        (Sender as TControl).Cursor := crDefault;
+    end
+    else
+    begin
+      case (Sender as TControl).Cursor of
+        crSizeNWSE:
         begin
-          (Sender as TControl).Left :=
-            (FormPanel.ScreenToClient(
-            (Sender as TControl).ClientToScreen(Point(X, Y))).X - FMousePoint.X) div
-            (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
-          (Sender as TControl).Top :=
-            (FormPanel.ScreenToClient(
-            (Sender as TControl).ClientToScreen(Point(X, Y))).Y - FMousePoint.y) div
-            (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
+          (Sender as TControl).Width :=
+            X div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
+          (Sender as TControl).Height :=
+            Y div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
           Moved := True;
-          for i := 0 to FormControlView.Items.Count - 1 do
-            if (i >= 0) and (i < FormControlView.Items.Count) and
-              FormControlView.Items[i].Selected and
-              (FormControlView.Items[i].Data <> Pointer(FormPanel)) and
-              (FormControlView.Items[i].Data <> Pointer(Sender)) then
-              with TControl(FormControlView.Items[i].Data) do
-              begin
-                Left := Left + ((Sender as TControl).Left - FOldLeft);
-                Top := Top + ((Sender as TControl).Top - FOldTop);
-              end;
-          FOldLeft := (Sender as TControl).Left;
-          FOldTop := (Sender as TControl).Top;
+          b := False;
           if FConf.UseHelpLines then
             with Sender as TControl do
               for n := 0 to Parent.ControlCount - 1 do
               begin
-                if (Left < Parent.Controls[n].Left + FConf.RasterSize) and
-                  (Left > Parent.Controls[n].Left - FConf.RasterSize) then
-                begin
-                  Left := Parent.Controls[n].Left;
-                  b := True;
-                end
-                else if (Left + Width < Parent.Controls[n].Left +
+                if (Left + Width < Parent.Controls[n].Left +
                   Parent.Controls[n].Width + FConf.RasterSize) and
                   (Left + Width > Parent.Controls[n].Left +
                   Parent.Controls[n].Width - FConf.RasterSize) then
                 begin
-                  Left := Parent.Controls[n].Left + Parent.Controls[n].Width - Width;
+                  Width := Parent.Controls[n].Left + Parent.Controls[n].Width - Left;
                   b := True;
                 end;
-                if (Top < Parent.Controls[n].Top + FConf.RasterSize) and
-                  (Top > Parent.Controls[n].Top - FConf.RasterSize) then
-                begin
-                  Top := Parent.Controls[n].Top;
-                  b := True;
-                end
-                else if (Top + Height < Parent.Controls[n].Top +
+                if (Top + Height < Parent.Controls[n].Top +
                   Parent.Controls[n].Height + FConf.RasterSize) and
                   (Top + Height > Parent.Controls[n].Top +
                   Parent.Controls[n].Height - FConf.RasterSize) then
                 begin
-                  Top := Parent.Controls[n].Top + Parent.Controls[n].Height - Height;
+                  Height := Parent.Controls[n].Top + Parent.Controls[n].Height - Top;
                   b := True;
                 end;
                 if b then
@@ -583,15 +467,129 @@ begin
                 FDrawLines := False;
               end;
         end;
-        if ToolSelect.ItemIndex >= 0 then
+        crSizeNS:
         begin
-          FSelPoint := FormPanel.ScreenToClient(
-            (Sender as TControl).ClientToScreen(Point(X, Y)));
-          FormPanel.Invalidate;
+          (Sender as TControl).Height :=
+            Y div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
           Moved := True;
+          if FConf.UseHelpLines then
+            with Sender as TControl do
+              for n := 0 to Parent.ControlCount - 1 do
+              begin
+
+                if (Top + Height < Parent.Controls[n].Top +
+                  Parent.Controls[n].Height + FConf.RasterSize) and
+                  (Top + Height > Parent.Controls[n].Top +
+                  Parent.Controls[n].Height - FConf.RasterSize) then
+                begin
+                  Height := Parent.Controls[n].Top + Parent.Controls[n].Height - Top;
+                  FDrawLines := True;
+                  FFormular.Invalidate;
+                  Exit;
+                end;
+                FDrawLines := False;
+              end;
+        end;
+        crSizeWE:
+        begin
+          (Sender as TControl).Width :=
+            X div (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
+          Moved := True;
+          if FConf.UseHelpLines then
+            with Sender as TControl do
+              for n := 0 to Parent.ControlCount - 1 do
+              begin
+                if (Left + Width < Parent.Controls[n].Left +
+                  Parent.Controls[n].Width + FConf.RasterSize) and
+                  (Left + Width > Parent.Controls[n].Left +
+                  Parent.Controls[n].Width - FConf.RasterSize) then
+                begin
+                  Width := Parent.Controls[n].Left + Parent.Controls[n].Width - Left;
+                  FDrawLines := True;
+                  FFormular.Invalidate;
+                  Exit;
+                end;
+                FDrawLines := False;
+              end;
+        end;
+        else
+        begin
+          if Sender <> FFormular then
+          begin
+            (Sender as TControl).Left :=
+              (FFormular.ScreenToClient(
+              (Sender as TControl).ClientToScreen(Point(X, Y))).X - FMousePoint.X) div
+              (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
+            (Sender as TControl).Top :=
+              (FFormular.ScreenToClient(
+              (Sender as TControl).ClientToScreen(Point(X, Y))).Y - FMousePoint.y) div
+              (FConf.RasterSize div 2) * (FConf.RasterSize div 2);
+            Moved := True;
+            for i := 0 to FormControlView.Items.Count - 1 do
+              if (i >= 0) and (i < FormControlView.Items.Count) and
+                FormControlView.Items[i].Selected and
+                (FormControlView.Items[i].Data <> Pointer(FFormular)) and
+                (FormControlView.Items[i].Data <> Pointer(Sender)) then
+                with TControl(FormControlView.Items[i].Data) do
+                begin
+                  Left := Left + ((Sender as TControl).Left - FOldLeft);
+                  Top := Top + ((Sender as TControl).Top - FOldTop);
+                end;
+            FOldLeft := (Sender as TControl).Left;
+            FOldTop := (Sender as TControl).Top;
+            if FConf.UseHelpLines then
+              with Sender as TControl do
+                for n := 0 to Parent.ControlCount - 1 do
+                begin
+                  if (Left < Parent.Controls[n].Left + FConf.RasterSize) and
+                    (Left > Parent.Controls[n].Left - FConf.RasterSize) then
+                  begin
+                    Left := Parent.Controls[n].Left;
+                    b := True;
+                  end
+                  else if (Left + Width < Parent.Controls[n].Left +
+                    Parent.Controls[n].Width + FConf.RasterSize) and
+                    (Left + Width > Parent.Controls[n].Left +
+                    Parent.Controls[n].Width - FConf.RasterSize) then
+                  begin
+                    Left := Parent.Controls[n].Left + Parent.Controls[n].Width - Width;
+                    b := True;
+                  end;
+                  if (Top < Parent.Controls[n].Top + FConf.RasterSize) and
+                    (Top > Parent.Controls[n].Top - FConf.RasterSize) then
+                  begin
+                    Top := Parent.Controls[n].Top;
+                    b := True;
+                  end
+                  else if (Top + Height < Parent.Controls[n].Top +
+                    Parent.Controls[n].Height + FConf.RasterSize) and
+                    (Top + Height > Parent.Controls[n].Top +
+                    Parent.Controls[n].Height - FConf.RasterSize) then
+                  begin
+                    Top := Parent.Controls[n].Top + Parent.Controls[n].Height - Height;
+                    b := True;
+                  end;
+                  if b then
+                  begin
+                    FDrawLines := True;
+                    Parent.Invalidate;
+                    Exit;
+                  end;
+                  FDrawLines := False;
+                end;
+          end;
+          if ToolSelect.ItemIndex >= 0 then
+          begin
+            FSelPoint := FFormular.ScreenToClient(
+              (Sender as TControl).ClientToScreen(Point(X, Y)));
+            FFormular.Invalidate;
+            Moved := True;
+          end;
         end;
       end;
     end;
+  finally
+    FChangeProps := False;
   end;
 end;
 
@@ -605,10 +603,10 @@ begin
     if (ToolSelect.ItemIndex >= 0) then
     begin
       case ToolSelect.ItemIndex of
-        0: c := CreateButton(FormPanel);
-        1: c := CreateCheckBox(FormPanel);
-        2: c := CreateEdit(FormPanel);
-        3: c := CreateLabel(FormPanel);
+        0: c := CreateButton(FFormular);
+        1: c := CreateCheckBox(FFormular);
+        2: c := CreateEdit(FFormular);
+        3: c := CreateLabel(FFormular);
       end;
 
       if (FSelPoint.X - FMousePoint.x >= 0) and (FSelPoint.y - FMousePoint.Y >= 0) then
@@ -616,7 +614,7 @@ begin
         c.Width := FSelPoint.X - FMousePoint.x;
         c.Height := FSelPoint.y - FMousePoint.Y;
         FSelPoint := Point(-1, -1);
-        FormPanel.Invalidate;
+        c.Parent.Invalidate;
       end;
       ToolSelect.ItemIndex := -1;
       if Assigned(FOnVarChanged) then
@@ -630,7 +628,8 @@ begin
     PositionPickerPanel.Show;
     FMousePoint := Point(-1, -1);
     FDrawLines := False;
-    FormPanel.Invalidate;
+    LoadControlData(TComponent(FormControlView.Selected.Data));
+    FFormular.Invalidate;
   end;
 end;
 
@@ -711,11 +710,6 @@ begin
       end;
 end;
 
-procedure TFormEditFrame.FormPanelResize(Sender: TObject);
-begin
-
-end;
-
 procedure TFormEditFrame.PositionPickerMouseEnter(Sender: TObject);
 begin
   PositionPickerPanel.Left := PositionPickerPanel.Left - 80;
@@ -739,16 +733,21 @@ var
 begin
   if ssLeft in Shift then
   begin
-    fw := Screen.Width / PositionPicker.Width;
-    fh := Screen.Height / PositionPicker.Height;
-    FFormLeft := Min(max(0, trunc(X * fw) - FormPanel.Width div 2),
-      Screen.Width - FormPanel.Width);
-    FFormTop := Min(max(0, trunc(Y * fH) - FormPanel.Height div 2),
-      Screen.Height - FormPanel.Height);
-    FormControlView.Select(FormControlView.Items[0]);
-    PositionPicker.Invalidate;
-    if Assigned(FOnChange) then
-      FOnChange(Self);
+    FChangeProps := True;
+    try
+      fw := Screen.Width / PositionPicker.Width;
+      fh := Screen.Height / PositionPicker.Height;
+      FFormular.Left := Min(max(0, trunc(X * fw) - FFormular.Width div 2),
+        Screen.Width - FFormular.Width);
+      FFormular.Top := Min(max(0, trunc(Y * fH) - FFormular.Height div 2),
+        Screen.Height - FFormular.Height);
+      FormControlView.Select(FormControlView.Items[0]);
+      PositionPicker.Invalidate;
+      if Assigned(FOnChange) then
+        FOnChange(Self);
+    finally
+      FChangeProps := False;
+    end;
   end;
 end;
 
@@ -758,7 +757,7 @@ var
   px, py: integer;
   px2, py2: integer;
 begin
-  if not Assigned(FormPanel) then
+  if not Assigned(FFormular) then
     exit;
   with PositionPicker.Canvas do
   begin
@@ -768,10 +767,10 @@ begin
     Rectangle(0, 0, PositionPicker.Width, PositionPicker.Height);
     fw := PositionPicker.Width / Screen.Width;
     fh := PositionPicker.Height / Screen.Height;
-    px := trunc(FFormLeft * fw);
-    py := trunc(FFormTop * fh);
-    px2 := px + trunc(FormPanel.Width * fw);
-    py2 := py + trunc(FormPanel.Height * fh);
+    px := trunc(FFormular.Left * fw);
+    py := trunc(FFormular.Top * fh);
+    px2 := px + trunc(FFormular.Width * fw);
+    py2 := py + trunc(FFormular.Height * fh);
     Brush.Color := clWindow;
     pen.Style := psSolid;
     pen.Color := clBlack;
@@ -779,88 +778,10 @@ begin
   end;
 end;
 
-procedure TFormEditFrame.PropEditorEditingDone(Sender: TObject);
-
-  function isNumeric(s: string): boolean;
-  var
-    c: char;
-  begin
-    Result := Length(s) > 0;
-    for c in s do
-      if not (c in ['0'..'9']) then
-      begin
-        Result := False;
-        Break;
-      end;
-  end;
-
-  function isValidName(s: string): boolean;
-  var
-    c: char;
-  begin
-    Result := Length(s) > 0;
-    for c in s do
-      if not (c in ['0'..'9', 'A'..'Z', 'a'..'z', '_']) then
-      begin
-        Result := False;
-        Break;
-      end;
-  end;
-
-var
-  o: TObject;
-  s, v: string;
-  i: integer;
+procedure TFormEditFrame.PropEditorEditorFilter(Sender: TObject;
+  aEditor: TPropertyEditor; var aShow: boolean);
 begin
-  if not Assigned(FormControlView.Selected) then
-    Exit;
-  s := LowerCase(PropEditor.Rows[PropEditor.Row][0]);
-  v := PropEditor.Rows[PropEditor.Row][1];
-  for i := 0 to FormControlView.Items.Count - 1 do
-    if FormControlView.Items[i].Selected then
-    begin
-      if s = 'name' then
-        o := FormControlView.Selected
-      else
-        o := TObject(FormControlView.Items[i].Data);
-      if o = FormPanel then
-      begin
-        if (s = 'name') and isValidName(v) then
-          FFormName := v
-        else if s = 'text' then
-          FormCaptionLabel.Caption := v
-        else if (s = 'x') and isNumeric(v) then
-          FFormLeft := StrToInt(v)
-        else if (s = 'y') and isNumeric(v) then
-          FFormTop := StrToInt(v)
-        else if (s = 'width') and isNumeric(v) then
-          FormPanel.Width := StrToInt(v)
-        else if (s = 'height') and isNumeric(v) then
-          FormPanel.Height := StrToInt(v)
-        else if (s = 'style') and isNumeric(v) then
-          FFormStyle := StrToInt(v);
-        PositionPicker.Invalidate;
-      end
-      else if o is TAALButton then
-        (o as TAALButton).ControlProp[s] := v
-      else if o is TAALLabel then
-        (o as TAALLabel).ControlProp[s] := v
-      else if o is TAALCheckbox then
-        (o as TAALCheckbox).ControlProp[s] := v
-      else if o is TAALEdit then
-        (o as TAALEdit).ControlProp[s] := v;
-      FormPanel.Invalidate;
-      if s = 'name' then
-      begin
-        FormControlView.Items[i].Text := v;
-        if Assigned(FOnVarChanged) then
-          FOnVarChanged(Self);
-      end;
-      if s = 'name' then
-        Break;
-    end;
-  if Assigned(FOnChange) then
-    FOnChange(Self);
+  aShow := (PropEditor.TIObject as IAALComponent).isProperty[aEditor.GetName];
 end;
 
 procedure TFormEditFrame.PropertyPanelResize(Sender: TObject);
@@ -894,9 +815,9 @@ begin
   if Button = mbLeft then
   begin
     FMousePoint := Point(X, Y);
-    FPanelMousePoint := FormPanel.ScreenToClient(
+    FPanelMousePoint := FFormular.ScreenToClient(
       (Sender as TControl).ClientToScreen(Point(X, Y)));
-    if FormPanel.Cursor = crSizeNWSE then
+    if FFormular.Cursor = crSizeNWSE then
       PositionPickerPanel.Hide;
     EditorScrollBox.Invalidate;
     FOldLeft := (Sender as TControl).Left;
@@ -915,7 +836,6 @@ end;
 
 procedure TFormEditFrame.FormControlViewChange(Sender: TObject; Node: TTreeNode);
 var
-  c: TControl;
   i: integer;
 begin
   if not Assigned(Node) then
@@ -924,37 +844,28 @@ begin
       FormControlView.Select(FormControlView.Items[0]);
     exit;
   end;
-  PropEditor.Clear;
   EventEditor.Clear;
   for i := 0 to FormControlView.Items.Count - 1 do
     if FormControlView.Items[i].Selected then
       LoadControlData(TControl(FormControlView.Items[i].Data));
+  FormControlView.SetFocus;
   EditorScrollBox.Invalidate;
 end;
 
 procedure TFormEditFrame.EventEditorEditingDone(Sender: TObject);
 var
-  c: TControl;
+  c: IAALComponent;
   s, v: string;
 begin
   if not Assigned(FormControlView.Selected) then
     exit;
   s := EventEditor.Rows[EventEditor.Row][0];
   v := EventEditor.Values[s];
-  c := TControl(FormControlView.Selected.Data);
-  if c = FormPanel then
-    FFormEvents.Values[s] := v
-  else if c is TAALButton then
-    (c as TAALButton).Event[s] := v
-  else if c is TAALLabel then
-    (c as TAALLabel).Event[s] := v
-  else if c is TAALEdit then
-    (c as TAALEdit).Event[s] := v
-  else if c is TAALCheckbox then
-    (c as TAALCheckbox).Event[s] := v;
+  c := IAALComponent(FormControlView.Selected.Data);
+  c.Event[s] := v;
   if Assigned(FOnChange) then
     FOnChange(Self);
-  LoadControlData(c);
+  LoadControlData(TComponent(c));
 end;
 
 procedure TFormEditFrame.EditorScrollBoxPaint(Sender: TObject);
@@ -969,20 +880,20 @@ begin
   if (FMousePoint.x = -1) and (FMousePoint.y = -1) then
     for i := 0 to FormControlView.Items.Count - 1 do
       if (FormControlView.Items[i].Selected) and
-        (TControl(FormControlView.Items[i].Data) = FormPanel) then
+        (TControl(FormControlView.Items[i].Data) = FFormular) then
       begin
         EditorScrollBox.Canvas.Brush.Style := bsClear;
         EditorScrollBox.Canvas.Pen.Style := psDash;
         EditorScrollBox.Canvas.Pen.Mode := pmNotXor;
-        EditorScrollBox.Canvas.Rectangle(FormPanel.Left - 1, FormPanel.Top - 1,
-          FormPanel.Left + FormPanel.Width + 1, FormPanel.Top + FormPanel.Height + 1);
+        EditorScrollBox.Canvas.Rectangle(FFormular.EditorLeft - 1,
+          FFormular.EditorTop - 1,
+          FFormular.EditorLeft + FFormular.Width + 1, FFormular.EditorTop +
+          FFormular.Height + 1);
       end;
 end;
 
 procedure TFormEditFrame.EventEditorGetPickList(Sender: TObject;
   const KeyName: string; Values: TStrings);
-var
-  i: integer;
 begin
   Values.Add('(Kein)');
   Values.Add('(Neu...)');
@@ -1041,10 +952,7 @@ begin
     s := Node.Text;
     Exit;
   end;
-  if TControl(Node.Data) = FormPanel then
-    FFormName := s
-  else
-    TControl(Node.Data).Name := s;
+  (TObject(Node.Data) as TComponent).Name := s;
   FormControlViewChange(Sender, Node);
   if Assigned(FOnChange) then
     FOnChange(Self);
@@ -1060,14 +968,12 @@ begin
     Exit;
   while n.HasChildren do
     DeleteItem(n.GetFirstChild);
-  for i := 0 to FEditorControls.Count - 1 do
-    if n.Data = Pointer(FEditorControls.Items[i]) then
-    begin
-      FEditorControls.Delete(i);
-      FormControlView.Items.Delete(n);
-      Break;
-    end;
-  FormPanel.Invalidate;
+  if TObject(n.Data) <> FFormular then
+  begin
+    TObject(n.Data).Free;
+    FormControlView.Items.Delete(n);
+  end;
+  FFormular.Invalidate;
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -1132,11 +1038,11 @@ begin
         (tmplst[i] as TControl).Left := (tmplst[i] as TControl).Left + 10;
         (tmplst[i] as TControl).Top := (tmplst[i] as TControl).Top + 10;
       end;
-      for i:=0 to tmplst.Count do
+      for i := 0 to tmplst.Count do
         if tmplst[i] is TWinControl then
         begin
-        (tmplst[i] as TWinControl).SetFocus;
-        Break;
+          (tmplst[i] as TWinControl).SetFocus;
+          Break;
         end;
     finally
       tmplst.Free;
@@ -1159,43 +1065,17 @@ procedure TFormEditFrame.Save(p: string = '');
 var
   sl: TStringList;
   i: integer;
-  c: TControl;
+  c: IAALComponent;
 begin
   if p = '' then
     p := FFileName;
   sl := TStringList.Create;
   try
-    sl.Add(Format('$%s = CreateWindow("%s", %d, %d, %d, %d, %d)',
-      [FFormName, FormCaptionLabel.Caption, FFormLeft, FFormTop,
-      FormPanel.Width + 16, FormPanel.Height + 32, 0]));
-
-    for i := 0 to FFormEvents.Count - 1 do
-      if FFormEvents.ValueFromIndex[i] <> '' then
-        sl.Add(Format('SetOnEvent($%s, "%s","%s")',
-          [FFormName, FFormEvents.Names[i], FFormEvents.ValueFromIndex[i]]));
-    for i := 0 to FEditorControls.Count - 1 do
+    for i := 0 to FormControlView.Items.Count - 1 do
     begin
-      c := FEditorControls[i] as TControl;
-      if c is TAALButton then
-      begin
-        sl.Add((c as TAALButton).GetAALString(FFormName));
-        (c as TAALButton).AddEvents(sl);
-      end
-      else if c is TAALLabel then
-      begin
-        sl.Add((c as TAALLabel).GetAALString(FFormName));
-        (c as TAALLabel).AddEvents(sl);
-      end
-      else if c is TAALCheckbox then
-      begin
-        sl.Add((c as TAALCheckbox).GetAALString(FFormName));
-        (c as TAALCheckbox).AddEvents(sl);
-      end
-      else if c is TAALEdit then
-      begin
-        sl.Add((c as TAALEdit).GetAALString(FFormName));
-        (c as TAALEdit).AddEvents(sl);
-      end;
+      c := TObject(FormControlView.Items[i].Data) as IAALComponent;
+      sl.Add(c.GetAALString(FFormular.Name));
+      c.AddEvents(sl);
     end;
     if p <> '' then
       sl.SaveToFile(p);
@@ -1300,9 +1180,12 @@ var
   FuncParams: TStringList;
   i, curr: integer;
   FormFound: boolean;
+  a: IAALComponent;
   c: TControl;
   idx: integer;
 begin
+  FChangeProps:=True;
+  try
   curr := 1;
   DeleteItem(FormControlView.Items[0]);
   FormFound := False;
@@ -1320,22 +1203,15 @@ begin
       if isEnd(Lines[i], 'SetOnEvent') then
       begin
         ReadFunc(Trim(Lines[i]), FuncParams);
-        if (LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) then
-          FFormEvents.Values[FuncParams[1]] := FuncParams[2]
+        if (LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) then
+          FFormular.Events.Values[FuncParams[1]] := FuncParams[2]
         else
         begin
           idx := FindControl(Copy(FuncParams[0], 2, length(FuncParams[0])));
-          if (idx < 0) or (idx > FEditorControls.Count - 1) then
+          if (idx < 0) or (idx > FormControlView.Items.Count - 1) then
             Continue;
-          c := FEditorControls[idx] as TControl;
-          if c is TAALButton then
-            (c as TAALButton).Event[FuncParams[1]] := FuncParams[2]
-          else if c is TAALLabel then
-            (c as TAALLabel).Event[FuncParams[1]] := FuncParams[2]
-          else if c is TAALEdit then
-            (c as TAALEdit).Event[FuncParams[1]] := FuncParams[2]
-          else if c is TAALCheckbox then
-            (c as TAALCheckbox).Event[FuncParams[1]] := FuncParams[2];
+          a := TObject(FormControlView.Items[idx].Data) as IAALComponent;
+          a.Event[FuncParams[1]] := FuncParams[2];
         end;
       end
       else
@@ -1357,27 +1233,27 @@ begin
             IsNumeric(FuncParams[5])) then
             Continue;
           // Read Data
-          FFormName := VarName;
-          FormControlView.Items[0].Text := FFormName;
-          FormCaptionLabel.Caption := FuncParams[0];
-          FFormLeft := StrToInt(FuncParams[1]);
-          FFormTop := StrToInt(FuncParams[2]);
-          FormPanel.Width := StrToInt(FuncParams[3]) - 16;
-          FormPanel.Height := StrToInt(FuncParams[4]) - 32;
-          FFormStyle := StrToInt(FuncParams[5]);
+          FFormular.Name := VarName;
+          FormControlView.Items[0].Text := FFormular.Name;
+          FFormular.Text := FuncParams[0];
+          FFormular.Left := StrToInt(FuncParams[1]);
+          FFormular.Top := StrToInt(FuncParams[2]);
+          FFormular.Width := StrToInt(FuncParams[3]) - 16;
+          FFormular.Height := StrToInt(FuncParams[4]) - 32;
+          FFormular.Style := StrToInt(FuncParams[5]);
           FormFound := True;
         end
         else if FuncName = 'createbutton' then
         begin
           // Syntax Check
           if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
             IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
             IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
             IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
             Continue;
           // Read Data
-          c := CreateButton(FormPanel);
+          c := CreateButton(FFormular);
           c.Name := VarName;
           FormControlView.Items[curr].Text := VarName;
           c.Caption := FuncParams[1];
@@ -1385,21 +1261,21 @@ begin
           c.Top := StrToInt(FuncParams[3]);
           c.Width := StrToInt(FuncParams[4]);
           c.Height := StrToInt(FuncParams[5]);
-          (c as TAALButton).ControlProp['Style'] := FuncParams[6];
-          (c as TAALButton).ControlProp['StyleEx'] := FuncParams[7];
+          (c as TAALButton).ComponentProp['Style'] := FuncParams[6];
+          (c as TAALButton).ComponentProp['StyleEx'] := FuncParams[7];
           Inc(curr);
         end
         else if FuncName = 'createcheckbox' then
         begin
           // Syntax Check
           if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
             IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
             IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
             IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
             Continue;
           // Read Data
-          c := CreateCheckBox(FormPanel);
+          c := CreateCheckBox(FFormular);
           c.Name := VarName;
           FormControlView.Items[curr].Text := VarName;
           c.Caption := FuncParams[1];
@@ -1407,21 +1283,21 @@ begin
           c.Top := StrToInt(FuncParams[3]);
           c.Width := StrToInt(FuncParams[4]);
           c.Height := StrToInt(FuncParams[5]);
-          (c as TAALCheckbox).ControlProp['Style'] := FuncParams[6];
-          (c as TAALCheckbox).ControlProp['StyleEx'] := FuncParams[7];
+          (c as TAALCheckbox).ComponentProp['Style'] := FuncParams[6];
+          (c as TAALCheckbox).ComponentProp['StyleEx'] := FuncParams[7];
           Inc(curr);
         end
         else if FuncName = 'createlabel' then
         begin
           // Syntax Check
           if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
             IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
             IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
             IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
             Continue;
           // Read Data
-          c := CreateLabel(FormPanel);
+          c := CreateLabel(FFormular);
           c.Name := VarName;
           FormControlView.Items[curr].Text := VarName;
           c.Caption := FuncParams[1];
@@ -1429,21 +1305,21 @@ begin
           c.Top := StrToInt(FuncParams[3]);
           c.Width := StrToInt(FuncParams[4]);
           c.Height := StrToInt(FuncParams[5]);
-          (c as TAALLabel).ControlProp['Style'] := FuncParams[6];
-          (c as TAALLabel).ControlProp['StyleEx'] := FuncParams[7];
+          (c as TAALLabel).ComponentProp['Style'] := FuncParams[6];
+          (c as TAALLabel).ComponentProp['StyleEx'] := FuncParams[7];
           Inc(curr);
         end
         else if FuncName = 'createinputbox' then
         begin
           // Syntax Check
           if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormName)) and
+            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
             IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
             IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
             IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
             Continue;
           // Read Data
-          c := CreateEdit(FormPanel);
+          c := CreateEdit(FFormular);
           c.Name := VarName;
           FormControlView.Items[curr].Text := VarName;
           (c as TAALEdit).Text := FuncParams[1];
@@ -1451,8 +1327,8 @@ begin
           c.Top := StrToInt(FuncParams[3]);
           c.Width := StrToInt(FuncParams[4]);
           c.Height := StrToInt(FuncParams[5]);
-          (c as TAALEdit).ControlProp['Style'] := FuncParams[6];
-          (c as TAALEdit).ControlProp['StyleEx'] := FuncParams[7];
+          (c as TAALEdit).ComponentProp['Style'] := FuncParams[6];
+          (c as TAALEdit).ComponentProp['StyleEx'] := FuncParams[7];
           Inc(curr);
         end;
       end;
@@ -1467,6 +1343,9 @@ begin
   FormControlView.Select(FormControlView.Items[0]);
   PositionPicker.Invalidate;
   FFileName := p;
+  finally
+    FChangeProps:=False;
+  end;
 end;
 
 end.

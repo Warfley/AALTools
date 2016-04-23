@@ -1,37 +1,164 @@
 unit FormEditComponents;
 
 {$mode objfpc}{$H+}
+{$Interfaces CORBA}
 
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ValEdit, LCLIntf;
+  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ValEdit, LCLIntf;
 
 type
-  TAALEdit = class(TCustomEdit)
-  private
-    FStyle: integer;
-    FStyleEX: integer;
-    FEvents: TStringList;
-    function GetProp(p: string): string;
-    procedure SetProp(p, val: string);
+  TPropertyChangeEvent = procedure(Sender: TObject;
+    PropName, PropVal: string) of object;
+
+  IAALComponent = interface
+    ['{DE4489A7-9015-405B-8123-AF253975EBA0}']
+    procedure CopyTo(c: TControl);
+    procedure FillEvents(g: TValueListEditor);
+    function GetAALString(FormName: string): string;
+
     function GetEvent(e: string): string;
     procedure SetEvent(e, val: string);
+    function CheckProperty(prop: string): boolean;
+    function GetProp(prop: string): string;
+    procedure SetProp(prop, val: string);
+    function GetEvents: TStringList;
+    function GetOnChangeProp: TPropertyChangeEvent;
+    procedure SetOnChangeProp(a: TPropertyChangeEvent);
+    procedure AddEvents(sl: TStringList);
+
+    property ComponentProp[prop: string]: string read GetProp write SetProp;
+    property isProperty[prop: string]: boolean read CheckProperty;
+    property Event[s: string]: string read GetEvent write SetEvent;
+    property Events: TStringList read GetEvents;
+    property OnChangeProp: TPropertyChangeEvent
+      read GetOnChangeProp write SetOnChangeProp;
+  end;
+
+  TAALForm = class(TCustomPanel, IAALComponent)
+  private
+    FStyle: integer;
+    FEvents: TStringList;
+    FLeft, FTop: integer;
+    FOnChangeProp: TPropertyChangeEvent;
+    FCaption: string;
+    FOnChangeCaption: TNotifyEvent;
+    function GetEditorTop: integer;
+    function GetEditorLeft: integer;
+  protected
+    procedure SetName(const Value: TComponentName); override;
+    procedure SetLeft(Val: integer);
+    procedure SetTop(Val: integer);
+    procedure SetWidth(Val: integer);
+    procedure SetHeight(Val: integer);
+    procedure SetText(val: string);
+    procedure SetStyle(val: integer);
+    function GetLeft: integer;
+    function GetTop: integer;
+    function GetWidth: integer;
+    function GetHeight: integer;
+    procedure Paint; override;
   public
+    procedure SetFormPos(x, y: integer);
+    function GetOnChangeProp: TPropertyChangeEvent;
+    procedure SetOnChangeProp(a: TPropertyChangeEvent);
+    function GetEvent(e: string): string;
+    procedure SetEvent(e, val: string);
+    function CheckProperty(prop: string): boolean;
+    function GetProp(p: string): string;
+    procedure SetProp(p, val: string);
+    function GetEvents: TStringList;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
-    procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
-    procedure OpenEditor(prop: string);
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
-    property ControlProp[s: string]: string read GetProp write SetProp;
     property Events: TStringList read FEvents;
+    property ComponentProp[prop: string]: string read GetProp write SetProp;
+    property isProperty[prop: string]: boolean read CheckProperty;
   published
-    property Style: integer read FStyle write FStyle;
-    property StyleEX: integer read FStyleEX write FStyleEX;
+    property EditorTop: integer read GetEditorTop;
+    property EditorLeft: integer read GetEditorLeft;
+    property Name;
+    property Y: integer read GetTop write SetTop;
+    property X: integer read GetLeft write SetLeft;
+    property Left: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
+    property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
+    property Style: integer read FStyle write SetStyle;
+    property Text: string read FCaption write SetText;
+    property Caption: string read FCaption write SetText;
+    property OnChangeCaption: TNotifyEvent read FOnChangeCaption write FOnChangeCaption;
+    property OnClick;
+    property OnEnter;
+    property OnExit;
+    property OnKeyPress;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnDblClick;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnResize;
+  end;
+
+  TAALEdit = class(TCustomEdit, IAALComponent)
+  private
+    FStyle: integer;
+    FStyleEX: integer;
+    FEvents: TStringList;
+    FOnChangeProp: TPropertyChangeEvent;
+  protected
+    procedure SetName(const Value: TComponentName); override;
+    procedure SetLeft(Val: integer);
+    procedure SetTop(Val: integer);
+    procedure SetWidth(Val: integer);
+    procedure SetHeight(Val: integer);
+    procedure SetText(val: string);
+    procedure SetStyle(val: integer);
+    procedure SetStyleEx(val: integer);
+    function GetLeft: integer;
+    function GetTop: integer;
+    function GetWidth: integer;
+    function GetHeight: integer;
+    function GetText: string;
+  public
+    function GetOnChangeProp: TPropertyChangeEvent;
+    procedure SetOnChangeProp(a: TPropertyChangeEvent);
+    function GetEvent(e: string): string;
+    procedure SetEvent(e, val: string);
+    function CheckProperty(prop: string): boolean;
+    function GetProp(prop: string): string;
+    procedure SetProp(prop, val: string);
+    function GetEvents: TStringList;
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure CopyTo(c: TControl);
+    function GetAALString(FormName: string): string;
+    procedure FillEvents(g: TValueListEditor);
+    procedure AddEvents(sl: TStringList);
+    property Event[s: string]: string read GetEvent write SetEvent;
+    property Events: TStringList read FEvents;
+    property ComponentProp[prop: string]: string read GetProp write SetProp;
+    property isProperty[prop: string]: boolean read CheckProperty;
+  published
+    property Name;
+    property Y: integer read GetTop write SetTop;
+    property X: integer read GetLeft write SetLeft;
+    property Left: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
+    property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
+    property Style: integer read FStyle write SetStyle;
+    property StyleEX: integer read FStyleEX write SetStyleEx;
     property Action;
     property Align;
     property Alignment;
@@ -88,38 +215,68 @@ type
     property ShowHint;
     property TabStop;
     property TabOrder;
-    property Text;
+    property Text: string read GetText write SetText;
+    property Caption: string read GetText write SetText;
     property TextHint;
     property TextHintFontColor;
     property TextHintFontStyle;
     property Visible;
   end;
 
-  TAALButton = class(TCustomButton)
+  TAALButton = class(TCustomButton, IAALComponent)
   private
     FStyle: integer;
     FStyleEX: integer;
     FEvents: TStringList;
     FLastClick: cardinal;
-    function GetProp(p: string): string;
-    procedure SetProp(p, val: string);
+    FOnChangeProp: TPropertyChangeEvent;
+  protected
+    procedure SetName(const Value: TComponentName); override;
+    procedure SetLeft(Val: integer);
+    procedure SetTop(Val: integer);
+    procedure SetWidth(Val: integer);
+    procedure SetHeight(Val: integer);
+    procedure SetText(val: string);
+    procedure SetStyle(val: integer);
+    procedure SetStyleEx(val: integer);
+    function GetLeft: integer;
+    function GetTop: integer;
+    function GetWidth: integer;
+    function GetHeight: integer;
+    function GetText: string;
+  public
+    procedure Click; override;
+    function GetOnChangeProp: TPropertyChangeEvent;
+    procedure SetOnChangeProp(a: TPropertyChangeEvent);
     function GetEvent(e: string): string;
     procedure SetEvent(e, val: string);
-  protected
-    procedure Click; override;
-  public
+    function CheckProperty(prop: string): boolean;
+    function GetProp(p: string): string;
+    procedure SetProp(p, val: string);
+    function GetEvents: TStringList;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
-    procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
-    procedure OpenEditor(prop: string);
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
-    property ControlProp[s: string]: string read GetProp write SetProp;
     property Events: TStringList read FEvents;
+    property ComponentProp[prop: string]: string read GetProp write SetProp;
+    property isProperty[prop: string]: boolean read CheckProperty;
   published
+    property Name;
+    property Y: integer read GetTop write SetTop;
+    property X: integer read GetLeft write SetLeft;
+    property Left: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
+    property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
+    property Style: integer read FStyle write SetStyle;
+    property StyleEX: integer read FStyleEX write SetStyleEx;
+    property Text: string read GetText write SetText;
+    property Caption: string read GetText write SetText;
     property Action;
     property Align;
     property Anchors;
@@ -127,7 +284,6 @@ type
     property BidiMode;
     property BorderSpacing;
     property Cancel;
-    property Caption;
     property Color;
     property Constraints;
     property Default;
@@ -168,34 +324,61 @@ type
     property TabOrder;
     property TabStop;
     property Visible;
-    property Style: integer read FStyle write FStyle;
-    property StyleEX: integer read FStyleEX write FStyleEX;
   end;
 
-  TAALCheckbox = class(TCustomCheckBox)
+  TAALCheckbox = class(TCustomCheckBox, IAALComponent)
   private
     FStyle: integer;
     FStyleEX: integer;
     FEvents: TStringList;
-    function GetProp(p: string): string;
-    procedure SetProp(p, val: string);
-    function GetEvent(e: string): string;
-    procedure SetEvent(e, val: string);
+    FOnChangeProp: TPropertyChangeEvent;
   protected
     procedure Click; override;
+    procedure SetName(const Value: TComponentName); override;
+    procedure SetLeft(Val: integer);
+    procedure SetTop(Val: integer);
+    procedure SetWidth(Val: integer);
+    procedure SetHeight(Val: integer);
+    procedure SetText(val: string);
+    procedure SetStyle(val: integer);
+    procedure SetStyleEx(val: integer);
+    function GetLeft: integer;
+    function GetTop: integer;
+    function GetWidth: integer;
+    function GetHeight: integer;
+    function GetText: string;
   public
+    function GetOnChangeProp: TPropertyChangeEvent;
+    procedure SetOnChangeProp(a: TPropertyChangeEvent);
+    function GetEvent(e: string): string;
+    procedure SetEvent(e, val: string);
+    function CheckProperty(prop: string): boolean;
+    function GetProp(p: string): string;
+    procedure SetProp(p, val: string);
+    function GetEvents: TStringList;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
-    procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
-    procedure OpenEditor(prop: string);
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
-    property ControlProp[s: string]: string read GetProp write SetProp;
     property Events: TStringList read FEvents;
+    property ComponentProp[prop: string]: string read GetProp write SetProp;
+    property isProperty[prop: string]: boolean read CheckProperty;
   published
+    property Name;
+    property Y: integer read GetTop write SetTop;
+    property X: integer read GetLeft write SetLeft;
+    property Left: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
+    property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
+    property Style: integer read FStyle write SetStyle;
+    property StyleEX: integer read FStyleEX write SetStyleEx;
+    property Text: string read GetText write SetText;
+    property Caption: string read GetText write SetText;
     property Action;
     property Align;
     property Alignment;
@@ -204,7 +387,6 @@ type
     property AutoSize default True;
     property BidiMode;
     property BorderSpacing;
-    property Caption;
     property Checked;
     property OnDblClick;
     property Color nodefault;
@@ -249,37 +431,61 @@ type
     property TabOrder;
     property TabStop default True;
     property Visible;
-    property Style: integer read FStyle write FStyle;
-    property StyleEX: integer read FStyleEX write FStyleEX;
   end;
 
-  TAALLabel = class(TCustomControl)
+  TAALLabel = class(TCustomControl, IAALComponent)
   private
     FStyle: integer;
     FStyleEX: integer;
     FEvents: TStringList;
+    FOnChangeProp: TPropertyChangeEvent;
     FCaption: string;
-    procedure SetCaption(s: string);
-    function GetProp(p: string): string;
-    procedure SetProp(p, val: string);
-    function GetEvent(e: string): string;
-    procedure SetEvent(e, val: string);
   protected
+    procedure SetName(const Value: TComponentName); override;
+    procedure SetLeft(Val: integer);
+    procedure SetTop(Val: integer);
+    procedure SetWidth(Val: integer);
+    procedure SetHeight(Val: integer);
+    procedure SetText(val: string);
+    procedure SetStyle(val: integer);
+    procedure SetStyleEx(val: integer);
+    function GetLeft: integer;
+    function GetTop: integer;
+    function GetWidth: integer;
+    function GetHeight: integer;
     procedure Paint; override;
   public
+    function GetOnChangeProp: TPropertyChangeEvent;
+    procedure SetOnChangeProp(a: TPropertyChangeEvent);
+    function GetEvent(e: string): string;
+    procedure SetEvent(e, val: string);
+    function CheckProperty(prop: string): boolean;
+    function GetProp(p: string): string;
+    procedure SetProp(p, val: string);
+    function GetEvents: TStringList;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure CopyTo(c: TControl);
     function GetAALString(FormName: string): string;
-    procedure FillProps(g: TValueListEditor);
     procedure FillEvents(g: TValueListEditor);
-    procedure OpenEditor(prop: string);
     procedure AddEvents(sl: TStringList);
     property Event[s: string]: string read GetEvent write SetEvent;
-    property ControlProp[s: string]: string read GetProp write SetProp;
     property Events: TStringList read FEvents;
+    property ComponentProp[prop: string]: string read GetProp write SetProp;
+    property isProperty[prop: string]: boolean read CheckProperty;
   published
-    property Caption: string read FCaption write SetCaption;
+    property Name;
+    property Left: integer read GetLeft write SetLeft;
+    property Y: integer read GetTop write SetTop;
+    property X: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
+    property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
+    property Style: integer read FStyle write SetStyle;
+    property StyleEX: integer read FStyleEX write SetStyleEx;
+    property Text: string read FCaption write SetText;
+    property Caption: string read FCaption write SetText;
     property OnClick;
     property OnEnter;
     property OnExit;
@@ -293,13 +499,10 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnResize;
-    property Style: integer read FStyle write FStyle;
-    property StyleEX: integer read FStyleEX write FStyleEX;
   end;
 
 implementation
 
-{ Edit }
 function isNumeric(s: string): boolean;
 var
   c: char;
@@ -326,13 +529,127 @@ begin
     end;
 end;
 
-function TAALEdit.GetProp(p: string): string;
+{ Form }
+
+procedure TAALForm.SetFormPos(x, y: integer);
+begin
+  inherited Left := x;
+  inherited Top := y;
+end;
+
+procedure TAALForm.Paint;
+begin
+  Canvas.Brush.Style := bsSolid;
+  Canvas.Pen.Style := psClear;
+  Canvas.Brush.Color := Color;
+  Canvas.FillRect(0, 0, Width, Height);
+  Canvas.DrawFocusRect(Rect(0, 0, Width, Height));
+  inherited;
+end;
+
+function TAALForm.GetEditorTop: integer;
+begin
+  Result := inherited Top;
+end;
+
+function TAALForm.GetEditorLeft: integer;
+begin
+  Result := inherited Left;
+end;
+
+function TAALForm.CheckProperty(prop: string): boolean;
+begin
+  prop := LowerCase(prop);
+  Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or (prop = 'style');
+end;
+
+function TAALForm.GetEvents: TStringList;
+begin
+  Result := FEvents;
+end;
+
+procedure TAALForm.SetName(const Value: TComponentName);
+begin
+  if Text=Name then Text:=Value;
+  inherited SetName(Value);
+  inherited Caption:='';
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Name', Value);
+end;
+
+procedure TAALForm.SetLeft(Val: integer);
+begin
+  FLeft := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Left', IntToStr(Val));
+end;
+
+procedure TAALForm.SetTop(Val: integer);
+begin
+  FTop := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Top', IntToStr(Val));
+end;
+
+procedure TAALForm.SetWidth(Val: integer);
+begin
+  inherited Width := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Width', IntToStr(Val));
+end;
+
+procedure TAALForm.SetHeight(Val: integer);
+begin
+  inherited Height := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Height', IntToStr(Val));
+end;
+
+function TAALForm.GetLeft: integer;
+begin
+  Result := FLeft;
+end;
+
+function TAALForm.GetTop: integer;
+begin
+  Result := FTop;
+end;
+
+function TAALForm.GetWidth: integer;
+begin
+  Result := inherited Width;
+end;
+
+function TAALForm.GetHeight: integer;
+begin
+  Result := inherited Height;
+end;
+
+procedure TAALForm.SetStyle(val: integer);
+begin
+  FStyle := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Style', IntToStr(Val));
+end;
+
+function TAALForm.GetOnChangeProp: TPropertyChangeEvent;
+begin
+  Result := FOnChangeProp;
+end;
+
+procedure TAALForm.SetOnChangeProp(a: TPropertyChangeEvent);
+begin
+  FOnChangeProp := a;
+end;
+
+function TAALForm.GetProp(p: string): string;
 begin
   p := LowerCase(p);
   if p = 'name' then
     Result := Name
   else if p = 'text' then
-    Result := Text
+    Result := Caption
   else if p = 'x' then
     Result := IntToStr(Left)
   else if p = 'y' then
@@ -342,18 +659,16 @@ begin
   else if p = 'height' then
     Result := IntToStr(Height)
   else if p = 'style' then
-    Result := IntToStr(FStyle)
-  else if p = 'styleex' then
-    Result := IntToStr(FStyleEX);
+    Result := IntToStr(FStyle);
 end;
 
-procedure TAALEdit.SetProp(p, val: string);
+procedure TAALForm.SetProp(p, val: string);
 begin
   p := LowerCase(p);
   if (p = 'name') and isValidName(val) then
     Name := val
   else if p = 'text' then
-    Text := val
+    Caption := val
   else if (p = 'x') and isNumeric(val) then
     Left := StrToInt(val)
   else if (p = 'y') and isNumeric(val) then
@@ -363,14 +678,243 @@ begin
   else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
   else if (p = 'style') and isNumeric(val) then
+    FStyle := StrToInt(val);
+end;
+
+function TAALForm.GetEvent(e: string): string;
+begin
+  Result := FEvents.Values[e];
+end;
+
+procedure TAALForm.SetEvent(e, val: string);
+begin
+  FEvents.Values[e] := val;
+end;
+
+constructor TAALForm.Create(AOwner: TComponent);
+begin
+  inherited;
+  FEvents := TStringList.Create;
+  Height := 312;
+  Width := 386;
+  inherited Name := 'Form1';
+  FCaption := 'Form1';
+  inherited Caption:='';
+  FEvents.Values['onClick'] := '';
+end;
+
+destructor TAALForm.Destroy;
+begin
+  FEvents.Free;
+  inherited;
+end;
+
+procedure TAALForm.CopyTo(c: TControl);
+begin
+  c.Left := Left;
+  c.Top := Top;
+  c.Width := Width;
+  c.Height := Height;
+  if Name = Caption then
+    c.Caption := c.Name
+  else
+    c.Caption := Caption;
+  if (c is TAALForm) then
+  begin
+    (c as TAALForm).Style := Style;
+    (c as TAALForm).Events.Assign(FEvents);
+  end;
+end;
+
+function TAALForm.GetAALString(FormName: string): string;
+begin
+  Result := Format('$%s = CreateWindow("%s", %d, %d, %d, %d, %d)',
+    [Name, FCaption, FLeft, FTop, Width + 16, Height + 32, FStyle]);
+end;
+
+procedure TAALForm.SetText(val: string);
+begin
+  FCaption := val;
+  Invalidate;
+  if Assigned(FOnChangeCaption) then
+    FOnChangeCaption(Self);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Text', val);
+end;
+
+procedure TAALForm.FillEvents(g: TValueListEditor);
+var
+  i: integer;
+begin
+  for i := 0 to FEvents.Count - 1 do
+  begin
+    g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
+    g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
+  end;
+end;
+
+procedure TAALForm.AddEvents(sl: TStringList);
+var
+  i: integer;
+begin
+  for i := 0 to FEvents.Count - 1 do
+    if FEvents.ValueFromIndex[i] <> '' then
+      sl.Add(Format('SetOnEvent($%s, "%s","%s")',
+        [Name, FEvents.Names[i], FEvents.ValueFromIndex[i]]));
+end;
+
+{ Edit }
+
+function TAALEdit.CheckProperty(prop: string): boolean;
+begin
+  prop := LowerCase(prop);
+  Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or
+    (prop = 'style') or (prop = 'styleex');
+end;
+
+function TAALEdit.GetEvents: TStringList;
+begin
+  Result := FEvents;
+end;
+
+procedure TAALEdit.SetName(const Value: TComponentName);
+begin
+  if Text=Name then Text:=Value;
+  inherited SetName(Value);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Name', Value);
+end;
+
+procedure TAALEdit.SetLeft(Val: integer);
+begin
+  inherited Left := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Left', IntToStr(Val));
+end;
+
+procedure TAALEdit.SetTop(Val: integer);
+begin
+  inherited Top := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Top', IntToStr(Val));
+end;
+
+procedure TAALEdit.SetWidth(Val: integer);
+begin
+  inherited Width := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Width', IntToStr(Val));
+end;
+
+procedure TAALEdit.SetHeight(Val: integer);
+begin
+  inherited Height := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Height', IntToStr(Val));
+end;
+
+function TAALEdit.GetLeft: integer;
+begin
+  Result := inherited Left;
+end;
+
+function TAALEdit.GetTop: integer;
+begin
+  Result := inherited Top;
+end;
+
+function TAALEdit.GetWidth: integer;
+begin
+  Result := inherited Width;
+end;
+
+function TAALEdit.GetHeight: integer;
+begin
+  Result := inherited Height;
+end;
+
+function TAALEdit.GetText: string;
+begin
+  Result := inherited Text;
+end;
+
+procedure TAALEdit.SetText(val: string);
+begin
+  inherited Text := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Text', Val);
+end;
+
+procedure TAALEdit.SetStyle(val: integer);
+begin
+  FStyle := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Style', IntToStr(Val));
+end;
+
+procedure TAALEdit.SetStyleEx(val: integer);
+begin
+  FStyleEX := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+end;
+
+function TAALEdit.GetProp(prop: string): string;
+begin
+  prop := LowerCase(prop);
+  if prop = 'name' then
+    Result := Name
+  else if prop = 'text' then
+    Result := Text
+  else if prop = 'x' then
+    Result := IntToStr(Left)
+  else if prop = 'y' then
+    Result := IntToStr(Top)
+  else if prop = 'width' then
+    Result := IntToStr(Width)
+  else if prop = 'height' then
+    Result := IntToStr(Height)
+  else if prop = 'style' then
+    Result := IntToStr(FStyle)
+  else if prop = 'styleex' then
+    Result := IntToStr(FStyleEX);
+end;
+
+procedure TAALEdit.SetProp(prop, val: string);
+begin
+  prop := LowerCase(prop);
+  if (prop = 'name') and isValidName(val) then
+    Name := val
+  else if prop = 'text' then
+    Text := val
+  else if (prop = 'x') and isNumeric(val) then
+    Left := StrToInt(val)
+  else if (prop = 'y') and isNumeric(val) then
+    Top := StrToInt(val)
+  else if (prop = 'width') and isNumeric(val) then
+    Width := StrToInt(val)
+  else if (prop = 'height') and isNumeric(val) then
+    Height := StrToInt(val)
+  else if (prop = 'style') and isNumeric(val) then
     FStyle := StrToInt(val)
-  else if (p = 'styleex') and isNumeric(val) then
+  else if (prop = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
 
 function TAALEdit.GetEvent(e: string): string;
 begin
   Result := FEvents.Values[e];
+end;
+
+function TAALEdit.GetOnChangeProp: TPropertyChangeEvent;
+begin
+  Result := FOnChangeProp;
+end;
+
+procedure TAALEdit.SetOnChangeProp(a: TPropertyChangeEvent);
+begin
+  FOnChangeProp := a;
 end;
 
 procedure TAALEdit.SetEvent(e, val: string);
@@ -415,24 +959,6 @@ begin
     [Name, FormName, Text, Left, Top, Width, Height, FStyle, FStyleEX]);
 end;
 
-procedure TAALEdit.FillProps(g: TValueListEditor);
-begin
-  g.Values['Name'] := Name;
-  g.Values['Text'] := Text;
-  g.Values['X'] := IntToStr(Left);
-  g.ItemProps['X'].EditMask := 'd';
-  g.Values['Y'] := IntToStr(Top);
-  g.ItemProps['Y'].EditMask := 'd';
-  g.Values['Width'] := IntToStr(Width);
-  g.ItemProps['Width'].EditMask := 'd';
-  g.Values['Height'] := IntToStr(Height);
-  g.ItemProps['Height'].EditMask := 'd';
-  g.Values['Style'] := IntToStr(FStyle);
-  g.ItemProps['Style'].EditMask := 'd';
-  g.Values['StyleEX'] := IntToStr(FStyleEX);
-  g.ItemProps['StyleEX'].EditMask := 'd';
-end;
-
 procedure TAALEdit.FillEvents(g: TValueListEditor);
 var
   i: integer;
@@ -442,15 +968,6 @@ begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
     g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
-end;
-
-procedure TAALEdit.OpenEditor(prop: string);
-begin
-  prop := LowerCase(prop);
-  if prop = 'style' then
-    exit//Todo
-  else if prop = 'styleex' then
-    exit;//Todo
 end;
 
 procedure TAALEdit.AddEvents(sl: TStringList);
@@ -464,6 +981,111 @@ begin
 end;
 
 { Button }
+
+function TAALButton.CheckProperty(prop: string): boolean;
+begin
+  prop := LowerCase(prop);
+  Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or
+    (prop = 'style') or (prop = 'styleex');
+end;
+
+function TAALButton.GetEvents: TStringList;
+begin
+  Result := FEvents;
+end;
+
+procedure TAALButton.SetName(const Value: TComponentName);
+begin
+  if Text=Name then Text:=Value;
+  inherited SetName(Value);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Name', Value);
+end;
+
+procedure TAALButton.SetLeft(Val: integer);
+begin
+  inherited Left := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Left', IntToStr(Val));
+end;
+
+procedure TAALButton.SetTop(Val: integer);
+begin
+  inherited Top := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Top', IntToStr(Val));
+end;
+
+procedure TAALButton.SetWidth(Val: integer);
+begin
+  inherited Width := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Width', IntToStr(Val));
+end;
+
+procedure TAALButton.SetHeight(Val: integer);
+begin
+  inherited Height := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Height', IntToStr(Val));
+end;
+
+function TAALButton.GetLeft: integer;
+begin
+  Result := inherited Left;
+end;
+
+function TAALButton.GetTop: integer;
+begin
+  Result := inherited Top;
+end;
+
+function TAALButton.GetWidth: integer;
+begin
+  Result := inherited Width;
+end;
+
+function TAALButton.GetHeight: integer;
+begin
+  Result := inherited Height;
+end;
+
+function TAALButton.GetText: string;
+begin
+  Result := inherited Caption;
+end;
+
+procedure TAALButton.SetText(val: string);
+begin
+  inherited Caption := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Text', Val);
+end;
+
+procedure TAALButton.SetStyle(val: integer);
+begin
+  FStyle := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Style', IntToStr(Val));
+end;
+
+procedure TAALButton.SetStyleEx(val: integer);
+begin
+  FStyleEX := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+end;
+
+function TAALButton.GetOnChangeProp: TPropertyChangeEvent;
+begin
+  Result := FOnChangeProp;
+end;
+
+procedure TAALButton.SetOnChangeProp(a: TPropertyChangeEvent);
+begin
+  FOnChangeProp := a;
+end;
 
 function TAALButton.GetProp(p: string): string;
 begin
@@ -566,24 +1188,6 @@ begin
     [Name, FormName, Caption, Left, Top, Width, Height, FStyle, FStyleEX]);
 end;
 
-procedure TAALButton.FillProps(g: TValueListEditor);
-begin
-  g.Values['Name'] := Name;
-  g.Values['Text'] := Caption;
-  g.Values['X'] := IntToStr(Left);
-  g.ItemProps['X'].EditMask := 'd';
-  g.Values['Y'] := IntToStr(Top);
-  g.ItemProps['Y'].EditMask := 'd';
-  g.Values['Width'] := IntToStr(Width);
-  g.ItemProps['Width'].EditMask := 'd';
-  g.Values['Height'] := IntToStr(Height);
-  g.ItemProps['Height'].EditMask := 'd';
-  g.Values['Style'] := IntToStr(FStyle);
-  g.ItemProps['Style'].EditMask := 'd';
-  g.Values['StyleEX'] := IntToStr(FStyleEX);
-  g.ItemProps['StyleEX'].EditMask := 'd';
-end;
-
 procedure TAALButton.FillEvents(g: TValueListEditor);
 var
   i: integer;
@@ -593,15 +1197,6 @@ begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
     g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
-end;
-
-procedure TAALButton.OpenEditor(prop: string);
-begin
-  prop := LowerCase(prop);
-  if prop = 'style' then
-    exit//Todo
-  else if prop = 'styleex' then
-    exit;//Todo
 end;
 
 procedure TAALButton.AddEvents(sl: TStringList);
@@ -615,6 +1210,111 @@ begin
 end;
 
 { Checkbox }
+
+function TAALCheckBox.CheckProperty(prop: string): boolean;
+begin
+  prop := LowerCase(prop);
+  Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or
+    (prop = 'style') or (prop = 'styleex');
+end;
+
+function TAALCheckBox.GetEvents: TStringList;
+begin
+  Result := FEvents;
+end;
+
+procedure TAALCheckBox.SetName(const Value: TComponentName);
+begin
+  if Text=Name then Text:=Value;
+  inherited SetName(Value);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Name', Value);
+end;
+
+procedure TAALCheckBox.SetLeft(Val: integer);
+begin
+  inherited Left := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Left', IntToStr(Val));
+end;
+
+procedure TAALCheckBox.SetTop(Val: integer);
+begin
+  inherited Top := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Top', IntToStr(Val));
+end;
+
+procedure TAALCheckBox.SetWidth(Val: integer);
+begin
+  inherited Width := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Width', IntToStr(Val));
+end;
+
+procedure TAALCheckBox.SetHeight(Val: integer);
+begin
+  inherited Height := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Height', IntToStr(Val));
+end;
+
+function TAALCheckBox.GetLeft: integer;
+begin
+  Result := inherited Left;
+end;
+
+function TAALCheckBox.GetTop: integer;
+begin
+  Result := inherited Top;
+end;
+
+function TAALCheckBox.GetWidth: integer;
+begin
+  Result := inherited Width;
+end;
+
+function TAALCheckBox.GetHeight: integer;
+begin
+  Result := inherited Height;
+end;
+
+function TAALCheckBox.GetText: string;
+begin
+  Result := inherited Caption;
+end;
+
+procedure TAALCheckBox.SetText(val: string);
+begin
+  inherited Caption := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Text', Val);
+end;
+
+procedure TAALCheckBox.SetStyle(val: integer);
+begin
+  FStyle := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Style', IntToStr(Val));
+end;
+
+procedure TAALCheckBox.SetStyleEx(val: integer);
+begin
+  FStyleEX := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+end;
+
+function TAALCheckBox.GetOnChangeProp: TPropertyChangeEvent;
+begin
+  Result := FOnChangeProp;
+end;
+
+procedure TAALCheckBox.SetOnChangeProp(a: TPropertyChangeEvent);
+begin
+  FOnChangeProp := a;
+end;
 
 function TAALCheckbox.GetProp(p: string): string;
 begin
@@ -711,24 +1411,6 @@ begin
     [Name, FormName, Caption, Left, Top, Width, Height, FStyle, FStyleEX]);
 end;
 
-procedure TAALCheckbox.FillProps(g: TValueListEditor);
-begin
-  g.Values['Name'] := Name;
-  g.Values['Text'] := Caption;
-  g.Values['X'] := IntToStr(Left);
-  g.ItemProps['X'].EditMask := 'd';
-  g.Values['Y'] := IntToStr(Top);
-  g.ItemProps['Y'].EditMask := 'd';
-  g.Values['Width'] := IntToStr(Width);
-  g.ItemProps['Width'].EditMask := 'd';
-  g.Values['Height'] := IntToStr(Height);
-  g.ItemProps['Height'].EditMask := 'd';
-  g.Values['Style'] := IntToStr(FStyle);
-  g.ItemProps['Style'].EditMask := 'd';
-  g.Values['StyleEX'] := IntToStr(FStyleEX);
-  g.ItemProps['StyleEX'].EditMask := 'd';
-end;
-
 procedure TAALCheckbox.FillEvents(g: TValueListEditor);
 var
   i: integer;
@@ -738,15 +1420,6 @@ begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
     g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
-end;
-
-procedure TAALCheckbox.OpenEditor(prop: string);
-begin
-  prop := LowerCase(prop);
-  if prop = 'style' then
-    exit//Todo
-  else if prop = 'styleex' then
-    exit;//Todo
 end;
 
 procedure TAALCheckbox.AddEvents(sl: TStringList);
@@ -760,6 +1433,99 @@ begin
 end;
 
 { Label }
+
+function TAALLabel.CheckProperty(prop: string): boolean;
+begin
+  prop := LowerCase(prop);
+  Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or
+    (prop = 'style') or (prop = 'styleex');
+end;
+
+function TAALLabel.GetEvents: TStringList;
+begin
+  Result := FEvents;
+end;
+
+procedure TAALLabel.SetName(const Value: TComponentName);
+begin
+  if Text=Name then Text:=Value;
+  inherited SetName(Value);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Name', Value);
+end;
+
+procedure TAALLabel.SetLeft(Val: integer);
+begin
+  inherited Left := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Left', IntToStr(Val));
+end;
+
+procedure TAALLabel.SetTop(Val: integer);
+begin
+  inherited Top := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Top', IntToStr(Val));
+end;
+
+procedure TAALLabel.SetWidth(Val: integer);
+begin
+  inherited Width := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Width', IntToStr(Val));
+end;
+
+procedure TAALLabel.SetHeight(Val: integer);
+begin
+  inherited Height := Val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Height', IntToStr(Val));
+end;
+
+function TAALLabel.GetLeft: integer;
+begin
+  Result := inherited Left;
+end;
+
+function TAALLabel.GetTop: integer;
+begin
+  Result := inherited Top;
+end;
+
+function TAALLabel.GetWidth: integer;
+begin
+  Result := inherited Width;
+end;
+
+function TAALLabel.GetHeight: integer;
+begin
+  Result := inherited Height;
+end;
+
+procedure TAALLabel.SetStyle(val: integer);
+begin
+  FStyle := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Style', IntToStr(Val));
+end;
+
+procedure TAALLabel.SetStyleEx(val: integer);
+begin
+  FStyleEX := val;
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+end;
+
+function TAALLabel.GetOnChangeProp: TPropertyChangeEvent;
+begin
+  Result := FOnChangeProp;
+end;
+
+procedure TAALLabel.SetOnChangeProp(a: TPropertyChangeEvent);
+begin
+  FOnChangeProp := a;
+end;
 
 function TAALLabel.GetProp(p: string): string;
 begin
@@ -870,30 +1636,14 @@ begin
     [Name, FormName, Caption, Left, Top, Width, Height, FStyle, FStyleEX]);
 end;
 
-procedure TAALLabel.SetCaption(s: string);
+procedure TAALLabel.SetText(val: string);
 begin
-  Width := Canvas.TextWidth(s);
-  Height := Canvas.TextHeight(s);
-  FCaption := s;
+  Width := Canvas.TextWidth(val);
+  Height := Canvas.TextHeight(val);
+  FCaption := val;
   Invalidate;
-end;
-
-procedure TAALLabel.FillProps(g: TValueListEditor);
-begin
-  g.Values['Name'] := Name;
-  g.Values['Text'] := Caption;
-  g.Values['X'] := IntToStr(Left);
-  g.ItemProps['X'].EditMask := 'd';
-  g.Values['Y'] := IntToStr(Top);
-  g.ItemProps['Y'].EditMask := 'd';
-  g.Values['Width'] := IntToStr(Width);
-  g.ItemProps['Width'].EditMask := 'd';
-  g.Values['Height'] := IntToStr(Height);
-  g.ItemProps['Height'].EditMask := 'd';
-  g.Values['Style'] := IntToStr(FStyle);
-  g.ItemProps['Style'].EditMask := 'd';
-  g.Values['StyleEX'] := IntToStr(FStyleEX);
-  g.ItemProps['StyleEX'].EditMask := 'd';
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'Text', val);
 end;
 
 procedure TAALLabel.FillEvents(g: TValueListEditor);
@@ -905,15 +1655,6 @@ begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];
     g.ItemProps[FEvents.Names[i]].EditStyle := esPickList;
   end;
-end;
-
-procedure TAALLabel.OpenEditor(prop: string);
-begin
-  prop := LowerCase(prop);
-  if prop = 'style' then
-    exit//Todo
-  else if prop = 'styleex' then
-    exit;//Todo
 end;
 
 procedure TAALLabel.AddEvents(sl: TStringList);

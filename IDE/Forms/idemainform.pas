@@ -5,7 +5,7 @@ unit IDEMainForm;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  Classes, SysUtils, LazFileUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Menus, ComCtrls, Buttons, ExtCtrls, PairSplitter, Project, IDEStartupScreen,
   ProjectInspector, EditorManagerFrame, AALTypes, FormEditor, Editor,
   AALFileInfo, strutils, CompilerOptions, AALCompiler, EditorOptions, FormEditorOptions,

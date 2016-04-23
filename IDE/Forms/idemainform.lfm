@@ -1,6 +1,6 @@
 object MainForm: TMainForm
   Left = 426
-  Height = 647
+  Height = 617
   Top = 195
   Width = 1260
   ActiveControl = EditorManager1.EditorControl
@@ -15,32 +15,33 @@ object MainForm: TMainForm
   OnResize = FormResize
   OnWindowStateChange = FormWindowStateChange
   LCLVersion = '1.7'
+  Visible = False
   WindowState = wsMaximized
   inline EditorManager1: TEditorManager
     Left = 347
-    Height = 485
+    Height = 455
     Top = 36
     Width = 913
     Align = alClient
-    ClientHeight = 485
+    ClientHeight = 455
     ClientWidth = 913
     inherited EditorControl: TPageControl
-      Height = 485
+      Height = 455
       Width = 913
     end
   end
   inline ProjectInspector1: TProjectInspector
-    Height = 485
+    Height = 455
     Top = 36
     Align = alLeft
-    ClientHeight = 485
+    ClientHeight = 455
     TabOrder = 1
     inherited ProjectFileTreeView: TTreeView
-      Height = 249
+      Height = 219
       DefaultItemHeight = 32
     end
     inherited FileInfoPanel: TPanel
-      Top = 306
+      Top = 276
       inherited AddButton: TButton
         OnClick = nil
       end
@@ -986,7 +987,7 @@ object MainForm: TMainForm
   object OutputBox: TListBox
     Left = 0
     Height = 96
-    Top = 521
+    Top = 491
     Width = 1260
     Align = alBottom
     ItemHeight = 0

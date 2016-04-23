@@ -7,10 +7,11 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, lazcontrols, IDEMainForm, Project, IDEStartupScreen, ProjectInspector,
-  AALTypes, Editor, FormEditor, EditorManagerFrame, AALFileInfo, 
-FormEditComponents, AALCompiler, CompilerOptions, EditorOptions, 
-FormEditorOptions, SampeProjectView, AboutWindow
+  Forms, lazcontrols, runtimetypeinfocontrols, IDEMainForm, Project,
+  IDEStartupScreen, ProjectInspector, AALTypes, Editor, FormEditor,
+  EditorManagerFrame, AALFileInfo, FormEditComponents, AALCompiler,
+  CompilerOptions, EditorOptions, FormEditorOptions, SampeProjectView,
+  AboutWindow
   { you can add units after this };
 
 {$R *.res}

@@ -8,19 +8,17 @@ object FormEditFrame: TFormEditFrame
   Color = clWindow
   ParentColor = False
   TabOrder = 0
-  DesignLeft = 399
-  DesignTop = 157
   object EditorScrollBox: TScrollBox
     Left = 0
     Height = 563
     Top = 0
     Width = 625
-    HorzScrollBar.Increment = 40
-    HorzScrollBar.Page = 402
+    HorzScrollBar.Increment = 6
+    HorzScrollBar.Page = 68
     HorzScrollBar.Smooth = True
     HorzScrollBar.Tracking = True
-    VertScrollBar.Increment = 34
-    VertScrollBar.Page = 344
+    VertScrollBar.Increment = 3
+    VertScrollBar.Page = 33
     VertScrollBar.Smooth = True
     VertScrollBar.Tracking = True
     Align = alClient
@@ -30,24 +28,6 @@ object FormEditFrame: TFormEditFrame
     ParentColor = False
     TabOrder = 0
     OnPaint = EditorScrollBoxPaint
-    object FormPanel: TPanel
-      Left = 16
-      Height = 312
-      Top = 32
-      Width = 386
-      BevelOuter = bvNone
-      BorderStyle = bsSingle
-      Color = clBtnFace
-      ParentColor = False
-      ParentFont = False
-      TabOrder = 0
-      OnDblClick = FormPanelDblClick
-      OnMouseDown = FormPanelMouseDown
-      OnMouseMove = FormPanelMouseMove
-      OnMouseUp = FormPanelMouseUp
-      OnPaint = FormPanelPaint
-      OnResize = FormPanelResize
-    end
     object FormCaptionLabel: TLabel
       Left = 16
       Height = 25
@@ -82,30 +62,20 @@ object FormEditFrame: TFormEditFrame
         Caption = 'Eigenschaften'
         ClientHeight = 218
         ClientWidth = 263
-        object PropEditor: TValueListEditor
+        object PropEditor: TTIPropertyGrid
           Left = 0
           Height = 218
           Top = 0
           Width = 263
           Align = alClient
-          FixedCols = 0
-          Flat = True
-          RowCount = 2
-          TabOrder = 0
-          TitleStyle = tsNative
-          OnEditingDone = PropEditorEditingDone
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAlwaysShowEditor, goThumbTracking, goDontScrollPartCell]
-          Strings.Strings = (
-            ''
-          )
-          TitleCaptions.Strings = (
-            'Eigenschaft'
-            'Wert'
-          )
-          ColWidths = (
-            64
-            198
-          )
+          BackgroundColor = clWhite
+          CheckboxForBoolean = True
+          DefaultValueFont.Color = clWindowText
+          Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar, tkHelper, tkFile, tkClassRef, tkPointer]
+          Indent = 24
+          NameFont.Color = clWindowText
+          OnEditorFilter = PropEditorEditorFilter
+          ValueFont.Color = clMaroon
         end
       end
       object ControlEvents: TTabSheet

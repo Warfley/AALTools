@@ -8,8 +8,6 @@ object EditorFrame: TEditorFrame
   Font.Quality = fqProof
   ParentFont = False
   TabOrder = 0
-  DesignLeft = 1270
-  DesignTop = 140
   object SearchBar: TPanel
     Left = 0
     Height = 34
@@ -606,8 +604,8 @@ object EditorFrame: TEditorFrame
       BevelOuter = bvNone
       BorderStyle = bsSingle
       Caption = 'Code Explorer'
-      ClientHeight = 30
-      ClientWidth = 231
+      ClientHeight = 34
+      ClientWidth = 235
       TabOrder = 0
       object CloseCodeExplorerButton: TSpeedButton
         Left = 201

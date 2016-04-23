@@ -5,7 +5,7 @@ unit Project;
 interface
 
 uses
-  Classes, SysUtils, DOM, XMLRead, XMLWrite, FileUtil, Dialogs, AALTypes, ListRecords;
+  Classes, SysUtils, DOM, XMLRead, XMLWrite, LazFileUtils, FileUtil, Dialogs, AALTypes, ListRecords;
 
 type
   TAALProject = class
@@ -116,7 +116,7 @@ begin
   if FilenameIsAbsolute(FMainFile) then
     Result := FMainFile
   else
-    Result := CreateAbsolutePath(FMainFile, FProjectDir);
+    Result := CreateAbsoluteSearchPath(FMainFile, FProjectDir);
 end;
 
 function TAALProject.GetAbsoluteFileName(i: integer): string;
@@ -127,7 +127,7 @@ begin
   if FilenameIsAbsolute(P) then
     Result := P
   else
-    Result := CreateAbsolutePath(P, FProjectDir);
+    Result := CreateAbsoluteSearchPath(P, FProjectDir);
 end;
 
 procedure TAALProject.SetAbsoluteFileName(i: integer; f: string);
@@ -140,7 +140,7 @@ end;
 function TAALProject.GetAbsPath(Rel: string): string;
 begin
   if not FilenameIsAbsolute(Rel) then
-    Rel := CreateAbsolutePath(Rel, FProjectDir);
+    Rel := CreateAbsoluteSearchPath(Rel, FProjectDir);
   Result := Rel;
 end;
 

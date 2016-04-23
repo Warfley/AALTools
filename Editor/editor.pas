@@ -5,7 +5,7 @@ unit Editor;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
+  Classes, SysUtils, LazFileUtils, FileUtil, SynEdit, SynCompletion, Forms, Controls,
   AALHighlighter, Types, contnrs, LCLType, ExtCtrls, AALTypes, UnitParser,
   Dialogs, Graphics, StdCtrls, Buttons, ComCtrls, strutils, CodeFormatter,
   ToolTip, ListRecords, SynEditTypes, Math, SynGutterBase, SynGutterChanges,

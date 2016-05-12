@@ -1240,7 +1240,7 @@ begin
           FFormular.Top := StrToInt(FuncParams[2]);
           FFormular.Width := StrToInt(FuncParams[3]) - 16;
           FFormular.Height := StrToInt(FuncParams[4]) - 32;
-          FFormular.Style := StrToInt(FuncParams[5]);
+          FFormular.Style := TWindowStyles(StrToInt(FuncParams[5]) shr 16);
           FormFound := True;
         end
         else if FuncName = 'createbutton' then

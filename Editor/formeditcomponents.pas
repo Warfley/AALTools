@@ -6,9 +6,28 @@ unit FormEditComponents;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ValEdit, LCLIntf;
+  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ValEdit, LCLIntf, PropEdits;
 
 type
+  TWindowStyle = (
+    WS_MAXIMIZEBOX,
+    WS_MINIMIZEBOX,
+    WS_THICKFRAME,
+    WS_SYSMENU,
+    WS_HSCROLL,
+    WS_VSCROLL,
+    WS_DLGFRAME,
+    WS_BORDER,
+    WS_MAXIMIZE,
+    WS_CLIPCHILDREN,
+    WS_CLIPSIBLINGS,
+    WS_DISABLED,
+    WS_VISIBLE,
+    WS_MINIMIZE,
+    WS_CHILD,
+    WS_POPUP);
+  TWindowStyles = set of TWindowStyle;
+
   TPropertyChangeEvent = procedure(Sender: TObject;
     PropName, PropVal: string) of object;
 
@@ -53,7 +72,8 @@ type
     procedure SetWidth(Val: integer);
     procedure SetHeight(Val: integer);
     procedure SetText(val: string);
-    procedure SetStyle(val: integer);
+    procedure SetStyle(val: TWindowStyles);
+    function GetStyle: TWindowStyles;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;
@@ -90,7 +110,7 @@ type
     property Width: integer read GetWidth write SetWidth;
     property Height: integer read GetHeight write SetHeight;
     property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
-    property Style: integer read FStyle write SetStyle;
+    property Style: TWindowStyles read GetStyle write SetStyle;
     property Text: string read FCaption write SetText;
     property Caption: string read FCaption write SetText;
     property OnChangeCaption: TNotifyEvent read FOnChangeCaption write FOnChangeCaption;
@@ -571,9 +591,10 @@ end;
 
 procedure TAALForm.SetName(const Value: TComponentName);
 begin
-  if Text=Name then Text:=Value;
+  if Text = Name then
+    Text := Value;
   inherited SetName(Value);
-  inherited Caption:='';
+  inherited Caption := '';
   if Assigned(FOnChangeProp) then
     FOnChangeProp(Self, 'Name', Value);
 end;
@@ -626,11 +647,16 @@ begin
   Result := inherited Height;
 end;
 
-procedure TAALForm.SetStyle(val: integer);
+procedure TAALForm.SetStyle(val: TWindowStyles);
 begin
-  FStyle := val;
+  FStyle := DWord(val) shl 16;
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'Style', IntToStr(Val));
+    FOnChangeProp(Self, 'Style', IntToStr(FStyle));
+end;
+
+function TAALForm.GetStyle: TWindowStyles;
+begin
+  Result := TWindowStyles(FStyle shr 16);
 end;
 
 function TAALForm.GetOnChangeProp: TPropertyChangeEvent;
@@ -699,7 +725,7 @@ begin
   Width := 386;
   inherited Name := 'Form1';
   FCaption := 'Form1';
-  inherited Caption:='';
+  inherited Caption := '';
   FEvents.Values['onClick'] := '';
 end;
 
@@ -780,7 +806,8 @@ end;
 
 procedure TAALEdit.SetName(const Value: TComponentName);
 begin
-  if Text=Name then Text:=Value;
+  if Text = Name then
+    Text := Value;
   inherited SetName(Value);
   if Assigned(FOnChangeProp) then
     FOnChangeProp(Self, 'Name', Value);
@@ -997,7 +1024,8 @@ end;
 
 procedure TAALButton.SetName(const Value: TComponentName);
 begin
-  if Text=Name then Text:=Value;
+  if Text = Name then
+    Text := Value;
   inherited SetName(Value);
   if Assigned(FOnChangeProp) then
     FOnChangeProp(Self, 'Name', Value);
@@ -1226,7 +1254,8 @@ end;
 
 procedure TAALCheckBox.SetName(const Value: TComponentName);
 begin
-  if Text=Name then Text:=Value;
+  if Text = Name then
+    Text := Value;
   inherited SetName(Value);
   if Assigned(FOnChangeProp) then
     FOnChangeProp(Self, 'Name', Value);
@@ -1449,7 +1478,8 @@ end;
 
 procedure TAALLabel.SetName(const Value: TComponentName);
 begin
-  if Text=Name then Text:=Value;
+  if Text = Name then
+    Text := Value;
   inherited SetName(Value);
   if Assigned(FOnChangeProp) then
     FOnChangeProp(Self, 'Name', Value);

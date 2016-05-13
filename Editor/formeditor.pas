@@ -195,6 +195,8 @@ begin
 end;
 
 procedure TFormEditFrame.LoadControlData(c: TComponent; Clear: boolean = True);
+var
+  i: integer;
 begin
   (c as IAALComponent).FillEvents(EventEditor);
   PropEditor.TIObject := c;
@@ -1184,167 +1186,167 @@ var
   c: TControl;
   idx: integer;
 begin
-  FChangeProps:=True;
+  FChangeProps := True;
   try
-  curr := 1;
-  DeleteItem(FormControlView.Items[0]);
-  FormFound := False;
-  if p = '' then
-    p := FFileName;
-  if not FileExists(p) then
-    exit;
-  Lines := TStringList.Create;
-  FuncParams := TStringList.Create;
-  try
-    Lines.LoadFromFile(p);
-    for i := 0 to Lines.Count - 1 do
-    begin
-      Lines[i] := Trim(Lines[i]);
-      if isEnd(Lines[i], 'SetOnEvent') then
+    curr := 1;
+    DeleteItem(FormControlView.Items[0]);
+    FormFound := False;
+    if p = '' then
+      p := FFileName;
+    if not FileExists(p) then
+      exit;
+    Lines := TStringList.Create;
+    FuncParams := TStringList.Create;
+    try
+      Lines.LoadFromFile(p);
+      for i := 0 to Lines.Count - 1 do
       begin
-        ReadFunc(Trim(Lines[i]), FuncParams);
-        if (LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) then
-          FFormular.Events.Values[FuncParams[1]] := FuncParams[2]
+        Lines[i] := Trim(Lines[i]);
+        if isEnd(Lines[i], 'SetOnEvent') then
+        begin
+          ReadFunc(Trim(Lines[i]), FuncParams);
+          if (LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) then
+            FFormular.Events.Values[FuncParams[1]] := FuncParams[2]
+          else
+          begin
+            idx := FindControl(Copy(FuncParams[0], 2, length(FuncParams[0])));
+            if (idx < 0) or (idx > FormControlView.Items.Count - 1) then
+              Continue;
+            a := TObject(FormControlView.Items[idx].Data) as IAALComponent;
+            a.Event[FuncParams[1]] := FuncParams[2];
+          end;
+        end
         else
         begin
-          idx := FindControl(Copy(FuncParams[0], 2, length(FuncParams[0])));
-          if (idx < 0) or (idx > FormControlView.Items.Count - 1) then
+          VarName := ReadVar(Lines[i]);
+          if VarName = '' then
             Continue;
-          a := TObject(FormControlView.Items[idx].Data) as IAALComponent;
-          a.Event[FuncParams[1]] := FuncParams[2];
-        end;
-      end
-      else
-      begin
-        VarName := ReadVar(Lines[i]);
-        if VarName = '' then
-          Continue;
-        FuncName := Lines[i];
-        Delete(FuncName, 1, Pos('=', FuncName));
-        FuncName := LowerCase(ReadFunc(FuncName, FuncParams));
-        if (FuncName = '') or (FuncParams.Count = 0) then
-          Continue;
-        if FuncName = 'createwindow' then
-        begin
-          // Syntax Check
-          if FormFound or (FuncParams.Count <> 6) or not
-            (IsNumeric(FuncParams[1]) and IsNumeric(FuncParams[2]) and
-            IsNumeric(FuncParams[3]) and IsNumeric(FuncParams[4]) and
-            IsNumeric(FuncParams[5])) then
+          FuncName := Lines[i];
+          Delete(FuncName, 1, Pos('=', FuncName));
+          FuncName := LowerCase(ReadFunc(FuncName, FuncParams));
+          if (FuncName = '') or (FuncParams.Count = 0) then
             Continue;
-          // Read Data
-          FFormular.Name := VarName;
-          FormControlView.Items[0].Text := FFormular.Name;
-          FFormular.Text := FuncParams[0];
-          FFormular.Left := StrToInt(FuncParams[1]);
-          FFormular.Top := StrToInt(FuncParams[2]);
-          FFormular.Width := StrToInt(FuncParams[3]) - 16;
-          FFormular.Height := StrToInt(FuncParams[4]) - 32;
-          FFormular.Style := TWindowStyles(StrToInt(FuncParams[5]) shr 16);
-          FormFound := True;
-        end
-        else if FuncName = 'createbutton' then
-        begin
-          // Syntax Check
-          if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
-            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
-            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
-            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
-            Continue;
-          // Read Data
-          c := CreateButton(FFormular);
-          c.Name := VarName;
-          FormControlView.Items[curr].Text := VarName;
-          c.Caption := FuncParams[1];
-          c.Left := StrToInt(FuncParams[2]);
-          c.Top := StrToInt(FuncParams[3]);
-          c.Width := StrToInt(FuncParams[4]);
-          c.Height := StrToInt(FuncParams[5]);
-          (c as TAALButton).ComponentProp['Style'] := FuncParams[6];
-          (c as TAALButton).ComponentProp['StyleEx'] := FuncParams[7];
-          Inc(curr);
-        end
-        else if FuncName = 'createcheckbox' then
-        begin
-          // Syntax Check
-          if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
-            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
-            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
-            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
-            Continue;
-          // Read Data
-          c := CreateCheckBox(FFormular);
-          c.Name := VarName;
-          FormControlView.Items[curr].Text := VarName;
-          c.Caption := FuncParams[1];
-          c.Left := StrToInt(FuncParams[2]);
-          c.Top := StrToInt(FuncParams[3]);
-          c.Width := StrToInt(FuncParams[4]);
-          c.Height := StrToInt(FuncParams[5]);
-          (c as TAALCheckbox).ComponentProp['Style'] := FuncParams[6];
-          (c as TAALCheckbox).ComponentProp['StyleEx'] := FuncParams[7];
-          Inc(curr);
-        end
-        else if FuncName = 'createlabel' then
-        begin
-          // Syntax Check
-          if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
-            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
-            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
-            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
-            Continue;
-          // Read Data
-          c := CreateLabel(FFormular);
-          c.Name := VarName;
-          FormControlView.Items[curr].Text := VarName;
-          c.Caption := FuncParams[1];
-          c.Left := StrToInt(FuncParams[2]);
-          c.Top := StrToInt(FuncParams[3]);
-          c.Width := StrToInt(FuncParams[4]);
-          c.Height := StrToInt(FuncParams[5]);
-          (c as TAALLabel).ComponentProp['Style'] := FuncParams[6];
-          (c as TAALLabel).ComponentProp['StyleEx'] := FuncParams[7];
-          Inc(curr);
-        end
-        else if FuncName = 'createinputbox' then
-        begin
-          // Syntax Check
-          if (FuncParams.Count <> 8) or not
-            ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
-            IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
-            IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
-            IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
-            Continue;
-          // Read Data
-          c := CreateEdit(FFormular);
-          c.Name := VarName;
-          FormControlView.Items[curr].Text := VarName;
-          (c as TAALEdit).Text := FuncParams[1];
-          c.Left := StrToInt(FuncParams[2]);
-          c.Top := StrToInt(FuncParams[3]);
-          c.Width := StrToInt(FuncParams[4]);
-          c.Height := StrToInt(FuncParams[5]);
-          (c as TAALEdit).ComponentProp['Style'] := FuncParams[6];
-          (c as TAALEdit).ComponentProp['StyleEx'] := FuncParams[7];
-          Inc(curr);
+          if FuncName = 'createwindow' then
+          begin
+            // Syntax Check
+            if FormFound or (FuncParams.Count <> 6) or not
+              (IsNumeric(FuncParams[1]) and IsNumeric(FuncParams[2]) and
+              IsNumeric(FuncParams[3]) and IsNumeric(FuncParams[4]) and
+              IsNumeric(FuncParams[5])) then
+              Continue;
+            // Read Data
+            FFormular.Name := VarName;
+            FormControlView.Items[0].Text := FFormular.Name;
+            FFormular.Text := FuncParams[0];
+            FFormular.Left := StrToInt(FuncParams[1]);
+            FFormular.Top := StrToInt(FuncParams[2]);
+            FFormular.Width := StrToInt(FuncParams[3]) - 16;
+            FFormular.Height := StrToInt(FuncParams[4]) - 32;
+            FFormular.Style := TWindowStyles(StrToInt(FuncParams[5]) shr 16);
+            FormFound := True;
+          end
+          else if FuncName = 'createbutton' then
+          begin
+            // Syntax Check
+            if (FuncParams.Count <> 8) or not
+              ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
+              IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+              IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+              IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+              Continue;
+            // Read Data
+            c := CreateButton(FFormular);
+            c.Name := VarName;
+            FormControlView.Items[curr].Text := VarName;
+            c.Caption := FuncParams[1];
+            c.Left := StrToInt(FuncParams[2]);
+            c.Top := StrToInt(FuncParams[3]);
+            c.Width := StrToInt(FuncParams[4]);
+            c.Height := StrToInt(FuncParams[5]);
+            (c as TAALButton).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALButton).ComponentProp['StyleEx'] := FuncParams[7];
+            Inc(curr);
+          end
+          else if FuncName = 'createcheckbox' then
+          begin
+            // Syntax Check
+            if (FuncParams.Count <> 8) or not
+              ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
+              IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+              IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+              IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+              Continue;
+            // Read Data
+            c := CreateCheckBox(FFormular);
+            c.Name := VarName;
+            FormControlView.Items[curr].Text := VarName;
+            c.Caption := FuncParams[1];
+            c.Left := StrToInt(FuncParams[2]);
+            c.Top := StrToInt(FuncParams[3]);
+            c.Width := StrToInt(FuncParams[4]);
+            c.Height := StrToInt(FuncParams[5]);
+            (c as TAALCheckbox).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALCheckbox).ComponentProp['StyleEx'] := FuncParams[7];
+            Inc(curr);
+          end
+          else if FuncName = 'createlabel' then
+          begin
+            // Syntax Check
+            if (FuncParams.Count <> 8) or not
+              ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
+              IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+              IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+              IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+              Continue;
+            // Read Data
+            c := CreateLabel(FFormular);
+            c.Name := VarName;
+            FormControlView.Items[curr].Text := VarName;
+            c.Caption := FuncParams[1];
+            c.Left := StrToInt(FuncParams[2]);
+            c.Top := StrToInt(FuncParams[3]);
+            c.Width := StrToInt(FuncParams[4]);
+            c.Height := StrToInt(FuncParams[5]);
+            (c as TAALLabel).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALLabel).ComponentProp['StyleEx'] := FuncParams[7];
+            Inc(curr);
+          end
+          else if FuncName = 'createinputbox' then
+          begin
+            // Syntax Check
+            if (FuncParams.Count <> 8) or not
+              ((LowerCase(FuncParams[0]) = '$' + LowerCase(FFormular.Name)) and
+              IsNumeric(FuncParams[2]) and IsNumeric(FuncParams[3]) and
+              IsNumeric(FuncParams[4]) and IsNumeric(FuncParams[5]) and
+              IsNumeric(FuncParams[6]) and IsNumeric(FuncParams[7])) then
+              Continue;
+            // Read Data
+            c := CreateEdit(FFormular);
+            c.Name := VarName;
+            FormControlView.Items[curr].Text := VarName;
+            (c as TAALEdit).Text := FuncParams[1];
+            c.Left := StrToInt(FuncParams[2]);
+            c.Top := StrToInt(FuncParams[3]);
+            c.Width := StrToInt(FuncParams[4]);
+            c.Height := StrToInt(FuncParams[5]);
+            (c as TAALEdit).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALEdit).ComponentProp['StyleEx'] := FuncParams[7];
+            Inc(curr);
+          end;
         end;
       end;
+    finally
+      FuncParams.Free;
+      Lines.Free;
     end;
+    if Assigned(FOnVarChanged) then
+      FOnVarChanged(Self);
+    Self.Parent.Caption := ExtractFileName(p);
+    FormControlView.Select(FormControlView.Items[0]);
+    PositionPicker.Invalidate;
+    FFileName := p;
   finally
-    FuncParams.Free;
-    Lines.Free;
-  end;
-  if Assigned(FOnVarChanged) then
-    FOnVarChanged(Self);
-  Self.Parent.Caption := ExtractFileName(p);
-  FormControlView.Select(FormControlView.Items[0]);
-  PositionPicker.Invalidate;
-  FFileName := p;
-  finally
-    FChangeProps:=False;
+    FChangeProps := False;
   end;
 end;
 

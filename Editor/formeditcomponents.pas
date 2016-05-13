@@ -117,6 +117,7 @@ type
     property OnClick;
     property OnEnter;
     property OnExit;
+    property Anchors;
     property OnKeyPress;
     property OnKeyDown;
     property OnKeyUp;
@@ -581,7 +582,8 @@ function TAALForm.CheckProperty(prop: string): boolean;
 begin
   prop := LowerCase(prop);
   Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
-    (prop = 'y') or (prop = 'width') or (prop = 'height') or (prop = 'style');
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or (prop = 'style') or
+    (Copy(prop, 1, 3)='ws_');
 end;
 
 function TAALForm.GetEvents: TStringList;

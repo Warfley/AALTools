@@ -329,7 +329,7 @@ begin
         ImageIndex := 4;
         SelectedIndex := 4;
         FormControlView.ClearSelection;
-        Selected := False;
+        Selected := True;
         Break;
       end;
 end;
@@ -1263,7 +1263,7 @@ begin
             c.Top := StrToInt(FuncParams[3]);
             c.Width := StrToInt(FuncParams[4]);
             c.Height := StrToInt(FuncParams[5]);
-            (c as TAALButton).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALButton).CompleteStyle := StrToInt(FuncParams[6]);
             (c as TAALButton).ComponentProp['StyleEx'] := FuncParams[7];
             Inc(curr);
           end
@@ -1285,7 +1285,7 @@ begin
             c.Top := StrToInt(FuncParams[3]);
             c.Width := StrToInt(FuncParams[4]);
             c.Height := StrToInt(FuncParams[5]);
-            (c as TAALCheckbox).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALCheckbox).CompleteStyle := StrToInt(FuncParams[6]);
             (c as TAALCheckbox).ComponentProp['StyleEx'] := FuncParams[7];
             Inc(curr);
           end
@@ -1329,7 +1329,7 @@ begin
             c.Top := StrToInt(FuncParams[3]);
             c.Width := StrToInt(FuncParams[4]);
             c.Height := StrToInt(FuncParams[5]);
-            (c as TAALEdit).ComponentProp['Style'] := FuncParams[6];
+            (c as TAALEdit).CompleteStyle := StrToInt(FuncParams[6]);
             (c as TAALEdit).ComponentProp['StyleEx'] := FuncParams[7];
             Inc(curr);
           end;

@@ -6,13 +6,14 @@ unit FormEditComponents;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ValEdit, LCLIntf, PropEdits;
+  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ValEdit,
+  LCLIntf;
 
 type
   TWindowStyle = (
     WS_MAXIMIZEBOX,
     WS_MINIMIZEBOX,
-    WS_THICKFRAME,
+    WS_SIZEBOX,
     WS_SYSMENU,
     WS_HSCROLL,
     WS_VSCROLL,
@@ -27,6 +28,83 @@ type
     WS_CHILD,
     WS_POPUP);
   TWindowStyles = set of TWindowStyle;
+
+  TWindowExStyle = (
+    WS_EX_DLGMODALFRAME,
+    Filler1,
+    WS_EX_NOPARENTNOTIFY,
+    WS_EX_TOPMOST,
+    WS_EX_ACCEPTFILES,
+    WS_EX_TRANSPARENT,
+    WS_EX_MDICHILD,
+    WS_EX_TOOLWINDOW,
+    WS_EX_WINDOWEDGE,
+    WS_EX_CLIENTEDGE,
+    WS_EX_CONTEXTHELP,
+    Filler2,
+    WS_EX_RIGHT,
+    WS_EX_RTLREADING,
+    WS_EX_LEFTSCROLLBAR,
+    Filler3,
+    WS_EX_CONTROLPARENT,
+    WS_EX_STATICEDGE,
+    WS_EX_APPWINDOW
+    );
+  TWindowExStyles = set of TWindowExStyle;
+
+  TEditStyle = (
+    ES_CENTER,
+    ES_RIGHT,
+    ES_MULTILINE,
+    ES_UPPERCASE,
+    ES_LOWERCASE,
+    ES_PASSWORD,
+    ES_AUTOVSCROLL,
+    ES_AUTOHSCROLL,
+    ES_NOHIDESEL,
+    Filler4,
+    ES_OEMCONVERT,
+    ES_READONLY,
+    ES_WANTRETURN,
+    ES_NUMBER
+    );
+  TEditStyles = set of TEditStyle;
+
+  TButtonStyle = (BS_DEFPUSHBUTTON,
+    BS_CHECKBOX,
+    BS_RADIOBUTTON,
+    BS_USERBUTTON,
+    Filler5,
+    BS_LEFTTEXT,
+    BS_ICON,
+    BS_BITMAP,
+    BS_LEFT,
+    BS_RIGHT,
+    BS_TOP,
+    BS_BOTTOM,
+    BS_PUSHLIKE,
+    BS_MULTILINE,
+    BS_NOTIFY,
+    BS_FLAT
+    );
+  TButtonStyles = set of TButtonStyle;
+
+  TStaticStyle = (
+    SS_CENTER,
+    SS_RIGHT,
+    SS_BLACKRECT,
+    SS_GRAYFRAME,
+    SS_ETCHEDHORZ,
+    Filler6,
+    Filler7,
+    SS_NOPREFIX,
+    SS_NOTIFY,
+    SS_CENTERIMAGE,
+    SS_RIGHTJUST,
+    SS_REALSIZEIMAGE,
+    SS_SUNKEN
+    );
+  TStaticStyles = set of TStaticStyle;
 
   TPropertyChangeEvent = procedure(Sender: TObject;
     PropName, PropVal: string) of object;
@@ -57,7 +135,7 @@ type
 
   TAALForm = class(TCustomPanel, IAALComponent)
   private
-    FStyle: integer;
+    FStyle: cardinal;
     FEvents: TStringList;
     FLeft, FTop: integer;
     FOnChangeProp: TPropertyChangeEvent;
@@ -132,8 +210,8 @@ type
 
   TAALEdit = class(TCustomEdit, IAALComponent)
   private
-    FStyle: integer;
-    FStyleEX: integer;
+    FStyle: cardinal;
+    FStyleEX: cardinal;
     FEvents: TStringList;
     FOnChangeProp: TPropertyChangeEvent;
   protected
@@ -143,8 +221,12 @@ type
     procedure SetWidth(Val: integer);
     procedure SetHeight(Val: integer);
     procedure SetText(val: string);
-    procedure SetStyle(val: integer);
-    procedure SetStyleEx(val: integer);
+    procedure SetStyle(val: TWindowStyles);
+    procedure SetEditStyle(val: TEditStyles);
+    procedure SetStyleEx(val: TWindowExStyles);
+    function GetStyle: TWindowStyles;
+    function GetEditStyle: TEditStyles;
+    function GetStyleEx: TWindowExStyles;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;
@@ -178,8 +260,10 @@ type
     property Width: integer read GetWidth write SetWidth;
     property Height: integer read GetHeight write SetHeight;
     property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
-    property Style: integer read FStyle write SetStyle;
-    property StyleEX: integer read FStyleEX write SetStyleEx;
+    property Style: TWindowStyles read GetStyle write SetStyle;
+    property StyleEX: TWindowExStyles read GetStyleEx write SetStyleEx;
+    property EditStyle: TEditStyles read GetEditStyle write SetEditStyle;
+    property CompleteStyle: cardinal read FStyle write FStyle;
     property Action;
     property Align;
     property Alignment;
@@ -246,8 +330,8 @@ type
 
   TAALButton = class(TCustomButton, IAALComponent)
   private
-    FStyle: integer;
-    FStyleEX: integer;
+    FStyle: cardinal;
+    FStyleEX: cardinal;
     FEvents: TStringList;
     FLastClick: cardinal;
     FOnChangeProp: TPropertyChangeEvent;
@@ -258,8 +342,12 @@ type
     procedure SetWidth(Val: integer);
     procedure SetHeight(Val: integer);
     procedure SetText(val: string);
-    procedure SetStyle(val: integer);
-    procedure SetStyleEx(val: integer);
+    procedure SetStyle(val: TWindowStyles);
+    procedure SetButtonStyle(val: TButtonStyles);
+    procedure SetStyleEx(val: TWindowExStyles);
+    function GetStyle: TWindowStyles;
+    function GetButtonStyle: TButtonStyles;
+    function GetStyleEx: TWindowExStyles;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;
@@ -294,10 +382,12 @@ type
     property Width: integer read GetWidth write SetWidth;
     property Height: integer read GetHeight write SetHeight;
     property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
-    property Style: integer read FStyle write SetStyle;
-    property StyleEX: integer read FStyleEX write SetStyleEx;
     property Text: string read GetText write SetText;
     property Caption: string read GetText write SetText;
+    property Style: TWindowStyles read GetStyle write SetStyle;
+    property ButtonStyle: TButtonStyles read GetButtonStyle write SetButtonStyle;
+    property StyleEX: TWindowExStyles read GetStyleEx write SetStyleEx;
+    property CompleteStyle: cardinal read FStyle write FStyle;
     property Action;
     property Align;
     property Anchors;
@@ -349,8 +439,8 @@ type
 
   TAALCheckbox = class(TCustomCheckBox, IAALComponent)
   private
-    FStyle: integer;
-    FStyleEX: integer;
+    FStyle: cardinal;
+    FStyleEX: cardinal;
     FEvents: TStringList;
     FOnChangeProp: TPropertyChangeEvent;
   protected
@@ -361,8 +451,12 @@ type
     procedure SetWidth(Val: integer);
     procedure SetHeight(Val: integer);
     procedure SetText(val: string);
-    procedure SetStyle(val: integer);
-    procedure SetStyleEx(val: integer);
+    procedure SetStyle(val: TWindowStyles);
+    procedure SetButtonStyle(val: TButtonStyles);
+    procedure SetStyleEx(val: TWindowExStyles);
+    function GetStyle: TWindowStyles;
+    function GetButtonStyle: TButtonStyles;
+    function GetStyleEx: TWindowExStyles;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;
@@ -396,8 +490,10 @@ type
     property Width: integer read GetWidth write SetWidth;
     property Height: integer read GetHeight write SetHeight;
     property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
-    property Style: integer read FStyle write SetStyle;
-    property StyleEX: integer read FStyleEX write SetStyleEx;
+    property Style: TWindowStyles read GetStyle write SetStyle;
+    property ButtonStyle: TButtonStyles read GetButtonStyle write SetButtonStyle;
+    property StyleEX: TWindowExStyles read GetStyleEx write SetStyleEx;
+    property CompleteStyle: cardinal read FStyle write FStyle;
     property Text: string read GetText write SetText;
     property Caption: string read GetText write SetText;
     property Action;
@@ -456,8 +552,8 @@ type
 
   TAALLabel = class(TCustomControl, IAALComponent)
   private
-    FStyle: integer;
-    FStyleEX: integer;
+    FStyle: Cardinal;
+    FStyleEX: Cardinal;
     FEvents: TStringList;
     FOnChangeProp: TPropertyChangeEvent;
     FCaption: string;
@@ -468,8 +564,12 @@ type
     procedure SetWidth(Val: integer);
     procedure SetHeight(Val: integer);
     procedure SetText(val: string);
-    procedure SetStyle(val: integer);
-    procedure SetStyleEx(val: integer);
+    procedure SetStyle(val: TWindowStyles);
+    procedure SetStaticStyle(val: TStaticStyles);
+    procedure SetStyleEx(val: TWindowExStyles);
+    function GetStyle: TWindowStyles;
+    function GetStaticStyle: TStaticStyles;
+    function GetStyleEx: TWindowExStyles;
     function GetLeft: integer;
     function GetTop: integer;
     function GetWidth: integer;
@@ -503,8 +603,10 @@ type
     property Width: integer read GetWidth write SetWidth;
     property Height: integer read GetHeight write SetHeight;
     property OnChangeProp: TPropertyChangeEvent read FOnChangeProp write FOnChangeProp;
-    property Style: integer read FStyle write SetStyle;
-    property StyleEX: integer read FStyleEX write SetStyleEx;
+    property Style: TWindowStyles read GetStyle write SetStyle;
+    property StaticStyle: TStaticStyles read GetStaticStyle write SetStaticStyle;
+    property StyleEX: TWindowExStyles read GetStyleEx write SetStyleEx;
+    property CompleteStyle: cardinal read FStyle write FStyle;
     property Text: string read FCaption write SetText;
     property Caption: string read FCaption write SetText;
     property OnClick;
@@ -582,8 +684,8 @@ function TAALForm.CheckProperty(prop: string): boolean;
 begin
   prop := LowerCase(prop);
   Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
-    (prop = 'y') or (prop = 'width') or (prop = 'height') or (prop = 'style') or
-    (Copy(prop, 1, 3)='ws_');
+    (prop = 'y') or (prop = 'width') or (prop = 'height') or
+    (prop = 'style') or (Pos('ws_', prop) = 1);
 end;
 
 function TAALForm.GetEvents: TStringList;
@@ -798,7 +900,8 @@ begin
   prop := LowerCase(prop);
   Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
     (prop = 'y') or (prop = 'width') or (prop = 'height') or
-    (prop = 'style') or (prop = 'styleex');
+    (prop = 'style') or (prop = 'styleex') or (prop = 'editstyle') or
+    (Pos('ws_', prop) = 1) or (Pos('es_', prop) = 1);
 end;
 
 function TAALEdit.GetEvents: TStringList;
@@ -875,18 +978,40 @@ begin
     FOnChangeProp(Self, 'Text', Val);
 end;
 
-procedure TAALEdit.SetStyle(val: integer);
+procedure TAALEdit.SetStyle(val: TWindowStyles);
 begin
-  FStyle := val;
+  FStyle := (FStyle and $FFFF) or (DWord(val) shl 16);
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'Style', IntToStr(Val));
+    FOnChangeProp(Self, 'Style', IntToStr(cardinal(val)));
 end;
 
-procedure TAALEdit.SetStyleEx(val: integer);
+procedure TAALEdit.SetEditStyle(val: TEditStyles);
 begin
-  FStyleEX := val;
+  FStyle := (FStyle and (not $FFFF)) or DWord(val);
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+    FOnChangeProp(Self, 'EditStyle', IntToStr(cardinal(val)));
+end;
+
+procedure TAALEdit.SetStyleEx(val: TWindowExStyles);
+begin
+  FStyleEX := cardinal(val);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(cardinal(Val)));
+end;
+
+function TAALEdit.GetStyle: TWindowStyles;
+begin
+  Result := TWindowStyles(FStyle shr 16);
+end;
+
+function TAALEdit.GetStyleEx: TWindowExStyles;
+begin
+  Result := TWindowExStyles(FStyleEX);
+end;
+
+function TAALEdit.GetEditStyle: TEditStyles;
+begin
+  Result := TEditStyles(FStyle and $FFFF);
 end;
 
 function TAALEdit.GetProp(prop: string): string;
@@ -905,7 +1030,9 @@ begin
   else if prop = 'height' then
     Result := IntToStr(Height)
   else if prop = 'style' then
-    Result := IntToStr(FStyle)
+    Result := IntToStr(cardinal(GetStyle))
+  else if prop = 'editstyle' then
+    Result := IntToStr(cardinal(GetEditStyle))
   else if prop = 'styleex' then
     Result := IntToStr(FStyleEX);
 end;
@@ -926,7 +1053,9 @@ begin
   else if (prop = 'height') and isNumeric(val) then
     Height := StrToInt(val)
   else if (prop = 'style') and isNumeric(val) then
-    FStyle := StrToInt(val)
+    SetStyle(TWindowStyles(StrToInt(val)))
+  else if (prop = 'editstyle') and isNumeric(val) then
+    SetEditStyle(TEditStyles(StrToInt(val)))
   else if (prop = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
@@ -977,6 +1106,7 @@ begin
     else
       (c as TAALEdit).Text := Text;
     (c as TAALEdit).Style := Style;
+    (c as TAALEdit).EditStyle := EditStyle;
     (c as TAALEdit).StyleEX := StyleEX;
     (c as TAALEdit).Events.Assign(FEvents);
   end;
@@ -1016,7 +1146,8 @@ begin
   prop := LowerCase(prop);
   Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
     (prop = 'y') or (prop = 'width') or (prop = 'height') or
-    (prop = 'style') or (prop = 'styleex');
+    (prop = 'style') or (prop = 'styleex') or (prop = 'buttonstyle') or
+    (Pos('ws_', prop) = 1) or (Pos('bs_', prop) = 1);
 end;
 
 function TAALButton.GetEvents: TStringList;
@@ -1093,18 +1224,40 @@ begin
     FOnChangeProp(Self, 'Text', Val);
 end;
 
-procedure TAALButton.SetStyle(val: integer);
+procedure TAALButton.SetStyle(val: TWindowStyles);
 begin
-  FStyle := val;
+  FStyle := (FStyle and $FFFF) or (DWord(val) shl 16);
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'Style', IntToStr(Val));
+    FOnChangeProp(Self, 'Style', IntToStr(cardinal(val)));
 end;
 
-procedure TAALButton.SetStyleEx(val: integer);
+procedure TAALButton.SetButtonStyle(val: TButtonStyles);
 begin
-  FStyleEX := val;
+  FStyle := (FStyle and (not $FFFF)) or (DWord(val));
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+    FOnChangeProp(Self, 'ButtonStyle', IntToStr(cardinal(val)));
+end;
+
+procedure TAALButton.SetStyleEx(val: TWindowExStyles);
+begin
+  FStyleEX := cardinal(val);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(cardinal(Val)));
+end;
+
+function TAALButton.GetStyle: TWindowStyles;
+begin
+  Result := TWindowStyles(FStyle shr 16);
+end;
+
+function TAALButton.GetButtonStyle: TButtonStyles;
+begin
+  Result := TButtonStyles(FStyle and $FFFF);
+end;
+
+function TAALButton.GetStyleEx: TWindowExStyles;
+begin
+  Result := TWindowExStyles(FStyleEX);
 end;
 
 function TAALButton.GetOnChangeProp: TPropertyChangeEvent;
@@ -1133,7 +1286,9 @@ begin
   else if p = 'height' then
     Result := IntToStr(Height)
   else if p = 'style' then
-    Result := IntToStr(FStyle)
+    Result := IntToStr(cardinal(GetStyle))
+  else if p = 'buttonstyle' then
+    Result := IntToStr(cardinal(GetButtonStyle))
   else if p = 'styleex' then
     Result := IntToStr(FStyleEX);
 end;
@@ -1154,7 +1309,9 @@ begin
   else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
   else if (p = 'style') and isNumeric(val) then
-    FStyle := StrToInt(val)
+    SetStyle(TWindowStyles(StrToInt(val)))
+  else if (p = 'buttonstyle') and isNumeric(val) then
+    SetButtonStyle(TButtonStyles(StrToInt(val)))
   else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
@@ -1206,7 +1363,7 @@ begin
     c.Caption := Caption;
   if (c is TAALButton) then
   begin
-    (c as TAALButton).Style := Style;
+    (c as TAALButton).CompleteStyle := CompleteStyle;
     (c as TAALButton).StyleEX := StyleEX;
     (c as TAALButton).Events.Assign(FEvents);
   end;
@@ -1246,7 +1403,8 @@ begin
   prop := LowerCase(prop);
   Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
     (prop = 'y') or (prop = 'width') or (prop = 'height') or
-    (prop = 'style') or (prop = 'styleex');
+    (prop = 'style') or (prop = 'styleex') or (prop = 'buttonstyle') or
+    (Pos('ws_', prop) = 1) or (Pos('bs_', prop) = 1);
 end;
 
 function TAALCheckBox.GetEvents: TStringList;
@@ -1323,18 +1481,40 @@ begin
     FOnChangeProp(Self, 'Text', Val);
 end;
 
-procedure TAALCheckBox.SetStyle(val: integer);
+procedure TAALCheckbox.SetStyle(val: TWindowStyles);
 begin
-  FStyle := val;
+  FStyle := (FStyle and $FFFF) or (DWord(val) shl 16);
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'Style', IntToStr(Val));
+    FOnChangeProp(Self, 'Style', IntToStr(cardinal(val)));
 end;
 
-procedure TAALCheckBox.SetStyleEx(val: integer);
+procedure TAALCheckbox.SetButtonStyle(val: TButtonStyles);
 begin
-  FStyleEX := val;
+  FStyle := (FStyle and (not $FFFF)) or (DWord(val));
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+    FOnChangeProp(Self, 'ButtonStyle', IntToStr(cardinal(val)));
+end;
+
+procedure TAALCheckbox.SetStyleEx(val: TWindowExStyles);
+begin
+  FStyleEX := cardinal(val);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(cardinal(Val)));
+end;
+
+function TAALCheckbox.GetStyle: TWindowStyles;
+begin
+  Result := TWindowStyles(FStyle shr 16);
+end;
+
+function TAALCheckbox.GetButtonStyle: TButtonStyles;
+begin
+  Result := TButtonStyles(FStyle and $FFFF);
+end;
+
+function TAALCheckbox.GetStyleEx: TWindowExStyles;
+begin
+  Result := TWindowExStyles(FStyleEX);
 end;
 
 function TAALCheckBox.GetOnChangeProp: TPropertyChangeEvent;
@@ -1363,7 +1543,9 @@ begin
   else if p = 'height' then
     Result := IntToStr(Height)
   else if p = 'style' then
-    Result := IntToStr(FStyle)
+    Result := IntToStr(cardinal(GetStyle))
+  else if p = 'buttonstyle' then
+    Result := IntToStr(cardinal(GetButtonStyle))
   else if p = 'styleex' then
     Result := IntToStr(FStyleEX);
 end;
@@ -1384,7 +1566,9 @@ begin
   else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
   else if (p = 'style') and isNumeric(val) then
-    FStyle := StrToInt(val)
+    SetStyle(TWindowStyles(StrToInt(val)))
+  else if (p = 'buttonstyle') and isNumeric(val) then
+    SetButtonStyle(TButtonStyles(StrToInt(val)))
   else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
@@ -1430,7 +1614,7 @@ begin
     c.Caption := Caption;
   if (c is TAALCheckbox) then
   begin
-    (c as TAALCheckbox).Style := Style;
+    (c as TAALCheckbox).CompleteStyle := CompleteStyle;
     (c as TAALCheckbox).StyleEX := StyleEX;
     (c as TAALCheckbox).Events.Assign(FEvents);
   end;
@@ -1470,7 +1654,8 @@ begin
   prop := LowerCase(prop);
   Result := (prop = 'name') or (prop = 'text') or (prop = 'x') or
     (prop = 'y') or (prop = 'width') or (prop = 'height') or
-    (prop = 'style') or (prop = 'styleex');
+    (prop = 'style') or (prop = 'styleex') or (prop = 'staticstyle') or
+    (Pos('ws_', prop) = 1) or (Pos('ss_', prop) = 1);
 end;
 
 function TAALLabel.GetEvents: TStringList;
@@ -1535,18 +1720,40 @@ begin
   Result := inherited Height;
 end;
 
-procedure TAALLabel.SetStyle(val: integer);
+procedure TAALLabel.SetStyle(val: TWindowStyles);
 begin
-  FStyle := val;
+  FStyle := (FStyle and $FFFF) or (DWord(val) shl 16);
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'Style', IntToStr(Val));
+    FOnChangeProp(Self, 'Style', IntToStr(cardinal(val)));
 end;
 
-procedure TAALLabel.SetStyleEx(val: integer);
+procedure TAALLabel.SetStaticStyle(val: TStaticStyles);
 begin
-  FStyleEX := val;
+  FStyle := (FStyle and (not $FFFF)) or (DWord(val));
   if Assigned(FOnChangeProp) then
-    FOnChangeProp(Self, 'StyleEx', IntToStr(Val));
+    FOnChangeProp(Self, 'StaticStyle', IntToStr(cardinal(val)));
+end;
+
+procedure TAALLabel.SetStyleEx(val: TWindowExStyles);
+begin
+  FStyleEX := cardinal(val);
+  if Assigned(FOnChangeProp) then
+    FOnChangeProp(Self, 'StyleEx', IntToStr(cardinal(Val)));
+end;
+
+function TAALLabel.GetStyle: TWindowStyles;
+begin
+  Result := TWindowStyles(FStyle shr 16);
+end;
+
+function TAALLabel.GetStaticStyle: TStaticStyles;
+begin
+  Result := TStaticStyles(FStyle and $FFFF);
+end;
+
+function TAALLabel.GetStyleEx: TWindowExStyles;
+begin
+  Result := TWindowExStyles(FStyleEX);
 end;
 
 function TAALLabel.GetOnChangeProp: TPropertyChangeEvent;
@@ -1575,7 +1782,9 @@ begin
   else if p = 'height' then
     Result := IntToStr(Height)
   else if p = 'style' then
-    Result := IntToStr(FStyle)
+    Result := IntToStr(cardinal(GetStyle))
+  else if p = 'staticstyle' then
+    Result := IntToStr(cardinal(GetStaticStyle))
   else if p = 'styleex' then
     Result := IntToStr(FStyleEX);
 end;
@@ -1596,7 +1805,9 @@ begin
   else if (p = 'height') and isNumeric(val) then
     Height := StrToInt(val)
   else if (p = 'style') and isNumeric(val) then
-    FStyle := StrToInt(val)
+    SetStyle(TWindowStyles(StrToInt(val)))
+  else if (p = 'staticstyle') and isNumeric(val) then
+    SetStaticStyle(TStaticStyles(StrToInt(val)))
   else if (p = 'styleex') and isNumeric(val) then
     FStyleEX := StrToInt(val);
 end;
@@ -1656,7 +1867,7 @@ begin
     c.Caption := Caption;
   if (c is TAALLabel) then
   begin
-    (c as TAALLabel).Style := Style;
+    (c as TAALLabel).CompleteStyle := CompleteStyle;
     (c as TAALLabel).StyleEX := StyleEX;
     (c as TAALLabel).Events.Assign(FEvents);
   end;

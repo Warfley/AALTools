@@ -85,7 +85,7 @@ type
     function CreateCheckBox(P: TWinControl): TAALCheckBox;
     function CreateLabel(P: TWinControl): TAALLabel;
     function CreateEdit(P: TWinControl): TAALEdit;
-    procedure LoadControlData(c: TComponent; Clear: boolean = True);
+    procedure LoadControlData(c: TComponent);
     procedure PropChanged(Sender: TObject; PropName, PropVal: string);
     procedure UpdateFormCaption(Sender: TObject);
   public
@@ -194,9 +194,7 @@ begin
   end;
 end;
 
-procedure TFormEditFrame.LoadControlData(c: TComponent; Clear: boolean = True);
-var
-  i: integer;
+procedure TFormEditFrame.LoadControlData(c: TComponent);
 begin
   (c as IAALComponent).FillEvents(EventEditor);
   PropEditor.TIObject := c;
@@ -856,15 +854,15 @@ end;
 
 procedure TFormEditFrame.EventEditorEditingDone(Sender: TObject);
 var
-  c: IAALComponent;
+  c: TComponent;
   s, v: string;
 begin
   if not Assigned(FormControlView.Selected) then
     exit;
   s := EventEditor.Rows[EventEditor.Row][0];
   v := EventEditor.Values[s];
-  c := IAALComponent(FormControlView.Selected.Data);
-  c.Event[s] := v;
+  c := TComponent(FormControlView.Selected.Data);
+  (c as IAALComponent).Event[s] := v;
   if Assigned(FOnChange) then
     FOnChange(Self);
   LoadControlData(TComponent(c));

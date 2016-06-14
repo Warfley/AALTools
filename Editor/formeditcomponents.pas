@@ -876,6 +876,7 @@ procedure TAALForm.FillEvents(g: TValueListEditor);
 var
   i: integer;
 begin
+  g.Clear;
   for i := 0 to FEvents.Count - 1 do
   begin
     g.Values[FEvents.Names[i]] := FEvents.ValueFromIndex[i];

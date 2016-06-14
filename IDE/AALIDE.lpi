@@ -17,7 +17,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <RevisionNr Value="4"/>
-      <BuildNr Value="8"/>
+      <BuildNr Value="9"/>
       <Language Value="0407"/>
       <Attributes pvaPreRelease="True"/>
       <StringTable Comments="AALIDE Alpha 0.0.2" FileDescription="IDE for AAL automation language" LegalCopyright="Copyright (c) F. Kehrein 2016" ProductVersion="0.0.2 Alpha"/>

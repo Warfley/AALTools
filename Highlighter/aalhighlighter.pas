@@ -6,19 +6,21 @@ unit AALHighlighter;
 interface
 
 uses
-  Classes, SysUtils, Graphics, SynEditTypes, SynEditHighlighter, Dialogs, AALTypes;
+  Classes, SysUtils, Graphics, SynEditTypes, SynEditHighlighter,
+  SynEditHighlighterFoldBase, Dialogs, AALTypes;
 
 type
 
   { TAALSynHighlight }
 
-  TAALSynHighlight = class(TSynCustomHighlighter)
+  TAALSynHighlight = class(TSynCustomFoldHighlighter)
   private
     FStrAttr, FDocAttr, FCommentAttr, FIdentifierAttr, FKeyAttr,
     FFunctionAttr, FNumberAttr, FSpaceAttr, FTextAttr, FVarAttr,
     FSelectAttr: TSynHighlighterAttributes;
     FSelectText: string;
     CurrLine: integer;
+    FCurrentRange: IntPtr;
     procedure SetDocAttr(v: TSynHighlighterAttributes);
     procedure SetStrAttr(v: TSynHighlighterAttributes);
     procedure SetComAttr(v: TSynHighlighterAttributes);
@@ -49,6 +51,9 @@ type
     function GetEol: boolean; override;
     procedure GetTokenEx(out TokenStart: PChar; out TokenLength: integer); override;
     function GetTokenAttribute: TSynHighlighterAttributes; override;
+    procedure SetRange(Value: Pointer); override;
+    function GetRange: Pointer; override;
+    procedure ResetRange; override;
   public
     property Line: string read GetLine;
     function GetToken: string; override;
@@ -78,6 +83,12 @@ type
     property SelectAttribute: TSynHighlighterAttributes
       read FSelectAttr write SetSelectAttr;
   end;
+
+const
+  IfBlockID = 1;
+  WhileBlockID = 2;
+  FuncBlockID = 3;
+  ForBlockID = 2;
 
 implementation
 
@@ -153,7 +164,7 @@ procedure TAALSynHighlight.CheckHash;
     t := LowerCase(FToken);
     aKey := LowerCase(aKey);
     {$Else}
-      t := FToken;
+    t := FToken;
     {$EndIf}
     if Length(aKey) <> FTokLen then
     begin
@@ -179,6 +190,7 @@ begin
       FTok := PHashInfo(FHashList[FTokenHash][i])^.Kind;
       Break;
     end;
+
 end;
 
 
@@ -547,9 +559,9 @@ begin
   end
   else if FLineText[FTokenEnd] = '#' then
   begin
-    FTokLen:=1;
-    while FLineText[FTokenEnd+FTokLen] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-'] do
-      inc(FTokLen);
+    FTokLen := 1;
+    while FLineText[FTokenEnd + FTokLen] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-'] do
+      Inc(FTokLen);
     Inc(FTokenEnd, FTokLen);
     FToken := copy(FLineText, FTokenPos, FTokLen);
     FTok := tkFunction;
@@ -582,6 +594,22 @@ begin
       FTok := tkFunction
     else
       FTok := tkUndefined;
+    if isEnd(FToken, 'if') then
+      StartCodeFoldBlock(Pointer(IfBlockID))
+    else if isEnd(FToken, 'while') then
+      StartCodeFoldBlock(Pointer(WhileBlockID))
+    else if isEnd(FToken, 'func') then
+      StartCodeFoldBlock(Pointer(FuncBlockID))
+    else if isEnd(FToken, 'for') then
+      StartCodeFoldBlock(Pointer(ForBlockID))
+    else if isEnd(FToken, 'endif') then
+      EndCodeFoldBlock()
+    else if isEnd(FToken, 'endfunc') then
+      EndCodeFoldBlock()
+    else if isEnd(FToken, 'wend') then
+      EndCodeFoldBlock()
+    else if isEnd(FToken, 'next') then
+      EndCodeFoldBlock();
   end;
 end;
 
@@ -607,7 +635,7 @@ function TAALSynHighlight.GetTokenAttribute: TSynHighlighterAttributes;
     t := LowerCase(FToken);
     aKey := LowerCase(aKey);
     {$Else}
-      t := FToken;
+    t := FToken;
     {$EndIf}
     if Length(aKey) <> FTokLen then
     begin
@@ -636,6 +664,24 @@ begin
   end
   else
     Result := GetAttr(FTok);
+end;
+
+procedure TAALSynHighlight.SetRange(Value: Pointer);
+begin
+  inherited SetRange(Value);
+  FCurrentRange := IntPtr(CodeFoldRange.RangeType);
+end;
+
+function TAALSynHighlight.GetRange: Pointer;
+begin
+  CodeFoldRange.RangeType := Pointer(PtrInt(FCurrentRange));
+  Result :=inherited GetRange;
+end;
+
+procedure TAALSynHighlight.ResetRange;
+begin
+  inherited ResetRange;
+  FCurrentRange := 0;
 end;
 
 function TAALSynHighlight.GetToken: string;
